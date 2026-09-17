@@ -10,12 +10,13 @@ All values map 1:1 to variables in `.env.example`.
 1. Create an account at <https://supabase.com> → **New project**.
    - Name: `dele-viaje`, region: pick one close to CR (e.g. `us-east-1`) — region is a paid migration later, choose now.
    - Password: **save it** (it encrypts your Postgres).
-2. From the project dashboard, **Project Settings → API**:
-   - Copy `Project URL`, `anon public key`, `service_role key` → `.env.local`:
+2. From the project dashboard, **Project Settings → API Keys**:
+   - Use the **publishable** and **secret** keys (current default), not the legacy `anon` / `service_role` JWT keys — both still work, but publishable/secret can be rotated independently of the JWT secret and is what Supabase now issues by default on new projects.
+   - Copy `Project URL`, `publishable key`, `secret key` → `.env.local`:
      - `NEXT_PUBLIC_SUPABASE_URL`
-     - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-     - `SUPABASE_SERVICE_ROLE_KEY`
-   - `service_role` bypasses RLS — **server-only**, never expose to the browser.
+     - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+     - `SUPABASE_SECRET_KEY`
+   - The secret key bypasses RLS — **server-only**, never expose to the browser.
 3. Run the schema migrations (creates `profiles`, RLS, triggers):
    ```bash
    npx supabase login        # once

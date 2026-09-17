@@ -1,43 +1,139 @@
 # Dele Viaje — Design & UI System (Taste)
 
-**This is a MANDATORY process rule:** the installed skill **`design-taste-frontend`** ("Taste", from `Leonxlnx/taste-skill`) is loaded **before creating or changing any UI** — every screen, component, route, or visual change. It defines *how good looks* here.
+**This is a MANDATORY process rule:** the installed skill **`design-taste-frontend`** ("Taste", from `.agents/skills/design-taste-frontend/SKILL.md`) is loaded **before creating or changing any UI** — every screen, component, route, or visual change. It defines *how good looks* here.
 
 This file records the project's locked design decisions so they stay consistent outside a single agent run.
 
 ---
 
-## 1. Process (run for every UI task)
+## ✅ 1. LOCKED DESIGN READ (Phase 0 — Finalized)
+
+> *"Reading this as: consumer marketplace for Costa Rican explorers (hikers + tourists + agencies), with an adventure/outdoor brand personality, leaning toward warm-accessible outdoor language, system-forward + motion-moderate."*
+
+**Rationale:** Dele Viaje serves dual audiences (social explorers + tourists) + agencies. Vibe is outdoor, human, adventurous — NOT resort-luxury. Forest green + Geist embodies this: lush (Costa Rican), confident (explorer-facing), modern (platform).
+
+---
+
+## ✅ 2. LOCKED DIALS (per surface) — Phase 0 Finalized
+
+| Surface | VARIANCE | MOTION | DENSITY | Notes |
+|---|---|---|---|---|
+| Landing / marketing | 7 | 5 | 3 | Parallax hero, spacious, brand moment |
+| Feed / discovery | 6 | 4 | 5 | Cards breathe, subtle transitions, readable |
+| Trip detail | 6 | 4 | 4 | Photos + text, balanced, engaging |
+| Private plan workspace | 5 | 3 | 5 | Collaborative, focused, minimal motion |
+| Agency panel | 4 | 2 | 7 | Data-forward, professional, restrained |
+| Super-admin | 3 | 2 | 8 | Tables, metrics, minimal decoration |
+| Chat | 4 | 3 | 6 | Conversational, live updates, readable |
+| Onboarding | 5 | 4 | 3 | Welcoming, guided, spacious |
+
+**Dial Strategy:** High variance on marketing (landing attracts), medium on discovery/core features, low on admin/panel (information hierarchy). Motion on hero + discovery (engagement), restrained on work surfaces (focus). Density inverse to motion.
+
+---
+
+## ✅ 3. LOCKED DESIGN TOKENS — Phase 0 Finalized
+
+### **A. Accent Color: Forest Green**
+- **Primary:** `#1B4332` (deep forest, lush, trustworthy)
+- **Light variant:** `#2D6A4F` (interactive states, hover)
+- **Dark variant:** `#081C15` (minimal use, strong contrast)
+- **Rationale:** Costa Rica = lush forests. Green signals adventure + trust. Avoids AI-purple default.
+
+### **B. Display Typography: Geist**
+- **Font family:** Geist (via `next/font/geist`)
+- **Used for:** Headlines, CTAs, brand moments
+- **Fallback:** system sans
+- **Rationale:** Modern, confident, perfect for explorer + agency messaging. Pairs well with body copy.
+
+### **C. Corner Radius (SHAPE CONSISTENCY LOCK)**
+- **Cards / containers:** `16px` (soft, friendly, outdoor)
+- **Buttons / CTAs:** `100%` (pill, modern, playful)
+- **Inputs / form elements:** `8px` (subtle, restrained, usable)
+- **Rationale:** One scale across entire project. No mixing.
+
+### **D. Icon System**
+- **Library:** `@phosphor-icons/react` (already installed)
+- **Global:** `strokeWidth={1.5}` for all icons
+- **No lucide, no hand-rolled SVGs**
+- **Rationale:** Consistent, professional, outdoor-friendly glyph set.
+
+### **E. Theme (Light + Dark)**
+- **Light mode:** Off-white (`#FAFAF8`) background, Forest Green accents, charcoal text
+- **Dark mode:** Off-black (`#0F0F0E`) background, Forest Green accents (lighter variant), off-white text
+- **Respect:** `prefers-color-scheme` by default; manual toggle optional
+- **Contrast:** WCAG AA minimum (AAA for hero)
+- **Rationale:** Both modes required; no light-only or dark-only shipping.
+
+---
+
+## 4. Process (run for every UI task)
 
 1. Load the skill (`.agents/skills/design-taste-frontend/SKILL.md`).
-2. State the one-line **Design Read** before coding:
-   > *"Reading this as: consumer marketplace for Costa Rican explorers (hikers + tourists) + craft out-of-doors brand, premium-but-friendly outdoor language, leaning toward [system/aesthetic]."*
-3. Set the **3 dials** for the surface and log them (below).
-4. Code following the skill's rules + ship ready for its pre-flight checks.
+2. Confirm **Design Read** before coding (see §1 — already locked).
+3. Verify **dials** for the surface (see §2 — refer to table above).
+4. Use **locked tokens** (§3) in all components — no overrides.
+5. Code following the skill's rules + ship ready for its pre-flight checks.
 
-## 2. Locked Dials (per surface)
+## 5. Architecture & Conventions (Taste §3 — Locked for Dele Viaje)
 
-| Surface | VARIANCE | MOTION | DENSITY |
-|---|---|---|---|
-| Landing / marketing | 7 | 7 | 3 |
-| Feed / discovery | 6 | 4 | 5 |
-| Trip detail | 6 | 4 | 4 |
-| Private plan workspace | 5 | 3 | 5 |
-| Agency panel | 4 | 2 | 7 |
-| Super-admin | 3 | 2 | 8 |
-| Chat | 4 | 3 | 6 |
-| Onboarding | 5 | 4 | 3 |
+- **Framework:** Next.js 16 (App Router), TypeScript, Tailwind v4
+- **State:** Zustand or React Context for deep prop drilling; `useState` for local UI
+- **Animation:** Motion (`motion/react`) for UI, GSAP + ScrollTrigger for scroll-driven (landing hero)
+- **Fonts:** `next/font` only; never external `<link>`
+- **Icons:** Phosphor React, `strokeWidth: 1.5` globally
+- **Emoji policy:** Discouraged; use icon glyphs instead
+- **Responsiveness:** `max-w-[1400px] mx-auto`, `min-h-[100dvh]` (not `h-screen`), CSS Grid over flex-math
 
-Rule: when in doubt default to `8 / 6 / 4` for consumer, drop density up for panels/tables.
+## 6. Hard Rules That Always Apply (Non-Negotiable)
 
-## 3. Brand Direction (draft — refine in Phase 0 with Taste)
+- ✅ **No em-dashes** (`—`) anywhere — zero, ever (Taste §9.G, most-violated Tell)
+- ✅ **One accent color locked** — Forest Green used identically on all sections
+- ✅ **No AI tells:** no Inter-by-default, no AI-purple, no three-equal-cards, no "Jane Doe", no "Quietly trusted by"
+- ✅ **Button contrast check:** WCAG AA (4.5:1 text-to-bg ratio) every CTA
+- ✅ **CTA button wrap ban:** text fits ONE line at desktop, ≤ 3 words
+- ✅ **Hero discipline:** min-h-[100dvh], headline ≤ 2 lines, subtext ≤ 20 words, ≤ 4 text elements, `pt-max-24`
+- ✅ **Eyebrow restraint:** max 1 per 3 sections (mechanical pre-flight check)
+- ✅ **Empty/loading/error states:** every list/form implements all three; skeletons match layout
+- ✅ **Motion motivated:** every animation justified in one sentence (hierarchy/storytelling/feedback/state change)
+- ✅ **Prefers-reduced-motion:** all motion `INTENSITY > 3` respects this; parallax → static
+- ✅ **Dark mode parity:** page tested in both light + dark before ship
+- ✅ **Real images only:** no div-based fake screenshots, no hand-rolled decorative SVGs, no pure-text minimalism
 
-- **Vibe:** outdoors, adventurous, human, genuinely Costa Rican — not resort-luxury, not stocky "mountain bro".
-- **Language tokens to avoid:** beige/cream + brass "premium consumer" palette (banned family), AI-purple gradients, glassmorphism everywhere, Inter-by-default, Fraunces/Instrument_Serif, emojis as design.
-- **Palette (seed, not final):** one saturated outdoor accent (e.g. deep forest green or electric trail orange) + neutral zinc/stone + off-white/off-black. **One accent, one palette, locked per project** (skill §4.2 / §8).
-- **Typography:** brand-appropriate sans display (e.g. `Outfit` / `Geist` / `Satoshi` — decide in Phase 0) via `next/font`; mono only for data/numeric density in panels. No serif as default.
-- **Icons:** single family `@phosphor-icons/react`; **no lucide, no hand-rolled SVG glyphs**; global `strokeWidth` (1.5).
-- **Shape:** one corner-radius scale locked project-wide (SHAPE CONSISTENCY LOCK) — proposal: cards 16px, buttons pill, inputs 8px — final in Phase 0.
-- **Theme:** light + dark from day 1, respect `prefers-color-scheme`, hierarchy parity, WCAG AA (AAA for hero).
+---
+
+## 7. Component System (components/ui/)
+
+Base component set built with Tailwind v4 + locked tokens. All components:
+- Use Forest Green for interactive states
+- Respect `prefers-color-scheme` and `prefers-reduced-motion`
+- Built with Radix UI primitives where sensible (a11y, keyboard nav)
+- Consistent corner-radius scale
+- WCAG AA contrast minimum
+
+**Components (Phase 0):**
+- Button (primary, secondary, ghost, loading states)
+- Input (text, email, password, with label + helper text)
+- Card (with variants: minimal, elevated, interactive)
+- Avatar (with fallback initials)
+- Badge (status, category)
+- Skeleton (shimmer, matching layout)
+- Toast (success, error, info, warning)
+- Tabs (underline, pill variants)
+- Modal / Dialog (with backdrop blur)
+- Checkbox / Radio
+- Data Table (for panels)
+
+---
+
+## 8. Brand Direction (Finalized)
+
+- **Vibe:** outdoors, adventurous, human, genuinely Costa Rican.
+- **Palette:** Forest Green (`#1B4332`) + neutral zinc/stone + off-white/off-black. One accent, locked.
+- **Typography:** Geist display + system sans body; mono only for data.
+- **Icons:** Phosphor React, `strokeWidth: 1.5`.
+- **Shape:** Cards 16px, buttons pill, inputs 8px.
+- **Theme:** Light + dark, respect `prefers-color-scheme`, WCAG AA+.
+- **Banned tokens:** beige/cream + brass (premium-consumer AI default), AI-purple gradients, glassmorphism everywhere, Inter-by-default, Fraunces/Instrument_Serif, em-dashes, emojis as design.
 
 ## 4. Hard Rules That Always Apply (minimum set)
 

@@ -1,0 +1,152 @@
+@import "tailwindcss";
+@config "../tailwind.config.ts";
+
+/* Geist fonts via next/font (see app/layout.tsx) */
+@supports (font-variation-settings: normal) {
+  :root {
+    font-family: var(--font-geist-sans, system-ui);
+  }
+}
+
+:root {
+  /* Light mode (default) */
+  --color-bg: hsl(0, 0%, 98%);         /* #fafaf8 */
+  --color-surface: hsl(0, 0%, 100%);   /* #ffffff */
+  --color-text-primary: hsl(0, 0%, 6%);      /* #0f0f0e (off-black) */
+  --color-text-secondary: hsl(0, 0%, 30%);   /* Muted text */
+  --color-border: hsl(0, 0%, 91%);    /* Neutral 200 */
+  --color-accent: hsl(163, 73%, 16%); /* #1B4332 (Forest Green) */
+  --color-accent-light: hsl(163, 50%, 35%); /* #2D6A4F */
+  --color-accent-dark: hsl(163, 96%, 5%);   /* #081C15 */
+
+  /* Typography */
+  --leading-tight: 1.2;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+
+  /* Spacing (Tailwind-aligned) */
+  --radius-sm: 4px;
+  --radius-base: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Dark mode */
+    --color-bg: hsl(0, 0%, 6%);        /* #0f0f0e (off-black) */
+    --color-surface: hsl(0, 0%, 9%);   /* Slightly lighter than bg */
+    --color-text-primary: hsl(0, 0%, 98%);  /* #fafaf8 (off-white) */
+    --color-text-secondary: hsl(0, 0%, 70%); /* Muted text */
+    --color-border: hsl(0, 0%, 20%);   /* Subtle dividers */
+    --color-accent: hsl(163, 96%, 25%); /* Lighter forest for dark mode */
+    --color-accent-light: hsl(163, 90%, 35%);
+    --color-accent-dark: hsl(163, 96%, 5%);
+  }
+}
+
+/* Allow user preference override */
+[data-theme="light"] {
+  --color-bg: hsl(0, 0%, 98%);
+  --color-surface: hsl(0, 0%, 100%);
+  --color-text-primary: hsl(0, 0%, 6%);
+  --color-text-secondary: hsl(0, 0%, 30%);
+  --color-border: hsl(0, 0%, 91%);
+  --color-accent: hsl(163, 73%, 16%);
+  --color-accent-light: hsl(163, 50%, 35%);
+  --color-accent-dark: hsl(163, 96%, 5%);
+}
+
+[data-theme="dark"] {
+  --color-bg: hsl(0, 0%, 6%);
+  --color-surface: hsl(0, 0%, 9%);
+  --color-text-primary: hsl(0, 0%, 98%);
+  --color-text-secondary: hsl(0, 0%, 70%);
+  --color-border: hsl(0, 0%, 20%);
+  --color-accent: hsl(163, 96%, 25%);
+  --color-accent-light: hsl(163, 90%, 35%);
+  --color-accent-dark: hsl(163, 96%, 5%);
+}
+
+/*
+ * Base element defaults live in @layer base so Tailwind utility classes
+ * (e.g. text-white on a <Link>-rendered <a>) correctly override them.
+ * Unlayered rules always beat layered ones under CSS Cascade Layers,
+ * regardless of specificity, which previously made every Link-styled
+ * button's text color fall back to --color-accent instead of its
+ * intended utility color.
+ */
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Links */
+  a {
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+
+  a:hover {
+    color: var(--color-accent-light);
+  }
+
+  /* Focus visible (keyboard nav) */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Scrollbar styling (optional, light/dark aware) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent-light);
+}
+
+/* Selection styling */
+::selection {
+  background-color: var(--color-accent);
+  color: var(--color-surface);
+}
+
+/* Print styles */
+@media print {
+  body {
+    background: white;
+    color: black;
+  }
+}

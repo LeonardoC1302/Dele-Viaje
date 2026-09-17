@@ -1,0 +1,196 @@
+{
+  "meta": {
+    "title": "Dele Viaje — Encuentra o crea un viaje",
+    "description": "Descubre y únete a viajes sociales, reserva tours verificados o organiza planes privados con amigos y familia en Costa Rica y más allá."
+  },
+  "pwa": {
+    "installHint": "Instala Dele Viaje: toca Compartir y luego \"Agregar a inicio\".",
+    "dismiss": "Cerrar"
+  },
+  "categories": {
+    "hiking": "Senderismo",
+    "beach": "Playa",
+    "waterfalls": "Cataratas",
+    "volcanoes": "Volcanes",
+    "wildlife": "Vida silvestre",
+    "surfing": "Surf",
+    "camping": "Camping",
+    "culture": "Cultura"
+  },
+  "nav": {
+    "howItWorks": "Cómo funciona",
+    "forAgencies": "Para agencias",
+    "waitlist": "Lista de espera",
+    "signIn": "Iniciar sesión"
+  },
+  "hero": {
+    "headlineLine1": "Encuentra o crea un viaje,",
+    "headlineLine2": "con la gente que quieras.",
+    "subtext": "Únete a aventuras sociales, reserva tours verificados o planea un viaje privado con amigos por Costa Rica.",
+    "findTrip": "Buscar viaje",
+    "createTrip": "Crear viaje"
+  },
+  "howItWorks": {
+    "title": "Tres maneras de salir al camino",
+    "social": {
+      "title": "Únete a un viaje social",
+      "body": "Explora viajes abiertos de otros exploradores, pide tu lugar y sal con un grupo que comparte tu ritmo."
+    },
+    "tour": {
+      "title": "Reserva un tour verificado",
+      "body": "Reserva directamente con agencias locales certificadas, sin intermediarios."
+    },
+    "private": {
+      "title": "Planea un viaje privado",
+      "body": "Organiza el itinerario, divide los gastos y coordina con amigos y familia en un espacio compartido."
+    }
+  },
+  "agenciesCta": {
+    "title": "¿Ofreces tours en Costa Rica?",
+    "body": "Estamos incorporando un grupo fundador de operadores locales antes del lanzamiento, con reservas directas y sin comisión intermediaria.",
+    "cta": "Aplicar como agencia"
+  },
+  "waitlist": {
+    "title": "Sé de los primeros en el camino",
+    "body": "Estamos construyendo Dele Viaje en este momento. Únete a la lista de espera y te avisaremos en cuanto abra.",
+    "emailLabel": "Correo electrónico",
+    "emailPlaceholder": "tu@ejemplo.com",
+    "submit": "Unirme a la lista",
+    "success": "Ya estás en la lista. Revisa tu correo el día del lanzamiento.",
+    "errorInvalidEmail": "Ingresa un correo electrónico válido."
+  },
+  "footer": {
+    "tagline": "Viajes por Costa Rica, planeados con gente de confianza.",
+    "explore": {
+      "title": "Explorar",
+      "socialTrips": "Viajes sociales",
+      "verifiedTours": "Tours verificados",
+      "privatePlans": "Planes privados"
+    },
+    "company": {
+      "title": "Empresa",
+      "about": "Nosotros",
+      "safety": "Seguridad",
+      "contact": "Contacto"
+    },
+    "agencies": {
+      "title": "Agencias",
+      "listTours": "Publica tus tours",
+      "dashboard": "Panel de agencia"
+    },
+    "copyright": "Copyright {year} Dele Viaje. Hecho en Costa Rica."
+  },
+  "auth": {
+    "continueWithGoogle": "Continuar con Google",
+    "or": "o",
+    "login": {
+      "title": "Iniciar sesión",
+      "subtitle": "Bienvenido de nuevo a Dele Viaje.",
+      "emailLabel": "Correo electrónico",
+      "emailPlaceholder": "tu@ejemplo.com",
+      "passwordLabel": "Contraseña",
+      "submit": "Iniciar sesión",
+      "noAccount": "¿Nuevo en Dele Viaje?",
+      "createAccount": "Crea una cuenta",
+      "invalidCredentials": "Correo o contraseña incorrectos."
+    },
+    "signup": {
+      "title": "Crea una cuenta",
+      "subtitle": "Únete a Dele Viaje para encontrar o crear tu próximo viaje.",
+      "emailLabel": "Correo electrónico",
+      "emailPlaceholder": "tu@ejemplo.com",
+      "passwordLabel": "Contraseña",
+      "passwordHelper": "Al menos 8 caracteres, con una letra y un número.",
+      "confirmPasswordLabel": "Confirma tu contraseña",
+      "submit": "Registrarme",
+      "haveAccount": "¿Ya tienes cuenta?",
+      "logIn": "Inicia sesión",
+      "passwordMismatch": "Las contraseñas no coinciden."
+    },
+    "checkEmail": {
+      "title": "Revisa tu correo",
+      "body": "Te enviamos un enlace de confirmación para terminar de crear tu cuenta. Ábrelo para continuar en Dele Viaje."
+    },
+    "onboarding": {
+      "title": "Cuéntanos sobre ti",
+      "subtitle": "Unos detalles antes de empezar a planear viajes.",
+      "displayNameLabel": "Nombre para mostrar",
+      "displayNamePlaceholder": "¿Cómo quieres que te vean los demás?",
+      "languageLabel": "Idioma preferido",
+      "categoriesTitle": "¿Qué te interesa?",
+      "categoriesSubtitle": "Opcional, nos ayuda a mostrarte lo relevante.",
+      "continue": "Continuar",
+      "genericError": "Algo salió mal. Intenta de nuevo."
+    }
+  },
+  "mainNav": {
+    "feed": "Viajes",
+    "createTrip": "Crear viaje",
+    "signOut": "Cerrar sesión"
+  },
+  "feed": {
+    "title": "Próximos viajes",
+    "subtitle": "Viajes sociales publicados por la comunidad.",
+    "allCategories": "Todas las categorías",
+    "emptyTitle": "Todavía no hay viajes publicados",
+    "emptyBody": "Sé la primera persona en organizar uno.",
+    "emptyCta": "Crear el primer viaje",
+    "noResultsTitle": "Sin viajes en esta categoría",
+    "noResultsBody": "Prueba con otra categoría o mira todos los viajes.",
+    "clearFilter": "Ver todas las categorías",
+    "spotsLeft": "{count} {count, plural, one {cupo libre} other {cupos libres}}",
+    "full": "Completo",
+    "openCapacity": "Cupo abierto"
+  },
+  "trips": {
+    "newTitle": "Crear un viaje",
+    "newSubtitle": "Publica un viaje social gratuito para que otros exploradores se unan.",
+    "titleLabel": "Título",
+    "titlePlaceholder": "Ej. Caminata al Cerro Chirripó este sábado",
+    "descriptionLabel": "Descripción",
+    "descriptionPlaceholder": "Cuéntale a la gente qué van a hacer, qué llevar y qué esperar.",
+    "categoryLabel": "Categoría",
+    "locationLabel": "Punto de encuentro",
+    "locationPlaceholder": "Ej. Estación de buses, San Isidro de El General",
+    "startLabel": "Inicio",
+    "endLabel": "Fin",
+    "selectDate": "Selecciona una fecha",
+    "capacityLabel": "Cupo máximo",
+    "capacityHelper": "Déjalo vacío para cupo ilimitado.",
+    "submit": "Publicar viaje",
+    "genericError": "No se pudo crear el viaje. Intenta de nuevo.",
+    "endBeforeStart": "La fecha de fin debe ser después del inicio.",
+    "detailBy": "Organizado por {name}",
+    "detailBack": "Volver a viajes",
+    "join": "Unirme al viaje",
+    "joinWaitlist": "Unirme a la lista de espera",
+    "leave": "Salir del viaje",
+    "leaveWaitlist": "Salir de la lista de espera",
+    "confirmLeaveTitle": "¿Salir de este viaje?",
+    "confirmLeaveBody": "Perderás tu cupo confirmado. Si hay lista de espera, otra persona podría tomar tu lugar.",
+    "confirmLeaveWaitlistBody": "Saldrás de la lista de espera de este viaje.",
+    "confirmLeaveCancel": "Cancelar",
+    "confirmLeaveConfirm": "Sí, salir",
+    "youAreGoing": "Vas a este viaje",
+    "youAreWaitlisted": "Estás en la lista de espera",
+    "loginToJoin": "Inicia sesión para unirte",
+    "youAreOrganizer": "Tú organizas este viaje",
+    "tripStarted": "Este viaje ya comenzó.",
+    "joinError": "No se pudo completar la acción. Intenta de nuevo.",
+    "attendeesTitle": "¿Quién va? ({count})",
+    "noAttendeesYet": "Todavía nadie se ha unido. ¡Sé el primero!",
+    "openChat": "Abrir chat"
+  },
+  "chat": {
+    "title": "Chat del viaje",
+    "backToTrip": "Volver al viaje",
+    "placeholder": "Escribe un mensaje…",
+    "send": "Enviar",
+    "empty": "Todavía no hay mensajes. ¡Sé el primero en escribir!",
+    "readOnlyNote": "Estás en la lista de espera: puedes leer el chat, pero no escribir hasta que se confirme tu cupo.",
+    "notAllowed": "Solo los participantes de este viaje pueden ver el chat.",
+    "deletedMessage": "Mensaje eliminado",
+    "deleteMessage": "Eliminar mensaje",
+    "sendError": "No se pudo enviar el mensaje. Intenta de nuevo."
+  }
+}

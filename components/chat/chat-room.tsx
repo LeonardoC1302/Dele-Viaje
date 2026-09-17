@@ -1,0 +1,269 @@
+'use client';
+
+import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
+import { Trash } from '@phosphor-icons/react';
+import { createClient } from '@/lib/supabase/client';
+import { Avatar } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+
+export interface ChatMessage {
+  id: string;
+  senderId: string;
+  body: string;
+  createdAt: string;
+  deletedAt: string | null;
+}
+
+export interface ChatProfile {
+  displayName: string | null;
+  avatarUrl: string | null;
+}
+
+interface ChatRoomProps {
+  tripId: string;
+  currentUserId: string;
+  canSend: boolean;
+  isOrganizer: boolean;
+  initialMessages: ChatMessage[];
+  profiles: Record<string, ChatProfile>;
+}
+
+export function ChatRoom({
+  tripId,
+  currentUserId,
+  canSend,
+  isOrganizer,
+  initialMessages,
+  profiles,
+}: ChatRoomProps) {
+  const t = useTranslations('chat');
+  const locale = useLocale();
+  // One client for the component's lifetime. A fresh client per call (as
+  // this previously did) races the realtime websocket against the async
+  // session/auth attachment (supabase.realtime.setAuth()), so subscribing
+  // immediately after creating a client can connect as anonymous and never
+  // receive RLS-protected postgres_changes events.
+  const [supabase] = useState(() => createClient());
+  const [messages, setMessages] = useState(initialMessages);
+  const [body, setBody] = useState('');
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    // Make sure the client has a resolved session (and has therefore
+    // called realtime.setAuth()) before opening the channel.
+    supabase.auth.getSession().then(() => {
+      if (cancelled) return;
+
+      channel = supabase
+        .channel(`trip-chat:${tripId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages',
+            filter: `trip_id=eq.${tripId}`,
+          },
+          (payload) => {
+            const row = payload.new as {
+              id: string;
+              sender_id: string;
+              body: string;
+              created_at: string;
+              deleted_at: string | null;
+            };
+            setMessages((prev) =>
+              prev.some((m) => m.id === row.id)
+                ? prev
+                : [
+                    ...prev,
+                    {
+                      id: row.id,
+                      senderId: row.sender_id,
+                      body: row.body,
+                      createdAt: row.created_at,
+                      deletedAt: row.deleted_at,
+                    },
+                  ]
+            );
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'messages',
+            filter: `trip_id=eq.${tripId}`,
+          },
+          (payload) => {
+            const row = payload.new as { id: string; deleted_at: string | null };
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === row.id ? { ...m, deletedAt: row.deleted_at } : m
+              )
+            );
+          }
+        )
+        .subscribe();
+    });
+
+    return () => {
+      cancelled = true;
+      if (channel) supabase.removeChannel(channel);
+    };
+  }, [tripId, supabase]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages.length]);
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    const trimmed = body.trim();
+    if (!trimmed) return;
+
+    setSending(true);
+    setError(null);
+
+    const { data: inserted, error: insertError } = await supabase
+      .from('messages')
+      .insert({ trip_id: tripId, sender_id: currentUserId, body: trimmed })
+      .select('id, sender_id, body, created_at, deleted_at')
+      .single();
+
+    if (insertError) {
+      console.error('Failed to send message:', insertError);
+      setError(`${t('sendError')} (${insertError.message})`);
+    } else {
+      // Optimistic append so the sender sees it immediately; the INSERT
+      // realtime handler dedupes by id if the event also arrives.
+      setMessages((prev) =>
+        prev.some((m) => m.id === inserted.id)
+          ? prev
+          : [
+              ...prev,
+              {
+                id: inserted.id,
+                senderId: inserted.sender_id,
+                body: inserted.body,
+                createdAt: inserted.created_at,
+                deletedAt: inserted.deleted_at,
+              },
+            ]
+      );
+      setBody('');
+    }
+    setSending(false);
+  };
+
+  const handleDelete = async (messageId: string) => {
+    await supabase
+      .from('messages')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', messageId);
+  };
+
+  const timeFormatter = new Intl.DateTimeFormat(locale, {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+
+  return (
+    <div className="flex h-[70vh] flex-col rounded-xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="flex-1 overflow-y-auto p-4">
+        {messages.length === 0 ? (
+          <p className="mt-8 text-center text-sm text-neutral-500 dark:text-neutral-400">
+            {t('empty')}
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-4">
+            {messages.map((message) => {
+              const profile = profiles[message.senderId];
+              const isOwn = message.senderId === currentUserId;
+              const canDelete = isOwn || isOrganizer;
+
+              return (
+                <li key={message.id} className="flex items-start gap-3">
+                  <Avatar
+                    src={profile?.avatarUrl ?? undefined}
+                    alt={profile?.displayName ?? ''}
+                    fallback={profile?.displayName ?? undefined}
+                    className="shrink-0"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                        {profile?.displayName ?? '—'}
+                      </span>
+                      <span className="text-xs text-neutral-400 dark:text-neutral-500">
+                        {timeFormatter.format(new Date(message.createdAt))}
+                      </span>
+                    </div>
+                    {message.deletedAt ? (
+                      <p className="text-sm italic text-neutral-400 dark:text-neutral-600">
+                        {t('deletedMessage')}
+                      </p>
+                    ) : (
+                      <p className="whitespace-pre-wrap break-words text-sm text-neutral-700 dark:text-neutral-300">
+                        {message.body}
+                      </p>
+                    )}
+                  </div>
+                  {!message.deletedAt && canDelete && (
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(message.id)}
+                      aria-label={t('deleteMessage')}
+                      className="shrink-0 text-neutral-300 hover:text-red-600 dark:text-neutral-600 dark:hover:text-red-400"
+                    >
+                      <Trash size={16} weight="regular" strokeWidth={1.5} />
+                    </button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        <div ref={bottomRef} />
+      </div>
+
+      <div className="border-t border-neutral-200 p-3 dark:border-neutral-800">
+        {canSend ? (
+          <form onSubmit={handleSubmit} className="flex items-end gap-2">
+            <textarea
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              placeholder={t('placeholder')}
+              maxLength={2000}
+              rows={1}
+              className="flex-1 resize-none rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm placeholder:text-neutral-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-600 dark:border-neutral-700 dark:bg-neutral-950 dark:placeholder:text-neutral-400"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit(e);
+                }
+              }}
+            />
+            <Button type="submit" size="md" isLoading={sending} disabled={!body.trim()}>
+              {t('send')}
+            </Button>
+          </form>
+        ) : (
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            {t('readOnlyNote')}
+          </p>
+        )}
+        {error && (
+          <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>
+        )}
+      </div>
+    </div>
+  );
+}

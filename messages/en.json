@@ -1,0 +1,196 @@
+{
+  "meta": {
+    "title": "Dele Viaje — Find or Create a Trip",
+    "description": "Discover and join social trips, book verified tours, or collaborate on private plans with friends and family in Costa Rica and beyond."
+  },
+  "pwa": {
+    "installHint": "Install Dele Viaje: tap Share, then \"Add to Home Screen\".",
+    "dismiss": "Dismiss"
+  },
+  "categories": {
+    "hiking": "Hiking",
+    "beach": "Beach",
+    "waterfalls": "Waterfalls",
+    "volcanoes": "Volcanoes",
+    "wildlife": "Wildlife",
+    "surfing": "Surfing",
+    "camping": "Camping",
+    "culture": "Culture"
+  },
+  "nav": {
+    "howItWorks": "How it works",
+    "forAgencies": "For agencies",
+    "waitlist": "Waitlist",
+    "signIn": "Sign in"
+  },
+  "hero": {
+    "headlineLine1": "Find or create a trip,",
+    "headlineLine2": "with people you want.",
+    "subtext": "Join social adventures, book verified tours, or plan a private trip with friends across Costa Rica.",
+    "findTrip": "Find a Trip",
+    "createTrip": "Create a Trip"
+  },
+  "howItWorks": {
+    "title": "Three ways to hit the trail",
+    "social": {
+      "title": "Join a social trip",
+      "body": "Browse open trips from fellow explorers, request a spot, and head out with a group that shares your pace."
+    },
+    "tour": {
+      "title": "Book a verified tour",
+      "body": "Reserve directly with licensed local agencies, no middleman markup."
+    },
+    "private": {
+      "title": "Plan a private trip",
+      "body": "Organize the itinerary, split costs, and coordinate with friends and family in one shared space."
+    }
+  },
+  "agenciesCta": {
+    "title": "Run tours in Costa Rica?",
+    "body": "We are onboarding a founding group of local operators before launch, with direct bookings and no middleman markup.",
+    "cta": "Apply as an Agency"
+  },
+  "waitlist": {
+    "title": "Be first on the trail",
+    "body": "We are building Dele Viaje right now. Join the waitlist and we will email you the moment it opens.",
+    "emailLabel": "Email address",
+    "emailPlaceholder": "you@example.com",
+    "submit": "Join Waitlist",
+    "success": "You are on the list. Watch your inbox for launch day.",
+    "errorInvalidEmail": "Enter a valid email address."
+  },
+  "footer": {
+    "tagline": "Trips across Costa Rica, planned with people you trust.",
+    "explore": {
+      "title": "Explore",
+      "socialTrips": "Social trips",
+      "verifiedTours": "Verified tours",
+      "privatePlans": "Private plans"
+    },
+    "company": {
+      "title": "Company",
+      "about": "About",
+      "safety": "Safety",
+      "contact": "Contact"
+    },
+    "agencies": {
+      "title": "Agencies",
+      "listTours": "List your tours",
+      "dashboard": "Agency dashboard"
+    },
+    "copyright": "Copyright {year} Dele Viaje. Made in Costa Rica."
+  },
+  "auth": {
+    "continueWithGoogle": "Continue with Google",
+    "or": "or",
+    "login": {
+      "title": "Log in",
+      "subtitle": "Welcome back to Dele Viaje.",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@example.com",
+      "passwordLabel": "Password",
+      "submit": "Log In",
+      "noAccount": "New to Dele Viaje?",
+      "createAccount": "Create an account",
+      "invalidCredentials": "Invalid email or password."
+    },
+    "signup": {
+      "title": "Create an account",
+      "subtitle": "Join Dele Viaje to find or create your next trip.",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@example.com",
+      "passwordLabel": "Password",
+      "passwordHelper": "At least 8 characters, with a letter and a number.",
+      "confirmPasswordLabel": "Confirm password",
+      "submit": "Sign Up",
+      "haveAccount": "Already have an account?",
+      "logIn": "Log in",
+      "passwordMismatch": "Passwords do not match."
+    },
+    "checkEmail": {
+      "title": "Check your email",
+      "body": "We sent a confirmation link to finish creating your account. Open it to continue to Dele Viaje."
+    },
+    "onboarding": {
+      "title": "Tell us about you",
+      "subtitle": "A few details before you start planning trips.",
+      "displayNameLabel": "Display name",
+      "displayNamePlaceholder": "How should others see you?",
+      "languageLabel": "Preferred language",
+      "categoriesTitle": "What are you into?",
+      "categoriesSubtitle": "Optional, helps us tailor what you see.",
+      "continue": "Continue",
+      "genericError": "Something went wrong. Try again."
+    }
+  },
+  "mainNav": {
+    "feed": "Trips",
+    "createTrip": "Create Trip",
+    "signOut": "Sign out"
+  },
+  "feed": {
+    "title": "Upcoming trips",
+    "subtitle": "Social trips published by the community.",
+    "allCategories": "All categories",
+    "emptyTitle": "No trips published yet",
+    "emptyBody": "Be the first to organize one.",
+    "emptyCta": "Create the first trip",
+    "noResultsTitle": "No trips in this category",
+    "noResultsBody": "Try another category or view all trips.",
+    "clearFilter": "View all categories",
+    "spotsLeft": "{count} {count, plural, one {spot left} other {spots left}}",
+    "full": "Full",
+    "openCapacity": "Open capacity"
+  },
+  "trips": {
+    "newTitle": "Create a trip",
+    "newSubtitle": "Publish a free social trip for other explorers to join.",
+    "titleLabel": "Title",
+    "titlePlaceholder": "E.g. Cerro Chirripó hike this Saturday",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Tell people what you'll do, what to bring, and what to expect.",
+    "categoryLabel": "Category",
+    "locationLabel": "Meeting point",
+    "locationPlaceholder": "E.g. Bus station, San Isidro de El General",
+    "startLabel": "Start",
+    "endLabel": "End",
+    "selectDate": "Select a date",
+    "capacityLabel": "Max capacity",
+    "capacityHelper": "Leave empty for unlimited capacity.",
+    "submit": "Publish Trip",
+    "genericError": "Could not create the trip. Try again.",
+    "endBeforeStart": "End date must be after the start date.",
+    "detailBy": "Organized by {name}",
+    "detailBack": "Back to trips",
+    "join": "Join Trip",
+    "joinWaitlist": "Join Waitlist",
+    "leave": "Leave Trip",
+    "leaveWaitlist": "Leave Waitlist",
+    "confirmLeaveTitle": "Leave this trip?",
+    "confirmLeaveBody": "You'll lose your confirmed spot. If there's a waitlist, someone else may take your place.",
+    "confirmLeaveWaitlistBody": "You'll be removed from this trip's waitlist.",
+    "confirmLeaveCancel": "Cancel",
+    "confirmLeaveConfirm": "Yes, leave",
+    "youAreGoing": "You're going to this trip",
+    "youAreWaitlisted": "You're on the waitlist",
+    "loginToJoin": "Log in to join",
+    "youAreOrganizer": "You're organizing this trip",
+    "tripStarted": "This trip has already started.",
+    "joinError": "Could not complete the action. Try again.",
+    "attendeesTitle": "Who's going ({count})",
+    "noAttendeesYet": "No one has joined yet. Be the first!",
+    "openChat": "Open Chat"
+  },
+  "chat": {
+    "title": "Trip chat",
+    "backToTrip": "Back to trip",
+    "placeholder": "Write a message...",
+    "send": "Send",
+    "empty": "No messages yet. Be the first to say something!",
+    "readOnlyNote": "You're on the waitlist: you can read the chat, but can't post until your spot is confirmed.",
+    "notAllowed": "Only trip participants can view this chat.",
+    "deletedMessage": "Message deleted",
+    "deleteMessage": "Delete message",
+    "sendError": "Could not send the message. Try again."
+  }
+}
