@@ -3,6 +3,11 @@ import { Link } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import {
+  NotificationBell,
+  type NotificationData,
+  type NotificationActor,
+} from '@/components/notifications/notification-bell';
 
 export default async function MainLayout({
   children,
@@ -14,6 +19,56 @@ export default async function MainLayout({
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  let notifications: NotificationData[] = [];
+  let actors: Record<string, NotificationActor> = {};
+  let tripTitles: Record<string, string> = {};
+  let isAdmin = false;
+
+  if (user) {
+    const { data: myProfile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+    isAdmin = myProfile?.role === 'admin';
+
+    const { data: rows } = await supabase
+      .from('notifications')
+      .select('id, type, trip_id, actor_id, data, read_at, created_at')
+      .order('created_at', { ascending: false })
+      .limit(20);
+
+    notifications = (rows ?? []).map((r) => ({
+      id: r.id,
+      type: r.type,
+      tripId: r.trip_id,
+      actorId: r.actor_id,
+      data: r.data ?? {},
+      readAt: r.read_at,
+      createdAt: r.created_at,
+    }));
+
+    const actorIds = [...new Set(notifications.map((n) => n.actorId).filter(Boolean))] as string[];
+    const tripIds = [...new Set(notifications.map((n) => n.tripId).filter(Boolean))] as string[];
+
+    if (actorIds.length > 0) {
+      const { data: actorRows } = await supabase.rpc('profiles_public').in('id', actorIds);
+      for (const a of actorRows ?? []) {
+        actors[a.id] = { displayName: a.display_name, avatarUrl: a.avatar_url };
+      }
+    }
+
+    if (tripIds.length > 0) {
+      const { data: tripRows } = await supabase
+        .from('trips')
+        .select('id, title')
+        .in('id', tripIds);
+      for (const tr of tripRows ?? []) {
+        tripTitles[tr.id] = tr.title;
+      }
+    }
+  }
 
   return (
     <div className="min-h-[100dvh]">
@@ -39,6 +94,22 @@ export default async function MainLayout({
             >
               {t('createTrip')}
             </Link>
+            {isAdmin && (
+              <Link
+                href="/admin/reports"
+                className="text-sm font-medium text-neutral-600 transition-colors hover:text-forest-600 dark:text-neutral-300 dark:hover:text-forest-400"
+              >
+                {t('admin')}
+              </Link>
+            )}
+            {user && (
+              <NotificationBell
+                currentUserId={user.id}
+                initialNotifications={notifications}
+                initialActors={actors}
+                initialTripTitles={tripTitles}
+              />
+            )}
             {user && (
               <form action="/api/auth/signout" method="POST">
                 <button

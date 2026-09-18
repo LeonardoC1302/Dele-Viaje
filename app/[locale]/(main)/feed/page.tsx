@@ -1,10 +1,9 @@
 import { getTranslations } from 'next-intl/server';
-import { Compass } from '@phosphor-icons/react/dist/ssr';
 import { Link } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { CATEGORY_KEYS } from '@/lib/constants/categories';
-import { TripCard, type TripCardData } from '@/components/trips/trip-card';
-import { buttonVariants } from '@/components/ui/button';
+import { type TripCardData } from '@/components/trips/trip-card';
+import { FeedView } from '@/components/trips/feed-view';
 import { cn } from '@/lib/utils';
 
 export default async function FeedPage({
@@ -20,7 +19,7 @@ export default async function FeedPage({
   let query = supabase
     .from('trips')
     .select(
-      'id, title, category, location_name, start_at, capacity, confirmed_count'
+      'id, title, category, location_name, start_at, capacity, confirmed_count, lat, lng'
     )
     .eq('status', 'published')
     .eq('visibility', 'public')
@@ -45,6 +44,8 @@ export default async function FeedPage({
     startAt: trip.start_at,
     capacity: trip.capacity,
     confirmedCount: trip.confirmed_count,
+    lat: trip.lat,
+    lng: trip.lng,
   }));
 
   return (
@@ -85,34 +86,13 @@ export default async function FeedPage({
           ))}
         </div>
 
-        {tripCards.length === 0 ? (
-          <div className="mt-16 flex flex-col items-center rounded-xl border border-dashed border-neutral-300 py-16 text-center dark:border-neutral-700">
-            <Compass
-              size={40}
-              weight="regular"
-              strokeWidth={1.5}
-              className="text-neutral-400 dark:text-neutral-600"
-            />
-            <h2 className="mt-4 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-              {activeCategory ? t('noResultsTitle') : t('emptyTitle')}
-            </h2>
-            <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-              {activeCategory ? t('noResultsBody') : t('emptyBody')}
-            </p>
-            <Link
-              href={activeCategory ? '/feed' : '/trips/new'}
-              className={cn(buttonVariants({ size: 'md', variant: 'primary' }), 'mt-6')}
-            >
-              {activeCategory ? t('clearFilter') : t('emptyCta')}
-            </Link>
-          </div>
-        ) : (
-          <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {tripCards.map((trip) => (
-              <TripCard key={trip.id} trip={trip} />
-            ))}
-          </div>
-        )}
+        <FeedView
+          trips={tripCards}
+          emptyTitle={activeCategory ? t('noResultsTitle') : t('emptyTitle')}
+          emptyBody={activeCategory ? t('noResultsBody') : t('emptyBody')}
+          emptyCtaHref={activeCategory ? '/feed' : '/trips/new'}
+          emptyCtaLabel={activeCategory ? t('clearFilter') : t('emptyCta')}
+        />
       </div>
     </main>
   );

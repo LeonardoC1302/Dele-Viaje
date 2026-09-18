@@ -44,7 +44,12 @@ export function JoinTripButton({
     setError(null);
     const res = await fetch(`/api/trips/${tripId}/join`, { method: 'POST' });
     if (!res.ok) {
-      setError(t('joinError'));
+      const body = await res.json().catch(() => null);
+      setError(
+        body?.error?.code === 'ERR_ACCOUNT_NOT_ACTIVE'
+          ? t('accountNotActive')
+          : t('joinError')
+      );
       setLoading(false);
       return;
     }

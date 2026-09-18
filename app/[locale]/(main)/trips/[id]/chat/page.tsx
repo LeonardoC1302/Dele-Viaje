@@ -57,7 +57,7 @@ export default async function TripChatPage({
 
   const { data: messageRows } = await supabase
     .from('messages')
-    .select('id, sender_id, body, created_at, deleted_at')
+    .select('id, sender_id, body, created_at, deleted_at, kind, event_type, actor_id')
     .eq('trip_id', trip.id)
     .order('created_at', { ascending: true })
     .limit(200);
@@ -68,15 +68,20 @@ export default async function TripChatPage({
     body: row.body,
     createdAt: row.created_at,
     deletedAt: row.deleted_at,
+    kind: row.kind as 'user' | 'system',
+    eventType: row.event_type as 'joined' | 'left' | 'promoted' | null,
+    actorId: row.actor_id,
   }));
 
-  const senderIds = Array.from(new Set(messages.map((m) => m.senderId)));
+  const profileIds = Array.from(
+    new Set(messages.flatMap((m) => [m.senderId, m.actorId].filter((v): v is string => !!v)))
+  );
   const profiles: Record<string, ChatProfile> = {};
 
-  if (senderIds.length > 0) {
+  if (profileIds.length > 0) {
     const { data: profileRows } = await supabase
       .rpc('profiles_public')
-      .in('id', senderIds);
+      .in('id', profileIds);
 
     for (const row of (profileRows ?? []) as {
       id: string;

@@ -8,22 +8,57 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select } from '@/components/ui/select';
 import { DateTimeField } from '@/components/ui/date-time-field';
 import { Button } from '@/components/ui/button';
+import {
+  TripMapEditor,
+  type TripWaypointInput,
+  type TripWaypointKind,
+} from '@/components/trips/trip-map-editor';
 import { CATEGORY_KEYS } from '@/lib/constants/categories';
 
 type Status = 'idle' | 'loading' | 'error';
 
-export function TripForm() {
+export interface TripFormInitialValues {
+  title: string;
+  description: string;
+  category: string;
+  locationName: string;
+  lat: number | null;
+  lng: number | null;
+  waypoints: { label: string; lat: number; lng: number; kind: TripWaypointKind }[];
+  startAt: string;
+  endAt: string;
+  capacity: number | null;
+}
+
+interface TripFormProps {
+  mode?: 'create' | 'edit';
+  tripId?: string;
+  initialValues?: TripFormInitialValues;
+}
+
+export function TripForm({ mode = 'create', tripId, initialValues }: TripFormProps) {
   const t = useTranslations('trips');
   const tCategories = useTranslations('categories');
   const router = useRouter();
 
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState<string>(CATEGORY_KEYS[0]);
-  const [locationName, setLocationName] = useState('');
-  const [startAt, setStartAt] = useState<Date | null>(null);
-  const [endAt, setEndAt] = useState<Date | null>(null);
-  const [capacity, setCapacity] = useState('');
+  const [title, setTitle] = useState(initialValues?.title ?? '');
+  const [description, setDescription] = useState(initialValues?.description ?? '');
+  const [category, setCategory] = useState<string>(initialValues?.category ?? CATEGORY_KEYS[0]);
+  const [locationName, setLocationName] = useState(initialValues?.locationName ?? '');
+  const [lat, setLat] = useState<number | null>(initialValues?.lat ?? null);
+  const [lng, setLng] = useState<number | null>(initialValues?.lng ?? null);
+  const [waypoints, setWaypoints] = useState<TripWaypointInput[]>(
+    initialValues?.waypoints.map((wp) => ({ id: crypto.randomUUID(), ...wp })) ?? []
+  );
+  const [startAt, setStartAt] = useState<Date | null>(
+    initialValues ? new Date(initialValues.startAt) : null
+  );
+  const [endAt, setEndAt] = useState<Date | null>(
+    initialValues ? new Date(initialValues.endAt) : null
+  );
+  const [capacity, setCapacity] = useState(
+    initialValues?.capacity != null ? String(initialValues.capacity) : ''
+  );
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState<string | null>(null);
 
@@ -49,14 +84,20 @@ export function TripForm() {
       return;
     }
 
-    const res = await fetch('/api/trips', {
-      method: 'POST',
+    const isEdit = mode === 'edit' && tripId;
+    const res = await fetch(isEdit ? `/api/trips/${tripId}` : '/api/trips', {
+      method: isEdit ? 'PATCH' : 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         title,
         description,
         category,
         locationName,
+        lat,
+        lng,
+        waypoints: waypoints
+          .filter((wp) => wp.lat != null && wp.lng != null && wp.label.trim())
+          .map((wp) => ({ label: wp.label.trim(), lat: wp.lat, lng: wp.lng, kind: wp.kind })),
         startAt: startAt.toISOString(),
         endAt: endAt.toISOString(),
         capacity: capacity ? Number(capacity) : null,
@@ -65,12 +106,17 @@ export function TripForm() {
 
     if (!res.ok) {
       const body = await res.json().catch(() => null);
-      setError(body?.error?.message ?? t('genericError'));
+      const code = body?.error?.code;
+      setError(
+        code === 'ERR_ACCOUNT_NOT_ACTIVE'
+          ? t('accountNotActive')
+          : (body?.error?.message ?? t('genericError'))
+      );
       setStatus('error');
       return;
     }
 
-    const { id } = await res.json();
+    const id = isEdit ? tripId : (await res.json()).id;
     router.push(`/trips/${id}`);
     router.refresh();
   };
@@ -81,10 +127,10 @@ export function TripForm() {
       className="w-full max-w-[560px] rounded-xl border border-neutral-200 bg-white p-8 dark:border-neutral-800 dark:bg-neutral-900"
     >
       <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-50">
-        {t('newTitle')}
+        {mode === 'edit' ? t('editTitle') : t('newTitle')}
       </h1>
       <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-        {t('newSubtitle')}
+        {mode === 'edit' ? t('editSubtitle') : t('newSubtitle')}
       </p>
 
       <div className="mt-6 flex flex-col gap-5">
@@ -125,6 +171,18 @@ export function TripForm() {
           maxLength={160}
         />
 
+        <TripMapEditor
+          meetingPointName={locationName}
+          meetingPointLat={lat}
+          meetingPointLng={lng}
+          onMeetingPointChange={(newLat, newLng) => {
+            setLat(newLat);
+            setLng(newLng);
+          }}
+          waypoints={waypoints}
+          onWaypointsChange={setWaypoints}
+        />
+
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <DateTimeField
             label={t('startLabel')}
@@ -157,7 +215,7 @@ export function TripForm() {
         )}
 
         <Button type="submit" size="lg" isLoading={status === 'loading'}>
-          {t('submit')}
+          {mode === 'edit' ? t('saveChanges') : t('submit')}
         </Button>
       </div>
     </form>

@@ -8,6 +8,7 @@ const ERROR_STATUS: Record<string, number> = {
   ERR_JOIN_DEADLINE_PASSED: 409,
   ERR_TRIP_STARTED: 409,
   ERR_ALREADY_JOINED: 409,
+  ERR_ACCOUNT_NOT_ACTIVE: 403,
 };
 
 // See docs/api.md §3. Seat admission (confirmed vs waitlisted) is decided

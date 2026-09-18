@@ -12,6 +12,8 @@ export interface TripCardData {
   startAt: string;
   capacity: number | null;
   confirmedCount: number;
+  lat?: number | null;
+  lng?: number | null;
 }
 
 export function TripCard({ trip }: { trip: TripCardData }) {

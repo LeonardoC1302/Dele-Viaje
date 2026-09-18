@@ -1,12 +1,14 @@
 import { notFound } from 'next/navigation';
 import { getTranslations, getLocale } from 'next-intl/server';
-import { CalendarBlank, MapPin, UsersThree, ChatCircleText } from '@phosphor-icons/react/dist/ssr';
+import { CalendarBlank, MapPin, UsersThree, ChatCircleText, PencilSimple } from '@phosphor-icons/react/dist/ssr';
 import { Link } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import { JoinTripButton, type AttendeeStatus } from '@/components/trips/join-trip-button';
 import { AttendeeList, type AttendeeData } from '@/components/trips/attendee-list';
+import { ReportButton } from '@/components/reports/report-button';
+import { TripRouteMap } from '@/components/trips/trip-route-map';
 
 export default async function TripDetailPage({
   params,
@@ -23,7 +25,7 @@ export default async function TripDetailPage({
   const { data: trip } = await supabase
     .from('trips')
     .select(
-      'id, title, description, category, location_name, start_at, end_at, capacity, confirmed_count, owner_id'
+      'id, title, description, category, location_name, lat, lng, start_at, end_at, capacity, confirmed_count, owner_id'
     )
     .eq('id', id)
     .single();
@@ -37,6 +39,11 @@ export default async function TripDetailPage({
   } = await supabase.auth.getUser();
 
   const ownerQuery = supabase.rpc('profiles_public').eq('id', trip.owner_id).single();
+  const waypointsQuery = supabase
+    .from('trip_waypoints')
+    .select('label, lat, lng, kind')
+    .eq('trip_id', trip.id)
+    .order('sort', { ascending: true });
   const attendeeQuery = user
     ? supabase
         .from('attendees')
@@ -52,12 +59,14 @@ export default async function TripDetailPage({
     .eq('status', 'confirmed')
     .order('joined_at', { ascending: true });
 
-  const [ownerResult, attendeeResult, confirmedRowsResult] = await Promise.all([
+  const [ownerResult, attendeeResult, confirmedRowsResult, waypointsResult] = await Promise.all([
     ownerQuery,
     attendeeQuery,
     confirmedRowsQuery,
+    waypointsQuery,
   ]);
   const owner = ownerResult.data as { display_name: string | null } | null;
+  const waypoints = waypointsResult.data ?? [];
   const myAttendance = attendeeResult.data as { status: string } | null;
   const confirmedIds = (confirmedRowsResult.data ?? []).map(
     (row) => row.profile_id as string
@@ -119,11 +128,34 @@ export default async function TripDetailPage({
             {trip.title}
           </h1>
 
-          {owner?.display_name && (
-            <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
-              {t('detailBy', { name: owner.display_name })}
-            </p>
-          )}
+          <div className="mt-2 flex items-center justify-between gap-4">
+            {owner?.display_name && (
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                {t.rich('detailBy', {
+                  name: owner.display_name,
+                  link: (chunks) => (
+                    <Link
+                      href={`/users/${trip.owner_id}`}
+                      className="font-medium text-neutral-700 hover:underline dark:text-neutral-300"
+                    >
+                      {chunks}
+                    </Link>
+                  ),
+                })}
+              </p>
+            )}
+            {isOwner ? (
+              <Link
+                href={`/trips/${trip.id}/edit`}
+                className="flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-forest-600 dark:text-neutral-400 dark:hover:text-forest-400"
+              >
+                <PencilSimple size={16} weight="regular" strokeWidth={1.5} />
+                {t('editTrip')}
+              </Link>
+            ) : (
+              user && <ReportButton targetType="trip" targetId={trip.id} />
+            )}
+          </div>
 
           <div className="mt-6 flex flex-col gap-3 border-y border-neutral-200 py-6 dark:border-neutral-800">
             <p className="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
@@ -148,6 +180,15 @@ export default async function TripDetailPage({
             {trip.description}
           </p>
 
+          {trip.lat != null && trip.lng != null && (
+            <div className="mt-6">
+              <TripRouteMap
+                meetingPoint={{ label: trip.location_name, lat: trip.lat, lng: trip.lng }}
+                waypoints={waypoints}
+              />
+            </div>
+          )}
+
           <div className="mt-8 flex flex-col items-start gap-3">
             <JoinTripButton
               tripId={trip.id}
@@ -168,7 +209,7 @@ export default async function TripDetailPage({
             )}
           </div>
 
-          <AttendeeList attendees={attendees} />
+          <AttendeeList attendees={attendees} currentUserId={user?.id} />
         </div>
       </div>
     </main>

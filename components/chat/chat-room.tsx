@@ -3,16 +3,23 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Trash } from '@phosphor-icons/react';
+import { Link } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { ReportButton } from '@/components/reports/report-button';
+
+export type ChatEventType = 'joined' | 'left' | 'promoted';
 
 export interface ChatMessage {
   id: string;
-  senderId: string;
-  body: string;
+  senderId: string | null;
+  body: string | null;
   createdAt: string;
   deletedAt: string | null;
+  kind: 'user' | 'system';
+  eventType: ChatEventType | null;
+  actorId: string | null;
 }
 
 export interface ChatProfile {
@@ -46,6 +53,8 @@ export function ChatRoom({
   // receive RLS-protected postgres_changes events.
   const [supabase] = useState(() => createClient());
   const [messages, setMessages] = useState(initialMessages);
+  const [profileCache, setProfileCache] = useState<Record<string, ChatProfile>>({});
+  const allProfiles = { ...profiles, ...profileCache };
   const [body, setBody] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -73,10 +82,13 @@ export function ChatRoom({
           (payload) => {
             const row = payload.new as {
               id: string;
-              sender_id: string;
-              body: string;
+              sender_id: string | null;
+              body: string | null;
               created_at: string;
               deleted_at: string | null;
+              kind: 'user' | 'system';
+              event_type: ChatEventType | null;
+              actor_id: string | null;
             };
             setMessages((prev) =>
               prev.some((m) => m.id === row.id)
@@ -89,9 +101,33 @@ export function ChatRoom({
                       body: row.body,
                       createdAt: row.created_at,
                       deletedAt: row.deleted_at,
+                      kind: row.kind,
+                      eventType: row.event_type,
+                      actorId: row.actor_id,
                     },
                   ]
             );
+
+            const missingProfileId = row.sender_id ?? row.actor_id;
+            if (missingProfileId) {
+              setProfileCache((prev) => {
+                if (prev[missingProfileId]) return prev;
+                supabase
+                  .rpc('profiles_public')
+                  .eq('id', missingProfileId)
+                  .single()
+                  .then(({ data }) => {
+                    const p = data as { display_name: string | null; avatar_url: string | null } | null;
+                    if (p) {
+                      setProfileCache((cur) => ({
+                        ...cur,
+                        [missingProfileId]: { displayName: p.display_name, avatarUrl: p.avatar_url },
+                      }));
+                    }
+                  });
+                return prev;
+              });
+            }
           }
         )
         .on(
@@ -155,6 +191,9 @@ export function ChatRoom({
                 body: inserted.body,
                 createdAt: inserted.created_at,
                 deletedAt: inserted.deleted_at,
+                kind: 'user' as const,
+                eventType: null,
+                actorId: null,
               },
             ]
       );
@@ -185,23 +224,46 @@ export function ChatRoom({
         ) : (
           <ul className="flex flex-col gap-4">
             {messages.map((message) => {
-              const profile = profiles[message.senderId];
+              if (message.kind === 'system') {
+                const actor = message.actorId ? allProfiles[message.actorId] : undefined;
+                const name = actor?.displayName ?? t('someone');
+                const text =
+                  message.eventType === 'joined'
+                    ? t('eventJoined', { name })
+                    : message.eventType === 'promoted'
+                      ? t('eventPromoted', { name })
+                      : t('eventLeft', { name });
+
+                return (
+                  <li key={message.id} className="flex justify-center">
+                    <span className="text-xs text-neutral-400 dark:text-neutral-500">
+                      {text} · {timeFormatter.format(new Date(message.createdAt))}
+                    </span>
+                  </li>
+                );
+              }
+
+              const profile = message.senderId ? allProfiles[message.senderId] : undefined;
               const isOwn = message.senderId === currentUserId;
               const canDelete = isOwn || isOrganizer;
 
               return (
                 <li key={message.id} className="flex items-start gap-3">
-                  <Avatar
-                    src={profile?.avatarUrl ?? undefined}
-                    alt={profile?.displayName ?? ''}
-                    fallback={profile?.displayName ?? undefined}
-                    className="shrink-0"
-                  />
+                  <Link href={`/users/${message.senderId}`} className="shrink-0">
+                    <Avatar
+                      src={profile?.avatarUrl ?? undefined}
+                      alt={profile?.displayName ?? ''}
+                      fallback={profile?.displayName ?? undefined}
+                    />
+                  </Link>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-baseline gap-2">
-                      <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                      <Link
+                        href={`/users/${message.senderId}`}
+                        className="text-sm font-medium text-neutral-900 hover:underline dark:text-neutral-100"
+                      >
                         {profile?.displayName ?? '—'}
-                      </span>
+                      </Link>
                       <span className="text-xs text-neutral-400 dark:text-neutral-500">
                         {timeFormatter.format(new Date(message.createdAt))}
                       </span>
@@ -216,15 +278,28 @@ export function ChatRoom({
                       </p>
                     )}
                   </div>
-                  {!message.deletedAt && canDelete && (
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(message.id)}
-                      aria-label={t('deleteMessage')}
-                      className="shrink-0 text-neutral-300 hover:text-red-600 dark:text-neutral-600 dark:hover:text-red-400"
-                    >
-                      <Trash size={16} weight="regular" strokeWidth={1.5} />
-                    </button>
+                  {!message.deletedAt && (
+                    <div className="flex shrink-0 items-center gap-2">
+                      {!isOwn && (
+                        <ReportButton
+                          targetType="message"
+                          targetId={message.id}
+                          className="text-neutral-300 hover:text-red-600 dark:text-neutral-600 dark:hover:text-red-400"
+                          label=""
+                          ariaLabel={t('reportMessage')}
+                        />
+                      )}
+                      {canDelete && (
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(message.id)}
+                          aria-label={t('deleteMessage')}
+                          className="text-neutral-300 hover:text-red-600 dark:text-neutral-600 dark:hover:text-red-400"
+                        >
+                          <Trash size={16} weight="regular" strokeWidth={1.5} />
+                        </button>
+                      )}
+                    </div>
                   )}
                 </li>
               );

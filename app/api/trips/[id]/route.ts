@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createTripSchema } from '@/lib/validators/trip';
-import { geocodeLocation } from '@/lib/geocode';
 
-// See docs/api.md §3. Only `type: social` / `visibility: public` trips are
-// supported until agencies (tours) and private plans land in later phases.
-export async function POST(request: Request) {
+// See docs/api.md §3. Organizer-only edit — RLS ("trips: owner updates
+// own") is the real enforcement; the owner_id check here just gives a
+// clean 403 instead of a generic RLS-violation error.
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
   const supabase = await createClient();
   const {
     data: { user },
@@ -15,6 +19,26 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: { code: 'ERR_UNAUTHENTICATED', message: 'Sign in required.' } },
       { status: 401 }
+    );
+  }
+
+  const { data: trip } = await supabase
+    .from('trips')
+    .select('id, owner_id')
+    .eq('id', id)
+    .single();
+
+  if (!trip) {
+    return NextResponse.json(
+      { error: { code: 'ERR_NOT_FOUND', message: 'Trip not found.' } },
+      { status: 404 }
+    );
+  }
+
+  if (trip.owner_id !== user.id) {
+    return NextResponse.json(
+      { error: { code: 'ERR_FORBIDDEN', message: 'Only the organizer can edit this trip.' } },
+      { status: 403 }
     );
   }
 
@@ -34,57 +58,37 @@ export async function POST(request: Request) {
     );
   }
 
-  // The client-side map editor (components/trips/trip-map-editor.tsx)
-  // usually already supplies lat/lng via /api/geocode + optional manual
-  // drag/click adjustment. Only fall back to a server-side geocode if it
-  // didn't — e.g. the user skipped the picker entirely. Best-effort either
-  // way: a trip is still valid with just its free-text location if this
-  // can't resolve it, it just won't get a pin on the feed's map view.
-  let lat = validated.data.lat ?? null;
-  let lng = validated.data.lng ?? null;
-  if (lat == null || lng == null) {
-    const geocoded = await geocodeLocation(validated.data.locationName);
-    lat = geocoded?.lat ?? null;
-    lng = geocoded?.lng ?? null;
-  }
-
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('trips')
-    .insert({
-      owner_id: user.id,
-      type: 'social',
-      visibility: 'public',
-      status: 'published',
+    .update({
       title: validated.data.title,
       description: validated.data.description,
       category: validated.data.category,
       location_name: validated.data.locationName,
-      lat,
-      lng,
+      lat: validated.data.lat ?? null,
+      lng: validated.data.lng ?? null,
       start_at: validated.data.startAt,
       end_at: validated.data.endAt,
       capacity: validated.data.capacity ?? null,
     })
-    .select('id')
-    .single();
+    .eq('id', id);
 
   if (error) {
-    if (error.code === '42501') {
-      return NextResponse.json(
-        { error: { code: 'ERR_ACCOUNT_NOT_ACTIVE', message: error.message } },
-        { status: 403 }
-      );
-    }
     return NextResponse.json(
-      { error: { code: 'ERR_CREATE_FAILED', message: error.message } },
+      { error: { code: 'ERR_UPDATE_FAILED', message: error.message } },
       { status: 500 }
     );
   }
 
+  // Simplest correct way to reconcile an ordered list on edit: replace it
+  // wholesale rather than diffing. Trip waypoint counts are small (max 20)
+  // so this is cheap, and it's organizer-only so there's no concurrent-
+  // editor race to worry about.
+  await supabase.from('trip_waypoints').delete().eq('trip_id', id);
   if (validated.data.waypoints && validated.data.waypoints.length > 0) {
     const { error: waypointsError } = await supabase.from('trip_waypoints').insert(
       validated.data.waypoints.map((wp, index) => ({
-        trip_id: data.id,
+        trip_id: id,
         label: wp.label,
         lat: wp.lat,
         lng: wp.lng,
@@ -97,5 +101,5 @@ export async function POST(request: Request) {
     }
   }
 
-  return NextResponse.json({ id: data.id }, { status: 201 });
+  return NextResponse.json({ id });
 }
