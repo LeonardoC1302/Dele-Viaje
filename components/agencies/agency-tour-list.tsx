@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Plus, PencilSimple } from '@phosphor-icons/react';
-import { Link } from '@/i18n/navigation';
+import { Plus, PencilSimple, BookmarkSimple } from '@phosphor-icons/react';
+import { Link, useRouter } from '@/i18n/navigation';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DeleteTripButton } from '@/components/trips/delete-trip-button';
@@ -30,8 +30,11 @@ export function AgencyTourList({
 }) {
   const t = useTranslations('agencies');
   const locale = useLocale();
+  const router = useRouter();
   const [tours, setTours] = useState(initialTours);
   const [publishingId, setPublishingId] = useState<string | null>(null);
+  const [savingTemplateId, setSavingTemplateId] = useState<string | null>(null);
+  const [savedTemplateIds, setSavedTemplateIds] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
 
   const currency = new Intl.NumberFormat(locale, {
@@ -54,6 +57,22 @@ export function AgencyTourList({
     }
 
     setTours((prev) => prev.map((tour) => (tour.id === tripId ? { ...tour, status: 'published' } : tour)));
+  };
+
+  const saveAsTemplate = async (tripId: string) => {
+    setSavingTemplateId(tripId);
+    setError(null);
+    const res = await fetch(`/api/agencies/${agencyId}/tours/${tripId}/save-as-template`, { method: 'POST' });
+    setSavingTemplateId(null);
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      setError(extractErrorMessage(body, t('templateSaveError')));
+      return;
+    }
+
+    setSavedTemplateIds((prev) => new Set(prev).add(tripId));
+    router.refresh();
   };
 
   return (
@@ -99,6 +118,21 @@ export function AgencyTourList({
                 )}
                 {canPublish && (
                   <>
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      isLoading={savingTemplateId === tour.id}
+                      disabled={savedTemplateIds.has(tour.id)}
+                      onClick={() => saveAsTemplate(tour.id)}
+                      aria-label={t('templateSaveFromTour')}
+                      title={t('templateSaveFromTour')}
+                    >
+                      <BookmarkSimple
+                        size={14}
+                        weight={savedTemplateIds.has(tour.id) ? 'fill' : 'regular'}
+                        strokeWidth={1.5}
+                      />
+                    </Button>
                     <Link
                       href={`/agencies/${agencyId}/tours/${tour.id}/edit`}
                       aria-label={t('tourEdit')}

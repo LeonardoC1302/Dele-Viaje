@@ -2,9 +2,26 @@
 
 Single developer, free stack, PWA. Estimates are solo-dev and optimistic; each phase has a **definition of done** used as the gate before moving on.
 
+> **Status as of 2026-09-20 (see `PROJECT_STATUS.md` for the full
+> phase-by-phase build log this summary is drawn from):** Phases 0–3 are
+> all **DONE**, with a small number of explicit, user-decided scope cuts
+> (shared docs originally deferred — since built as `trip_documents`,
+> migration `0029`; agency document/verification upload still deferred).
+> Phase 4 (real payment capture) is untouched, but its **v1.5 manual
+> stage — SINPE Móvil evidence upload + agency review — is done**
+> (migration `0026`), which covers the same ground the v1.5 bullet below
+> asks for. Several follow-up features beyond the original phase scope
+> also shipped: agencies/tours/reviews/Q&A/check-in (Phase 2 work,
+> migrations `0022`–`0025`), tour templates, multi-date tours, agency
+> rating rollups, feed price/date filters, and a master admin panel.
+> Notification **delivery channels** (Web Push, Resend email, T-24h/T-2h
+> reminders) remain genuinely not started — the in-app inbox pipeline
+> they'd ride on already exists. See `docs/frontend-migration-reference.md`
+> for the full current feature/schema/route inventory.
+
 ---
 
-## Phase 0 — Foundations ⚙️ *(1–2 weeks)*
+## Phase 0 — Foundations ⚙️ *(1–2 weeks)* — **DONE**
 **Goals:** repo conventions, running app shell, Supabase wired, i18n + PWA + design system locked.
 
 - [ ] Read bundled Next 16 docs (`node_modules/next/dist/docs`); record conventions in `docs/architecture.md` (caching, route handlers, proxy, PWA).
@@ -20,51 +37,52 @@ Single developer, free stack, PWA. Estimates are solo-dev and optimistic; each p
 
 ---
 
-## Phase 1 — Social Core 🌲 *(3–4 weeks)*
+## Phase 1 — Social Core 🌲 *(3–4 weeks)* — **DONE** (core features; notification *delivery channels* deferred, user decision 2026-09-17)
 **Goals:** public social trips work end-to-end (create → discover → join → chat). The product is usable by real hikers.
 
-- [ ] Migrations `0002_trips` + `0003` attendees/waitlist triggers; seat/waitlist integrity.
-- [ ] Trip CRUD (draft→publish), recurrence (weekly), itinerary blocks.
-- [ ] Feed (Upcoming / Near me / My trips) + filters + MapLibre map view + Nominatim geocode.
-- [ ] RSVP, leave, auto-waitlist promotion, seat churn rules.
-- [ ] Chat (Realtime) + system events + moderation basics + WhatsApp group link.
-- [ ] Profiles (public/partial), follow, badges seed.
-- [ ] Notifications pipeline: DB rows → in-app inbox + Web Push (VAPID) + Resend email; reminders T-24h/T-2h.
-- [ ] Super-admin basics: report queue, ban/suspend users, approve nothing yet.
-- **Definition of done:** two seeded users create and join trips on live feed; chat realtime works; reminders fire; e2e Flow A green (create→publish→RSVP→chat).
+- [x] Migrations `0003` (trips) + `0004`/`0005`/`0006` attendees/waitlist triggers; seat/waitlist integrity.
+- [x] Trip CRUD — **create publishes immediately, no draft→publish flow was built for social trips** (tours are the exception — see Phase 2, tours *do* have draft→publish). No recurrence (weekly pattern) was ever built — `trips.recurrence_id` is schema-only, unused. Itinerary blocks: built (migration `0016` schema, UI landed later alongside Phase 3, with icon fallback added in `0021`).
+- [x] Feed (category tabs / Near me / Verified) + price/date filters + MapLibre map view (clustered) + Nominatim geocode. "My trips" is its own dashboard (`/my-trips`), not a feed tab.
+- [x] RSVP (`join_trip`), leave (`leave_trip`), auto-waitlist promotion, seat churn rules, waitlist position visibility (migration `0031`).
+- [x] Chat (Realtime) + system events (migration `0013`) + message editing (migration `0027`) + moderation basics (soft delete, report button). **Not built**: WhatsApp group link / `chat_settings` (no schema at all for mute/announcements-only/link).
+- [x] Profiles (public via `profiles_public()`, partial visibility), follow (migration `0011`), badges seed (migration `0012`, manual grant only — no auto-rule badges).
+- [ ] Notifications pipeline: DB rows → **in-app inbox only, DONE**. Web Push (VAPID), Resend email, and T-24h/T-2h reminders are **explicitly deferred** (user decision 2026-09-17), not outstanding work — they need external accounts/keys before they're worth wiring up.
+- [x] Super-admin basics: report queue (migration `0009`), ban/suspend enforcement (migration `0010`). Agency approval came with Phase 2.
+- **Definition of done:** met for everything except live reminders (deferred, see above).
 
 ---
 
-## Phase 2 — Marketplace (Agencies) 🏷️ *(3–4 weeks)*
+## Phase 2 — Marketplace (Agencies) 🏷️ *(3–4 weeks)* — **DONE except agency document upload** (out of scope by explicit user decision, 2026-09-20)
 **Goals:** verified tour listings with reservations, reviews with QR check-in, reputation.
 
-- [ ] Migrations `0004 needs` `0005` agencies, members, reviews, logo/cover storage.
-- [ ] Agency application + super-admin approval pipeline.
-- [ ] Agency Panel: publish tours (price CRC, capacity, min-participants, itinerary blocks), manage reservations, QR check-in, manual attendance.
-- [ ] Feed: `Verified` tab + verified badge on cards.
-- [ ] Reviews: gated to attended + completed; agency responses; admin hide.
-- [ ] Reputation scores + badges (`verified_agency`, `fast_responder`, `host_10`, `great_host`, `good_participant`).
-- [ ] Super-admin: metrics dashboard, approve/reject/suspend agencies, moderate tours.
-- **Definition of done:** agency creates tour → approved → reservation → QR check-in → review; e2e Flow B green.
+- [x] Migrations `0022`–`0025`: agencies, `agency_members`, tours (`trips.type='tour'`), tour Q&A, reviews, check-in.
+- [x] Agency application (`apply_for_agency()`) + super-admin approval pipeline (`set_agency_status()`, `/admin/agencies`).
+- [x] Agency Panel (`/agencies/[id]/panel`): publish tours (price CRC, capacity, min-participants, itinerary blocks, multi-date via `tour_group_id` — migration `0032`), manage staff, **manual check-in** (roster tap-to-toggle — **not** QR/camera scanning, scoped down deliberately, see below).
+- [x] Feed: `Verified` tab (checks agency approval at read time, not just publish time) + "Tour" badge/price on cards.
+- [x] Reviews: gated on tour `start_at < now()` + reviewer `attendance='attended'` — **deviates from the original "attended + completed" gate below**, because `trips.status` never actually reaches `'completed'` anywhere in the app (no cron, no manual transition), so that gate would have been permanently unreachable. Agency responses: one per review, column-grant restricted. Admin can delete (moderation) via the shared delete policy; no separate "hide" state was built.
+- [x] Reputation: badges unchanged from Phase 1 (still manual-grant only, including `verified_agency` — nothing auto-grants it on approval). Agency aggregate star rating: computed live by averaging `reviews.rating` across the agency's tours (no stored score column).
+- [x] Super-admin: agency approve/reject/suspend, admin dashboard (`/admin`) with live counts, user ban/suspend/role-grant (`/admin/users`). **Not built**: a metrics dashboard (DAU/WAU/conversion aggregates) — the admin dashboard only shows open-report/pending-agency/user counts, not usage analytics.
+- **Definition of done:** met, with check-in scoped to manual (not QR) by deliberate decision — see `PROJECT_STATUS.md`'s Phase 2 section for the reasoning (QR's actual value over a tap-to-toggle roster didn't justify a camera-scanning dependency at this scale).
+- **Built beyond original Phase 2 scope**: tour templates (migration `0028`), exclusive content for paid attendees (migration `0030`), the SINPE Móvil manual payment flow (migration `0026`, see Phase 4 below).
 
 ---
 
-## Phase 3 — Private Plans & Workspace 🔒 *(2–3 weeks)*
+## Phase 3 — Private Plans & Workspace 🔒 *(2–3 weeks)* — **DONE except shared docs originally, now also DONE** (shared docs were deferred by decision, then built anyway as `trip_documents`, migration `0029`, 2026-09-20)
 **Goals:** invite-only collaborative plans with all utilities. (Phases 2↔3 are interchangeable; data model is independent.)
 
-- [ ] Migrations: `visibility` on trips, `plan_invites`, `packing_items`, `expenses`, `polls/poll_votes`, `trip_docs`.
-- [ ] Visibility model + RLS (private invisible everywhere; member-only reads).
-- [ ] Invites: direct (username/email) + expiring links; revoke; join flow idempotent.
-- [ ] Workspace UI: packing list, prerequisites (assigned), budget + equal split calc, polls, shared docs, collaborative itinerary; module lock.
-- [ ] Permission layer (owner/co-host structure vs member content) via RLS helpers.
-- [ ] Notifications for plan events; owner transfer / archive on empty.
-- **Definition of done:** host creates private plan → invites 3 people via link → collaborative checklist/poll/budget → private project invisible to non-members; e2e Flow C green.
+- [x] Migrations: `0016` (visibility on trips, `plan_invites`, `packing_items`, `expenses`, `polls`/`poll_votes`, `trip_docs` schema-only), `0017` (owner auto-membership fix), `0019` (direct invites, leave/transfer/auto-archive), `0020` (RLS recursion fix — required before any non-owner member could read a plan at all), `0029` (real document uploads via `trip_documents`, superseding the unused `trip_docs` table from `0016`).
+- [x] Visibility model + RLS (private invisible everywhere via `notFound()`-style handling; member-only reads, `is_member(id)` branch on the `trips` select policy).
+- [x] Invites: direct (**email**, not username — `profiles` has no username column) + expiring links; revoke (soft, `revoked_at`); join flow idempotent (`accept_plan_invite()`).
+- [x] Workspace UI: packing list, prerequisites (an item with `assigned_to` set — same table, not a separate concept), budget + equal split calc (computed client-side, never stored), polls, **shared docs (done — see above)**, collaborative itinerary. **Not built**: per-module owner lock (packing/budget/itinerary aren't individually lockable — always all-members-can-contribute).
+- [x] Permission layer via RLS helpers (`is_member`/`is_host_team`, not separate owner/co-host structure — there's no co-host concept anywhere in this app, only owner vs. member).
+- [ ] Notifications for plan events — only `plan_direct_invite` exists; joined/poll-added/expense-added/etc. were never added to the `notifications.type` check constraint. Owner transfer (`transfer_plan_ownership()`) / auto-archive-on-empty (`archive_empty_private_plan()` trigger): both done.
+- **Definition of done:** met — verified end-to-end including the invite → join → workspace flow; the RLS-recursion bug (migration `0020`) was found and fixed specifically while testing this flow with a real non-owner member.
 
 ---
 
 ## Phase 4 — Monetization 💰 *(5–7 weeks, starts after traction validation)*
-- **v1.5 (manual, ~1 week):** `payment_status` on attendees; super-admin/agency marking paid; "no refund/no-show" messaging in UI; simple attendance ledger export.
-- **v2 (Stripe):**
+- **v1.5 (manual) — DONE** (migration `0026`, 2026-09-20, built as "SINPE Móvil" specifically rather than a generic manual-mark-paid flow): `attendees.payment_status`/`payment_evidence_path`; buyer uploads bank-transfer screenshot evidence to a private Storage bucket, host team confirms/rejects via `confirm_payment()`/`reject_payment()`. "No refund/no-show" messaging in UI and an attendance ledger export were **not** built — only the pay/evidence/confirm loop itself.
+- **v2 (Stripe) — untouched, still fully speculative:** researched only (Google Pay/Apple Pay feasibility discussed 2026-09-20 — blocked on no major processor supporting Costa Rica as a merchant country yet; **Tilopay**/**ONVO Pay** named as CR-specific gateways worth evaluating instead of Stripe Atlas if/when this is picked up).
   - [ ] Verify Stripe Atlas (US LLC) + Connect Global Payout CR availability in production (re-verify at build time — feature shipped Feb 2026).
   - [ ] Connect onboarding for agencies (KYC) → payouts to CR bank accounts.
   - [ ] Checkout Sessions for tour booking; webhooks; refund flow (≥48h free window), auto-cancel refunds; commission (10–15%) as application fee.

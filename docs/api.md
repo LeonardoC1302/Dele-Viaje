@@ -4,6 +4,22 @@
 
 Auth: session from cookies (Supabase SSR client). Auth guard inside each handler; RLS is the second layer.
 
+> **Status note (2026-09-20):** this document describes the *original
+> target* API surface. A large amount of the app's actual write traffic
+> ended up going through `SECURITY DEFINER` Postgres RPCs
+> (`supabase.rpc(...)`) called directly from Server Components/Actions or
+> thin Route Handler wrappers, rather than the fuller REST-shaped surface
+> sketched below — many routes listed here (per-module plan endpoints,
+> `/checkin`, `/waitlist`, `/push/*`, `/admin/metrics`, `/duplicate`,
+> `/cancel`, `/cohosts`, chat message PATCH/DELETE as its own route, etc.)
+> were **never built as separate endpoints**; the underlying action still
+> exists, just via direct Supabase-client table writes (RLS-gated) or an
+> RPC call. See `docs/frontend-migration-reference.md` §3.2 for the
+> actual current `app/api/**` route list with methods/purpose/auth, and
+> §2.8 for the RPC catalog. The sections below are kept for the
+> *conceptual* shape (resource grouping, error convention) but should not
+> be read as "this route exists" without cross-checking that doc.
+
 ---
 
 ## 1. Auth / Session
@@ -117,3 +133,41 @@ Handled by Supabase Auth + Next SSR cookie helpers, plus:
 
 ## Rate Limits (MVP, in-process)
 - invite create: 20/day/user · chat send: 1/s soft · review: 1 per trip · checkin: 5/min · join/leave churn: 20/day/user.
+
+**Status note**: none of the rate limits above were actually implemented
+in code — there's no in-process or DB-level rate limiting on any route.
+This section describes the original target only.
+
+---
+
+## Addendum: routes and RPCs built beyond the original sketch (2026-09-20)
+
+Not in the sections above because they didn't exist when this doc was
+first written. Full detail (methods, purpose, auth) is in
+`docs/frontend-migration-reference.md` §3.2 (routes) and §2.8/§2 (RPCs);
+this is just a pointer so this file isn't silently missing them:
+
+- **Plan membership**: `POST /api/trips/[id]/leave-plan`,
+  `POST /api/trips/[id]/transfer-owner`,
+  `POST /api/trips/[id]/invites/direct`, `POST /api/invites/accept` —
+  wrappers around `leave_plan()`, `transfer_plan_ownership()`,
+  `create_direct_plan_invite()`, `accept_plan_invite()`.
+- **Tour templates**: `GET/POST /api/agencies/[id]/templates`,
+  `GET/PATCH/DELETE /api/agencies/[id]/templates/[templateId]`,
+  `POST /api/agencies/[id]/tours/[tripId]/save-as-template`.
+- **Tour publish**: `POST /api/agencies/[id]/tours/[tripId]/publish`
+  (draft → published, gated on agency approval).
+- **Payments (SINPE)**: no dedicated Route Handler at all — the buyer/
+  host-team payment flow (`submit_payment_evidence()`,
+  `confirm_payment()`, `reject_payment()`) is called directly as
+  Supabase RPCs from Client Components
+  (`components/agencies/tour-payment.tsx`,
+  `tour-checkin.tsx`), plus direct Storage upload/signed-URL calls for
+  the evidence screenshot.
+- **Check-in, waitlist position, tour Q&A/reviews, itinerary, packing/
+  expenses/polls, trip documents**: same pattern — no dedicated Route
+  Handler, direct Supabase-client table writes (RLS-gated) or RPC calls
+  (`get_my_waitlist_position()`, etc.) from the relevant component.
+- **Geocoding/routing proxies**: `GET /api/geocode` (Nominatim),
+  `GET /api/directions` (OSRM) — both session-gated proxies, not in the
+  original sketch's "Files & Media" or other sections at all.

@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import { TripCard, type TripCardData } from '@/components/trips/trip-card';
+import { Stars } from '@/components/agencies/tour-reviews';
 
 export default async function AgencyProfilePage({
   params,
@@ -49,6 +50,21 @@ export default async function AgencyProfilePage({
   ]);
 
   const isStaff = !!staffResult.data;
+
+  // Two queries rather than an embedded-resource filter (reviews!inner
+  // joined through trips) — same reasoning as My Trips/Verified feed tab
+  // elsewhere in this codebase: simpler, no dependency on PostgREST
+  // embedded-filter syntax. All of an agency's tours (not just currently
+  // published ones) count toward its rating — a suspended/past tour's
+  // reviews shouldn't quietly vanish from the average.
+  const { data: agencyTourIds } = await supabase.from('trips').select('id').eq('agency_id', id).eq('type', 'tour');
+  const tourIds = (agencyTourIds ?? []).map((t) => t.id);
+  const { data: ratingRows } =
+    tourIds.length > 0 ? await supabase.from('reviews').select('rating').in('trip_id', tourIds) : { data: [] };
+  const ratingCount = ratingRows?.length ?? 0;
+  const ratingSum = (ratingRows ?? []).reduce((sum: number, r: { rating: number }) => sum + r.rating, 0);
+  const ratingAverage = ratingCount > 0 ? ratingSum / ratingCount : 0;
+
   const tours: TripCardData[] = (toursResult.data ?? []).map((trip) => ({
     id: trip.id,
     title: trip.title,
@@ -85,11 +101,22 @@ export default async function AgencyProfilePage({
             )}
           </div>
 
-          {agency.status === 'approved' && (
-            <Badge variant="secondary" className="mt-2">
-              {t('verifiedBadge')}
-            </Badge>
-          )}
+          <div className="mt-2 flex flex-wrap items-center gap-3">
+            {agency.status === 'approved' && (
+              <Badge variant="secondary">{t('verifiedBadge')}</Badge>
+            )}
+            {ratingCount > 0 && (
+              <div className="flex items-center gap-1.5 text-sm text-neutral-600 dark:text-neutral-400">
+                <Stars value={ratingAverage} size={16} />
+                <span>
+                  {t('agencyRatingAverage', {
+                    average: ratingAverage.toFixed(1),
+                    count: ratingCount,
+                  })}
+                </span>
+              </div>
+            )}
+          </div>
 
           {agency.location_name && (
             <p className="mt-4 text-sm text-neutral-600 dark:text-neutral-400">{agency.location_name}</p>

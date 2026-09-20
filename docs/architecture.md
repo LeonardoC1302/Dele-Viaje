@@ -3,6 +3,19 @@
 Project id: `dele-viaje`
 Stack baseline: Next.js 16 (App Router) + TypeScript + Tailwind v4 + Supabase + MapLibre + PWA.
 
+> **Status note (2026-09-20):** the sections below describe the
+> *original* architecture plan. The stack decisions (Next.js/Supabase/
+> next-intl/MapLibre/Tailwind/Radix/Vitest/GitHub Actions) all held, but
+> the **repo layout (§5)** and the **RLS helper list (§4)** have both
+> drifted from what's actually in the codebase — see the corrections
+> inline below, and `docs/frontend-migration-reference.md` for the full
+> current route map, component inventory, and RLS helper catalog. Also
+> materially different from plan: GSAP (`ScrollTrigger`) is used only for
+> the homepage hero; Motion (`motion/react`) handles simple scroll-reveal
+> elsewhere — not mentioned in the original plan at all. Phosphor icons
+> (`strokeWidth 1.5`) and `class-variance-authority` for `Button` variants
+> are the actual icon/variant system, also not in the original plan.
+
 > **IMPORTANT — this repo runs a modified Next.js (16.3.5) with breaking changes.** Every implementation task MUST read the bundled docs before writing code: `node_modules/next/dist/docs/` (App Router: `01-app/…`, incl. `15-route-handlers`, `16-proxy`, caching model). Do NOT apply out-of-training-data conventions blindly.
 
 ---
@@ -82,6 +95,20 @@ Shared SQL helpers used by policies:
 - `is_agency_staff(agency_id)`.
 - `can_review(trip_id)` — checked-in/attended + trip completed.
 
+**As actually built**: every one of the helpers above is `security
+definer` (required fix — plain `stable sql` helpers caused a real
+production RLS-recursion crash, `54001 stack depth limit exceeded`, the
+moment a non-owner member read a private plan; see
+`docs/frontend-migration-reference.md` §2.8 for why and the fix). There
+is no co-host concept in the actual schema — `is_organizer` is strictly
+`owner_id = auth.uid()`. Additional helpers not listed above:
+`is_agency_admin(agency_id)`, `is_trip_participant(trip_id)` (the actual
+chat-read gate), `get_my_waitlist_position(trip_id)`. `can_review()` was
+never built as a standalone function — its logic is inlined into the
+`reviews` insert policy, and it checks `attendance='attended'` +
+`start_at < now()`, not "checked-in + completed" (`trips.status` never
+reaches `'completed'` anywhere in the app).
+
 ---
 
 ## 5. Modules / Repo Layout (proposed)
@@ -113,6 +140,44 @@ tests/                  # vitest + playwright
 docs/                   # this documentation set
 ```
 
+**As actually built**, the real top-level `app/` layout is:
+
+```
+app/
+  [locale]/
+    page.tsx                # homepage (marketing), own Navbar
+    (auth)/                 # login, signup, signup/check-email, onboarding
+    (main)/                 # authenticated shell: shared header + nav + notification bell
+      feed/, my-trips/, users/[id]/, invite/[token]/
+      trips/new/, trips/[id]/, trips/[id]/edit/, trips/[id]/chat/
+      agencies/new/, agencies/[id]/, agencies/[id]/edit/, agencies/[id]/panel/,
+        agencies/[id]/tours/new/, agencies/[id]/tours/[tripId]/edit/,
+        agencies/[id]/templates/new/, agencies/[id]/templates/[templateId]/edit/
+      admin/, admin/reports/, admin/agencies/, admin/users/
+  api/
+    onboarding/, auth/callback/, auth/signout/, follows/[profileId]/,
+    geocode/, directions/, trips/, trips/[id]/, trips/[id]/join/,
+    trips/[id]/leave/, trips/[id]/leave-plan/, trips/[id]/transfer-owner/,
+    trips/[id]/invites/, trips/[id]/invites/direct/, invites/[inviteId]/,
+    invites/accept/, reports/, agencies/, agencies/[id]/,
+    agencies/[id]/members/, agencies/[id]/tours/,
+    agencies/[id]/tours/[tripId]/publish/,
+    agencies/[id]/tours/[tripId]/save-as-template/,
+    agencies/[id]/templates/, agencies/[id]/templates/[templateId]/,
+    admin/agencies/[id]/
+```
+
+No `(plans)`/`(panel)` route groups — plan workspace and agency panel
+both live inside `(main)` as ordinary nested routes
+(`trips/[id]` branches internally on `visibility`, `agencies/[id]/panel`
+is its own path). No `u/[username]/` — public profile is `users/[id]`
+(profiles have no username column). Components are grouped as
+`components/{ui,landing,auth,trips,plans,agencies,admin,chat,
+notifications,reports,profile,layout,pwa}/` — `plans` (private-plan
+workspace) and `reports` (moderation report button) weren't anticipated
+in the original sketch. See `docs/frontend-migration-reference.md` §3–§4
+for the complete, current route map and component inventory.
+
 ---
 
 ## 6. Key Implementation Notes (per bundled Next docs)
@@ -143,6 +208,26 @@ docs/                   # this documentation set
 - Downsizing: create a web-ready cover variant (max 1600px, optimized JPEG/AVIF).
 - Public read via storage public bucket with RLS on metadata only (paths are non-guessable UUIDs).
 - Private docs are accessed via signed URLs with short TTL; RLS protects metadata/list.
+
+**As actually built**: only two private Storage buckets exist, neither
+named as planned above, and no `covers`/`avatars` bucket at all (no
+image-upload feature for trip covers or avatars was ever built — those
+fields exist on `trips`/`profiles` but nothing writes to them via
+Storage). No EXIF/GPS stripping exists anywhere (no image upload =
+nothing to strip). The two real buckets:
+- **`payment-evidence`** (migration `0026`, private) — path
+  `{attendeeId}/{filename}`; buyer's SINPE payment screenshot. RLS on
+  `storage.objects` keyed off the attendee row's `profile_id`/trip
+  host-team membership (see `docs/frontend-migration-reference.md`
+  §2.5).
+- **`trip-documents`** (migration `0029`, private) — path
+  `{tripId}/{filename}`; host-team-uploaded plan documents. Same
+  path-segment RLS pattern.
+
+Both are read via short-TTL signed URLs generated client-side
+(`supabase.storage.createSignedUrl()`), matching the "private docs via
+signed URL" principle above — just via two purpose-specific buckets
+rather than a generic one.
 
 ---
 

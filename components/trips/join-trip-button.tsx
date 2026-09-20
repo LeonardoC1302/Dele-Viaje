@@ -22,6 +22,7 @@ interface JoinTripButtonProps {
   isOwner: boolean;
   isFull: boolean;
   hasStarted: boolean;
+  waitlistPosition?: number | null;
 }
 
 export function JoinTripButton({
@@ -31,6 +32,7 @@ export function JoinTripButton({
   isOwner,
   isFull,
   hasStarted,
+  waitlistPosition,
 }: JoinTripButtonProps) {
   const t = useTranslations('trips');
   const router = useRouter();
@@ -112,7 +114,11 @@ export function JoinTripButton({
                 : 'text-sm font-medium text-neutral-600 dark:text-neutral-400'
             }
           >
-            {status === 'confirmed' ? t('youAreGoing') : t('youAreWaitlisted')}
+            {status === 'confirmed'
+              ? t('youAreGoing')
+              : waitlistPosition
+                ? t('youAreWaitlistedAt', { position: waitlistPosition })
+                : t('youAreWaitlisted')}
           </p>
           {error && (
             <p className="text-sm text-red-600 dark:text-red-400">{error}</p>

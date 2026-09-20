@@ -56,3 +56,28 @@ export async function saveTripLinks(
     console.error('Failed to save trip links:', error);
   }
 }
+
+// Upserts or clears a tour's exclusive-content row depending on whether
+// the field was left blank. A separate helper (not folded into the trips
+// insert/update itself) since it targets a different table — see
+// migration 0030 for why exclusive_content isn't a trips column.
+export async function saveTourExclusiveContent(
+  supabase: SupabaseServerClient,
+  tripId: string,
+  content: string | undefined
+) {
+  if (content && content.trim()) {
+    const { error } = await supabase
+      .from('tour_exclusive_content')
+      .upsert({ trip_id: tripId, content: content.trim() }, { onConflict: 'trip_id' });
+    if (error) {
+      console.error('Failed to save tour exclusive content:', error);
+    }
+    return;
+  }
+
+  const { error } = await supabase.from('tour_exclusive_content').delete().eq('trip_id', tripId);
+  if (error) {
+    console.error('Failed to clear tour exclusive content:', error);
+  }
+}

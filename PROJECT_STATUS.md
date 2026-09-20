@@ -6,11 +6,20 @@ Source of truth for *intent* is still `docs/PRD.md`, `docs/architecture.md`,
 *what's real right now* versus what those docs describe as the target.
 Supersedes the old `PHASE0_STATUS.md` (deleted, this file replaces it).
 
-Last updated: 2026-09-20 (responsive header — hamburger menu below `lg`,
-no migration needed; form validation errors now show field-level
-detail instead of "Invalid ... data", no migration needed; SINPE Móvil
-manual payment flow, migration 0026, first Storage bucket in this
-project; chat message editing,
+Last updated: 2026-09-20 (**waitlist visibility, multi-date tours,
+agency rating rollup, feed price/date filters, itinerary UX — migrations
+0031-0032; ⚠️ migration 0032 adds `trips.tour_group_id`, now selected on
+every trip detail page load, so `/trips/[id]` 404s for every trip,
+private plans included, until it's pushed — confirmed by browser-testing
+against the live dev DB just now, this is more disruptive than the usual
+"feature just doesn't exist yet" and needs `npx supabase db push` before
+anyone can open a trip page again**; tour templates — migration 0028; private-trip
+document uploads — migration 0029, second Storage bucket; tour
+exclusive-content-for-paid-attendees — migration 0030; responsive header
+— hamburger menu below `lg`, no migration needed; form validation errors
+now show field-level detail instead of "Invalid ... data", no migration
+needed; SINPE Móvil manual payment flow, migration 0026, first Storage
+bucket in this project; chat message editing,
 migration 0027; feed "Near me" tab; real map clustering; Phase 2 done
 except document upload — agencies, tours incl. edit/delete, admin
 approval, tour Q&A, reviews + agency responses, manual check-in, feed
@@ -21,7 +30,7 @@ Trips; rich-text/custom-fields/linked-places trip customization;
 **critical RLS-recursion fix, migration 0020 — not yet pushed, blocks
 non-owners from reading private plans**; markdown editor write/preview
 tabs; custom time picker; itinerary icon fallback, migration 0021 — also
-not yet pushed; **migrations 0020-0027 all still need
+not yet pushed; **migrations 0020-0032 all still need
 `npx supabase db push`**).
 
 ---
@@ -1135,6 +1144,124 @@ unchanged, just wrapped in `hidden lg:flex`.
   adding `lg:hidden` to `PopoverContent` itself, so trigger and content
   visibility are both driven by the same breakpoint instead of only one
   of them.
+
+## Tour templates, private-trip documents, paid-attendee exclusive content: DONE
+
+Three follow-up requests (2026-09-20), each its own migration:
+
+- **Tour templates** (migration `0028`, `tour_templates` table). An agency
+  saves a tour's content (everything except dates/booking state — title,
+  description, map, custom fields, links, capacity, price) as a reusable
+  template, either from scratch (`/agencies/[id]/templates/new`) or from
+  an existing tour ("save as template" button in `AgencyTourList`, which
+  copies the trip's current fields server-side). "Use" on a template
+  (`AgencyTemplateList`) opens `tours/new?template=<id>`, which prefills
+  `TourForm` via a new `templateValues` prop — everything except
+  start/end, which always start blank since the whole point is a new
+  schedule. RLS is staff-or-admin only (`is_agency_staff`/`is_admin`),
+  same shape as the rest of an agency's internal tooling — no public
+  read branch, unlike `agencies`/published tours.
+- **Private-trip document uploads** (migration `0029`, `trip_documents`
+  table + second Storage bucket `trip-documents`, path
+  `{tripId}/{filename}`, same pattern as `payment-evidence` from `0026`).
+  Host team uploads (reservation confirmations, plane tickets, etc.),
+  any confirmed member can view/download via a signed URL,
+  uploader-or-host-team can delete. `components/plans/trip-documents.tsx`
+  is mounted only in the private-plan branch of the trip detail page —
+  built generically at the `trips` level (not gated on
+  `visibility='private'` in the database) since membership works
+  identically for a private plan and a public social trip, but nothing
+  currently surfaces it outside private plans.
+- **Exclusive content for paid tour attendees** (migration `0030`,
+  `tour_exclusive_content` table, one row per tour). WhatsApp group
+  links, meeting-point details, anything an agency wants to hold back
+  until payment clears. **Deliberately its own table, not a
+  `trips.exclusive_content` column** — the existing "trips: read
+  published public..." policy lets anyone read a published public tour's
+  *entire row*, and Postgres RLS has no column-level granularity, so a
+  plain column would leak to every visitor regardless of payment status.
+  A separate table gets a genuinely row-conditional SELECT policy
+  (`is_host_team(trip_id) OR is_admin() OR` an `attendees` row for
+  `auth.uid()` with `status='confirmed' AND payment_status='paid'`) —
+  same reasoning that already produced `tour_questions`/`reviews`/
+  `tour_templates` as their own tables. Editable via a new field on
+  `TourForm` (`exclusiveContent`, optional markdown, max 4000 chars);
+  saved through a new `saveTourExclusiveContent()` helper in
+  `lib/trip-extras.ts` (upserts if non-empty, deletes the row if
+  cleared) called from both the tour-create and tour-edit routes.
+  Rendered read-only via `components/agencies/tour-exclusive-content.tsx`
+  (a server component — no client-side gating logic needed since the
+  query itself already only returns a row when RLS allows it).
+- **Known pre-existing gap, not introduced or fixed this session**:
+  `attendees.payment_status`/`payment_evidence_path` are exposed the
+  same row-level-only way — the "attendees: public read confirmed on
+  public trips" policy (migration `0006`) is row-scoped, so a client
+  could `select('payment_status, payment_evidence_path')` directly on
+  any confirmed attendee of any public trip via the JS client, bypassing
+  the fact that the app's own UI only ever surfaces those columns to the
+  host team. Flagging for awareness — fixing it would need the same
+  separate-table treatment as `tour_exclusive_content` above, or a
+  column-level `REVOKE`/`GRANT` on `attendees`, neither of which was in
+  scope for this session's requests.
+
+## Waitlist visibility, multi-date tours, agency ratings, feed filters, itinerary UX: DONE
+
+Five follow-up requests (2026-09-20):
+
+- **Waitlist visibility** (migration `0031`, one RPC, no table changes).
+  Waitlisting itself already existed end-to-end since migration `0004`
+  (`join_trip()` confirms if a seat's free, else waitlists;
+  `leave_trip()` promotes the earliest waitlisted row when a seat frees
+  up) — what was missing was visibility. `components/trips/
+  waitlist-panel.tsx` gives the host team a roster (their existing RLS
+  access already covers every waitlisted row, no new policy needed);
+  `get_my_waitlist_position()` is a small SECURITY DEFINER RPC so a
+  regular attendee can see their own position, which the existing "read
+  own or organizer or admin" policy alone can't answer since it only
+  ever exposes a caller's *own* row, never the others ahead of them a
+  position count requires. `JoinTripButton` shows "You're on the
+  waitlist (#3)" when a position is available.
+- **Multi-date tours** (migration `0032`, `trips.tour_group_id`).
+  Deliberately NOT a shared-capacity-pool redesign — every date is still
+  its own fully independent `trips` row (own capacity/attendees/chat/
+  reviews/check-in/payment state), linked to its siblings only by
+  `tour_group_id` pointing at the primary date's id. Zero changes to
+  `join_trip`/`leave_trip`/capacity triggers/check-in/payments/reviews —
+  all of that machinery works exactly as it did for a single-date tour,
+  applied once per date. `TourForm` gained a repeatable "additional
+  dates" list (create mode only); the tours API route creates a sibling
+  `trips` row per extra date (copying content, not booking state) and
+  sets `tour_group_id` on all of them. The trip detail page shows an
+  "Other dates" pill row linking between siblings. **Known v1
+  limitation**: editing one date's content (title/description/etc.)
+  doesn't propagate to its siblings — each is independently editable,
+  by design (see the migration's own comment), but worth knowing if an
+  agency expects a single edit to update every date at once.
+- **Agency rating rollup**: `agencies/[id]/page.tsx` now averages
+  `reviews.rating` across every one of the agency's tours (two queries —
+  agency's tour ids, then reviews `.in()` those ids — same established
+  pattern as My Trips/Verified feed elsewhere, not an embedded-resource
+  filter), shown next to the verified badge. Exported the `Stars` helper
+  from `tour-reviews.tsx` (was file-local) to reuse it here rather than
+  duplicating a star-rendering component.
+- **Feed price/date filters**: `components/trips/feed-filters.tsx`, a
+  plain `method="get"` form (no client JS, matching how category/
+  Verified/Near-me are already plain links) with max-price and date-
+  range inputs, hidden inputs carrying the other active filters forward.
+  Server-side: date range clamps its lower bound to `max(now, dateFrom)`
+  so a past date can't resurrect already-started trips; the price filter
+  uses `.or('price_crc.lte.X,price_crc.is.null')` so it narrows tours
+  over budget without hiding social trips (which have no price at all).
+- **Itinerary UX**: the always-visible "add stop" form (every field
+  expanded even for a read-only viewer's view of a short itinerary) now
+  collapses behind an "Add stop" button, matching the collapsed-by-
+  default pattern the rest of the app uses for secondary actions. Added
+  a day-jump pill row (only when there's more than one day) that anchor-
+  links down to that day's section — useful once an itinerary has more
+  than 2-3 days and the list gets long. Also added a subtle vertical
+  connector line behind each day's stops for a lighter timeline feel.
+  No new functionality here (still no editing an existing block, only
+  add/delete), purely a decluttering/navigation pass.
 
 ## Not started
 

@@ -5,6 +5,7 @@ import { CATEGORY_KEYS } from '@/lib/constants/categories';
 import { type TripCardData } from '@/components/trips/trip-card';
 import { FeedView } from '@/components/trips/feed-view';
 import { NearMeButton } from '@/components/trips/near-me-button';
+import { FeedFilters } from '@/components/trips/feed-filters';
 import { boundingBox, haversineKm } from '@/lib/geo';
 import { cn } from '@/lib/utils';
 
@@ -13,9 +14,17 @@ const NEAR_ME_RADIUS_KM = 100;
 export default async function FeedPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; verified?: string; lat?: string; lng?: string }>;
+  searchParams: Promise<{
+    category?: string;
+    verified?: string;
+    lat?: string;
+    lng?: string;
+    maxPrice?: string;
+    dateFrom?: string;
+    dateTo?: string;
+  }>;
 }) {
-  const { category, verified, lat, lng } = await searchParams;
+  const { category, verified, lat, lng, maxPrice, dateFrom, dateTo } = await searchParams;
   const t = await getTranslations('feed');
   const tCategories = await getTranslations('categories');
   const supabase = await createClient();
@@ -25,6 +34,23 @@ export default async function FeedPage({
   const userLng = lng ? Number(lng) : null;
   const nearMeActive = userLat != null && userLng != null && !Number.isNaN(userLat) && !Number.isNaN(userLng);
 
+  // dateFrom only ever narrows the lower bound further into the future —
+  // a past date picked here still can't surface trips that have already
+  // happened, so the floor is always max(now, dateFrom).
+  const now = new Date();
+  const parsedDateFrom = dateFrom ? new Date(dateFrom) : null;
+  const lowerBound =
+    parsedDateFrom && !Number.isNaN(parsedDateFrom.getTime()) && parsedDateFrom > now
+      ? parsedDateFrom
+      : now;
+  const parsedDateTo = dateTo ? new Date(dateTo) : null;
+  const upperBound =
+    parsedDateTo && !Number.isNaN(parsedDateTo.getTime())
+      ? new Date(parsedDateTo.getTime() + 24 * 60 * 60 * 1000)
+      : null;
+  const parsedMaxPrice = maxPrice ? Number(maxPrice) : null;
+  const validMaxPrice = parsedMaxPrice != null && !Number.isNaN(parsedMaxPrice) && parsedMaxPrice > 0 ? parsedMaxPrice : null;
+
   let query = supabase
     .from('trips')
     .select(
@@ -32,8 +58,19 @@ export default async function FeedPage({
     )
     .eq('status', 'published')
     .eq('visibility', 'public')
-    .gte('start_at', new Date().toISOString())
+    .gte('start_at', lowerBound.toISOString())
     .order('start_at', { ascending: true });
+
+  if (upperBound) {
+    query = query.lte('start_at', upperBound.toISOString());
+  }
+
+  // Social trips have no price at all (price_crc is null) — a price
+  // filter should only ever exclude tours over budget, not hide every
+  // social trip along with them.
+  if (validMaxPrice != null) {
+    query = query.or(`price_crc.lte.${validMaxPrice},price_crc.is.null`);
+  }
 
   const activeCategory = CATEGORY_KEYS.includes(category as never)
     ? category
@@ -85,6 +122,15 @@ export default async function FeedPage({
       .filter((trip) => haversineKm(userLat!, userLng!, trip.lat!, trip.lng!) <= NEAR_ME_RADIUS_KM)
       .sort((a, b) => haversineKm(userLat!, userLng!, a.lat!, a.lng!) - haversineKm(userLat!, userLng!, b.lat!, b.lng!));
   }
+
+  const hasActiveFilters = !!(
+    activeCategory ||
+    showVerifiedOnly ||
+    nearMeActive ||
+    validMaxPrice != null ||
+    (parsedDateFrom && !Number.isNaN(parsedDateFrom.getTime())) ||
+    upperBound
+  );
 
   const tripCards: TripCardData[] = tripRows.map((trip) => ({
     id: trip.id,
@@ -156,12 +202,22 @@ export default async function FeedPage({
           <NearMeButton active={nearMeActive} category={activeCategory} />
         </div>
 
+        <FeedFilters
+          category={activeCategory}
+          verified={showVerifiedOnly}
+          lat={lat}
+          lng={lng}
+          maxPrice={maxPrice}
+          dateFrom={dateFrom}
+          dateTo={dateTo}
+        />
+
         <FeedView
           trips={tripCards}
-          emptyTitle={activeCategory || showVerifiedOnly || nearMeActive ? t('noResultsTitle') : t('emptyTitle')}
-          emptyBody={activeCategory || showVerifiedOnly || nearMeActive ? t('noResultsBody') : t('emptyBody')}
-          emptyCtaHref={activeCategory || showVerifiedOnly || nearMeActive ? '/feed' : '/trips/new'}
-          emptyCtaLabel={activeCategory || showVerifiedOnly || nearMeActive ? t('clearFilter') : t('emptyCta')}
+          emptyTitle={hasActiveFilters ? t('noResultsTitle') : t('emptyTitle')}
+          emptyBody={hasActiveFilters ? t('noResultsBody') : t('emptyBody')}
+          emptyCtaHref={hasActiveFilters ? '/feed' : '/trips/new'}
+          emptyCtaLabel={hasActiveFilters ? t('clearFilter') : t('emptyCta')}
         />
       </div>
     </main>

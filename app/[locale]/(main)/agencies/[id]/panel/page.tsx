@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { buttonVariants } from '@/components/ui/button';
 import { AgencyStatusBanner, type AgencyStatus } from '@/components/agencies/agency-status-banner';
 import { AgencyTourList, type AgencyTourData } from '@/components/agencies/agency-tour-list';
+import { AgencyTemplateList, type AgencyTemplateData } from '@/components/agencies/agency-template-list';
 import { AgencyStaffManager, type AgencyMemberData } from '@/components/agencies/agency-staff-manager';
 
 export default async function AgencyPanelPage({
@@ -48,10 +49,15 @@ export default async function AgencyPanelPage({
 
   const isAdminRole = myMembership.role === 'owner' || myMembership.role === 'admin';
 
-  const [toursResult, membersResult] = await Promise.all([
+  const [toursResult, templatesResult, membersResult] = await Promise.all([
     supabase
       .from('trips')
       .select('id, title, status, start_at, capacity, confirmed_count, price_crc')
+      .eq('agency_id', id)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('tour_templates')
+      .select('id, name')
       .eq('agency_id', id)
       .order('created_at', { ascending: false }),
     supabase
@@ -69,6 +75,11 @@ export default async function AgencyPanelPage({
     capacity: trip.capacity,
     confirmedCount: trip.confirmed_count,
     priceCrc: trip.price_crc,
+  }));
+
+  const templates: AgencyTemplateData[] = (templatesResult.data ?? []).map((template) => ({
+    id: template.id,
+    name: template.name,
   }));
 
   const memberProfileIds = (membersResult.data ?? []).map((m) => m.profile_id);
@@ -105,6 +116,7 @@ export default async function AgencyPanelPage({
         <div className="mt-6 flex flex-col gap-6">
           <AgencyStatusBanner status={agency.status as AgencyStatus} />
           <AgencyTourList agencyId={id} canPublish={isAdminRole} initialTours={tours} />
+          <AgencyTemplateList agencyId={id} initialTemplates={templates} />
           {isAdminRole && (
             <AgencyStaffManager agencyId={id} currentProfileId={user.id} initialMembers={members} />
           )}

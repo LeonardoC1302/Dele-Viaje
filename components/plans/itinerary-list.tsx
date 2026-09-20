@@ -55,6 +55,7 @@ export function ItineraryList({ tripId, currentUserId, canAdd, canDelete, initia
   const [icon, setIcon] = useState<ItineraryIconKey | ''>('');
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
 
   const dayGroups = new Map<number, ItineraryBlockData[]>();
   for (const block of blocks) {
@@ -112,6 +113,7 @@ export function ItineraryList({ tripId, currentUserId, canAdd, canDelete, initia
     setDescription('');
     setPhotoUrl('');
     setIcon('');
+    setFormOpen(false);
   };
 
   const removeBlock = async (id: string) => {
@@ -129,17 +131,31 @@ export function ItineraryList({ tripId, currentUserId, canAdd, canDelete, initia
       {sortedDays.length === 0 ? (
         <p className="mt-4 text-sm text-neutral-500 dark:text-neutral-400">{t('itineraryEmpty')}</p>
       ) : (
-        <div className="mt-4 flex flex-col gap-5">
+        <>
+          {sortedDays.length > 1 && (
+            <div className="mt-4 flex flex-wrap gap-1.5">
+              {sortedDays.map((dayIndex) => (
+                <a
+                  key={dayIndex}
+                  href={`#itinerary-day-${dayIndex}`}
+                  className="rounded-full border border-neutral-300 px-2.5 py-1 text-xs font-medium text-neutral-600 transition-colors hover:border-forest-600 hover:text-forest-600 dark:border-neutral-700 dark:text-neutral-400 dark:hover:border-forest-400 dark:hover:text-forest-400"
+                >
+                  {t('itineraryDay', { day: dayIndex + 1 })}
+                </a>
+              ))}
+            </div>
+          )}
+          <div className="mt-4 flex flex-col gap-5">
           {sortedDays.map((dayIndex) => (
-            <div key={dayIndex}>
+            <div key={dayIndex} id={`itinerary-day-${dayIndex}`} className="scroll-mt-24">
               <h3 className="text-xs font-semibold uppercase tracking-wide text-forest-600 dark:text-forest-400">
                 {t('itineraryDay', { day: dayIndex + 1 })}
               </h3>
-              <ul className="mt-2 flex flex-col gap-2">
+              <ul className="relative mt-2 flex flex-col gap-2 before:absolute before:bottom-2 before:left-[39px] before:top-2 before:w-px before:bg-neutral-200 before:content-[''] dark:before:bg-neutral-800">
                 {dayGroups.get(dayIndex)!.map((block) => (
                   <li
                     key={block.id}
-                    className="flex gap-3 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800"
+                    className="relative flex gap-3 overflow-hidden rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900"
                   >
                     <ItineraryThumb block={block} />
                     <div className="min-w-0 flex-1 py-2 pr-3">
@@ -176,10 +192,18 @@ export function ItineraryList({ tripId, currentUserId, canAdd, canDelete, initia
               </ul>
             </div>
           ))}
-        </div>
+          </div>
+        </>
       )}
 
-      {canAdd && (
+      {canAdd && !formOpen && (
+        <Button size="sm" variant="secondary" className="mt-5" onClick={() => setFormOpen(true)}>
+          <Plus size={14} weight="bold" />
+          {t('itineraryAddStop')}
+        </Button>
+      )}
+
+      {canAdd && formOpen && (
         <div className="mt-5 flex flex-col gap-3 border-t border-neutral-200 pt-4 dark:border-neutral-800">
           <div className="flex flex-wrap gap-2">
             <Input
@@ -245,10 +269,19 @@ export function ItineraryList({ tripId, currentUserId, canAdd, canDelete, initia
               })}
             </div>
           </div>
-          <Button size="sm" isLoading={adding} onClick={addBlock} className="self-start">
-            <Plus size={14} weight="bold" />
-            {t('itineraryAdd')}
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button size="sm" isLoading={adding} onClick={addBlock} className="self-start">
+              <Plus size={14} weight="bold" />
+              {t('itineraryAdd')}
+            </Button>
+            <button
+              type="button"
+              onClick={() => setFormOpen(false)}
+              className="text-sm font-medium text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+            >
+              {t('itineraryCancel')}
+            </button>
+          </div>
         </div>
       )}
       {error && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}

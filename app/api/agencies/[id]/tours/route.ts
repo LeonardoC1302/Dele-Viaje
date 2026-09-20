@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createTourSchema } from '@/lib/validators/agency';
 import { geocodeLocation } from '@/lib/geocode';
-import { saveTripCustomFields, saveTripLinks } from '@/lib/trip-extras';
+import { saveTripCustomFields, saveTripLinks, saveTourExclusiveContent } from '@/lib/trip-extras';
 
 // Tours are created as `status: 'draft'` — unlike a social trip (which
 // publishes immediately), an agency needs a separate "Publish" action
@@ -107,6 +107,56 @@ export async function POST(
 
   await saveTripCustomFields(supabase, data.id, validated.data.customFields);
   await saveTripLinks(supabase, data.id, user.id, validated.data.links);
+  await saveTourExclusiveContent(supabase, data.id, validated.data.exclusiveContent);
+
+  // Extra bookable dates for the same tour (migration 0032) — each is its
+  // own fully independent `trips` row (own capacity/attendees/chat/
+  // reviews), sharing everything but the schedule. `tour_group_id` on
+  // every row (including the primary) points at the primary's id, so the
+  // trip detail page can find every sibling with one equality filter.
+  if (validated.data.additionalDates && validated.data.additionalDates.length > 0) {
+    const siblingRows = validated.data.additionalDates.map((d) => ({
+      owner_id: user.id,
+      type: 'tour' as const,
+      visibility: 'public' as const,
+      status: 'draft' as const,
+      agency_id: id,
+      tour_group_id: data.id,
+      title: validated.data.title,
+      description: validated.data.description,
+      category: validated.data.category,
+      location_name: validated.data.locationName,
+      lat,
+      lng,
+      start_at: d.startAt,
+      end_at: d.endAt,
+      capacity: validated.data.capacity,
+      min_participants: validated.data.minParticipants ?? null,
+      price_crc: validated.data.priceCrc,
+    }));
+
+    const { data: siblings } = await supabase.from('trips').insert(siblingRows).select('id');
+
+    for (const sibling of siblings ?? []) {
+      if (validated.data.waypoints && validated.data.waypoints.length > 0) {
+        await supabase.from('trip_waypoints').insert(
+          validated.data.waypoints.map((wp, index) => ({
+            trip_id: sibling.id,
+            label: wp.label,
+            lat: wp.lat,
+            lng: wp.lng,
+            kind: wp.kind,
+            sort: index,
+          }))
+        );
+      }
+      await saveTripCustomFields(supabase, sibling.id, validated.data.customFields);
+      await saveTripLinks(supabase, sibling.id, user.id, validated.data.links);
+      await saveTourExclusiveContent(supabase, sibling.id, validated.data.exclusiveContent);
+    }
+
+    await supabase.from('trips').update({ tour_group_id: data.id }).eq('id', data.id);
+  }
 
   return NextResponse.json({ id: data.id }, { status: 201 });
 }

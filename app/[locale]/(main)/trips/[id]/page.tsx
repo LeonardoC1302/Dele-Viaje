@@ -17,12 +17,15 @@ import { ExpensesList, type ExpenseData } from '@/components/plans/expenses-list
 import { PollsList, type PollData, type PollOption } from '@/components/plans/polls-list';
 import { ItineraryList, type ItineraryBlockData } from '@/components/plans/itinerary-list';
 import { PlanMembers } from '@/components/plans/plan-members';
+import { TripDocuments, type TripDocumentData } from '@/components/plans/trip-documents';
 import { CustomFieldsDisplay } from '@/components/trips/custom-fields-display';
 import { LinkPreviewCard, type TripLinkData } from '@/components/trips/link-preview-card';
 import { TourQA, type TourQuestionData } from '@/components/agencies/tour-qa';
 import { TourCheckin, type CheckinAttendeeData } from '@/components/agencies/tour-checkin';
 import { TourReviews, type ReviewData } from '@/components/agencies/tour-reviews';
 import { TourPayment } from '@/components/agencies/tour-payment';
+import { TourExclusiveContent } from '@/components/agencies/tour-exclusive-content';
+import { WaitlistPanel, type WaitlistRowData } from '@/components/trips/waitlist-panel';
 
 export default async function TripDetailPage({
   params,
@@ -39,7 +42,7 @@ export default async function TripDetailPage({
   const { data: trip } = await supabase
     .from('trips')
     .select(
-      'id, title, description, category, location_name, lat, lng, start_at, end_at, capacity, confirmed_count, owner_id, visibility, type, agency_id, price_crc, min_participants'
+      'id, title, description, category, location_name, lat, lng, start_at, end_at, capacity, confirmed_count, owner_id, visibility, type, agency_id, price_crc, min_participants, tour_group_id'
     )
     .eq('id', id)
     .single();
@@ -172,6 +175,38 @@ export default async function TripDetailPage({
   }));
   const myConfirmedRow = user ? confirmedRows.find((row) => row.profile_id === user.id) : undefined;
 
+  // RLS-filtered: a non-host-team user only ever gets back their own
+  // waitlisted row here (see "attendees: read own or organizer or
+  // admin", migration 0004), so this doubles as both the host team's
+  // full roster and a regular attendee's "am I on it" check without any
+  // branching here.
+  let waitlistRows: WaitlistRowData[] = [];
+  let myWaitlistPosition: number | null = null;
+  if (trip.visibility !== 'private') {
+    const { data: waitlistData } = await supabase
+      .from('attendees')
+      .select('id, profile_id')
+      .eq('trip_id', trip.id)
+      .eq('status', 'waitlisted')
+      .order('joined_at', { ascending: true });
+
+    const waitlistProfileIds = (waitlistData ?? []).map((row) => row.profile_id);
+    const { data: waitlistProfilesData } =
+      waitlistProfileIds.length > 0 ? await supabase.rpc('profiles_public').in('id', waitlistProfileIds) : { data: [] };
+    const waitlistProfileById = new Map(
+      ((waitlistProfilesData ?? []) as { id: string; display_name: string | null }[]).map((p) => [p.id, p.display_name])
+    );
+    waitlistRows = (waitlistData ?? []).map((row) => ({
+      id: row.id,
+      displayName: waitlistProfileById.get(row.profile_id) ?? null,
+    }));
+
+    if (myAttendance?.status === 'waitlisted') {
+      const { data: position } = await supabase.rpc('get_my_waitlist_position', { p_trip_id: trip.id });
+      myWaitlistPosition = position ?? null;
+    }
+  }
+
   const dateFormatter = new Intl.DateTimeFormat(locale, {
     weekday: 'long',
     day: 'numeric',
@@ -225,6 +260,37 @@ export default async function TripDetailPage({
     }));
   }
 
+  let otherDates: {
+    id: string;
+    startAt: string;
+    spotsLeft: number | null;
+  }[] = [];
+  if (trip.type === 'tour' && trip.tour_group_id) {
+    const { data: siblingRows } = await supabase
+      .from('trips')
+      .select('id, start_at, capacity, confirmed_count')
+      .eq('tour_group_id', trip.tour_group_id)
+      .eq('status', 'published')
+      .neq('id', trip.id)
+      .order('start_at', { ascending: true });
+
+    otherDates = (siblingRows ?? []).map((row) => ({
+      id: row.id,
+      startAt: row.start_at,
+      spotsLeft: row.capacity != null ? row.capacity - row.confirmed_count : null,
+    }));
+  }
+
+  let exclusiveContent: string | null = null;
+  if (trip.type === 'tour' && user) {
+    const { data: exclusiveRow } = await supabase
+      .from('tour_exclusive_content')
+      .select('content')
+      .eq('trip_id', trip.id)
+      .maybeSingle();
+    exclusiveContent = exclusiveRow?.content ?? null;
+  }
+
   let reviews: ReviewData[] = [];
   let canReview = false;
   let sinpePhone: string | null = null;
@@ -275,7 +341,7 @@ export default async function TripDetailPage({
   }
 
   if (trip.visibility === 'private') {
-    const [invitesResult, packingResult, expensesResult, pollsResult, votesResult] = await Promise.all([
+    const [invitesResult, packingResult, expensesResult, pollsResult, votesResult, documentsResult] = await Promise.all([
       isOwner
         ? supabase
             .from('plan_invites')
@@ -301,6 +367,13 @@ export default async function TripDetailPage({
         .is('deleted_at', null)
         .order('created_at', { ascending: false }),
       supabase.from('poll_votes').select('poll_id, profile_id, option_key'),
+      user
+        ? supabase
+            .from('trip_documents')
+            .select('id, file_name, storage_path, file_size, created_at')
+            .eq('trip_id', trip.id)
+            .order('created_at', { ascending: false })
+        : Promise.resolve({ data: [] }),
     ]);
 
     const invites: PlanInvite[] = (invitesResult.data ?? []).map((inv) => ({
@@ -347,6 +420,14 @@ export default async function TripDetailPage({
     });
 
     const members = attendees.map((a) => ({ id: a.id, displayName: a.displayName }));
+
+    const documents: TripDocumentData[] = (documentsResult.data ?? []).map((d) => ({
+      id: d.id,
+      fileName: d.file_name,
+      storagePath: d.storage_path,
+      fileSize: d.file_size,
+      createdAt: d.created_at,
+    }));
 
     return (
       <main className="min-h-[100dvh] bg-neutral-50 py-12 dark:bg-neutral-950">
@@ -462,6 +543,7 @@ export default async function TripDetailPage({
                   canDelete={isOwner}
                   initialBlocks={itineraryBlocks}
                 />
+                <TripDocuments tripId={trip.id} isHostTeam={isOwner} initialDocuments={documents} />
               </>
             )}
           </div>
@@ -555,6 +637,35 @@ export default async function TripDetailPage({
             )}
           </div>
 
+          {otherDates.length > 0 && (
+            <div className="mt-6">
+              <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                {t('otherDatesTitle')}
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {otherDates.map((date) => {
+                  const dateIsFull = date.spotsLeft != null && date.spotsLeft <= 0;
+                  return (
+                    <Link
+                      key={date.id}
+                      href={`/trips/${date.id}`}
+                      className="rounded-full border border-neutral-300 px-3 py-1.5 text-sm text-neutral-700 transition-colors hover:border-forest-600 hover:text-forest-600 dark:border-neutral-700 dark:text-neutral-300 dark:hover:border-forest-400 dark:hover:text-forest-400"
+                    >
+                      {new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric' }).format(
+                        new Date(date.startAt)
+                      )}
+                      {dateIsFull && (
+                        <span className="ml-1.5 text-xs text-neutral-400 dark:text-neutral-500">
+                          ({t('otherDatesFull')})
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <MarkdownContent content={trip.description} className="mt-6" />
 
           <CustomFieldsDisplay fields={customFields} />
@@ -596,6 +707,7 @@ export default async function TripDetailPage({
               isOwner={isHostTeam}
               isFull={isFull}
               hasStarted={hasStarted}
+              waitlistPosition={myWaitlistPosition}
             />
             {canOpenChat && (
               <Link
@@ -611,6 +723,8 @@ export default async function TripDetailPage({
           <AttendeeList attendees={attendees} currentUserId={user?.id} />
         </div>
 
+        {isHostTeam && <div className="mt-6"><WaitlistPanel rows={waitlistRows} /></div>}
+
         {trip.type === 'tour' && (
           <div className="mt-6 flex flex-col gap-6">
             {isHostTeam && <TourCheckin tripId={trip.id} initialAttendees={checkinRows} />}
@@ -621,6 +735,7 @@ export default async function TripDetailPage({
                 paymentStatus={myConfirmedRow.payment_status}
               />
             )}
+            {exclusiveContent && <TourExclusiveContent content={exclusiveContent} />}
             <TourReviews
               tripId={trip.id}
               currentUserId={user?.id}

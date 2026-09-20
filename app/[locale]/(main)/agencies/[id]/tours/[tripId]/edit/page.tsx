@@ -43,7 +43,7 @@ export default async function EditTourPage({
     notFound();
   }
 
-  const [waypointsResult, customFieldsResult, linksResult] = await Promise.all([
+  const [waypointsResult, customFieldsResult, linksResult, exclusiveContentResult] = await Promise.all([
     supabase
       .from('trip_waypoints')
       .select('label, lat, lng, kind')
@@ -59,6 +59,7 @@ export default async function EditTourPage({
       .select('url, label')
       .eq('trip_id', tripId)
       .order('sort', { ascending: true }),
+    supabase.from('tour_exclusive_content').select('content').eq('trip_id', tripId).maybeSingle(),
   ]);
 
   const initialValues: TourFormInitialValues = {
@@ -76,6 +77,7 @@ export default async function EditTourPage({
     capacity: trip.capacity ?? 1,
     minParticipants: trip.min_participants,
     priceCrc: trip.price_crc ?? 0,
+    exclusiveContent: exclusiveContentResult.data?.content ?? '',
   };
 
   return (

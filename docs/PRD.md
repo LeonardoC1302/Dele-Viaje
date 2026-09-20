@@ -2,7 +2,7 @@
 
 Working title: **"Dele Viaje"** (Costa Rican slang for "let's go / make it happen"). Rebrand-safe for international expansion (docs use the neutral project name `Dele Viaje` / codebase id `dele-viaje`).
 
-- Status: Draft v0.1
+- Status: Draft v0.1 (original intent) — **most of what's below is now built**; see `PROJECT_STATUS.md` for the phase-by-phase build log and `docs/frontend-migration-reference.md` for the complete current feature/schema/route inventory. Where this PRD's spec and the shipped product diverge, an inline note says so — this file is kept for original intent/rationale, not as a live status board.
 - Audience: product + engineering
 - Market: Costa Rica first (validation), LATAM/tourism-destinations later
 
@@ -36,11 +36,11 @@ Both kinds of plans live in the **same feed/map** but are visually distinct (one
 - Monetization designed now, built in v2 (see §9).
 
 ### Non-Goals (explicitly out of MVP scope)
-- Real payment capture (Stripe) — **deferred to v2**. Paid tours exist as listings with price and reservation; money movement is off-platform (see §9).
-- PRO SaaS plan (CRM, reports, multi-user, branding) — v2.
-- Algorithmic feed / personalization beyond simple tabs + filters.
-- Geo-fencing check-in, native mobile apps (KMP) — later phases.
-- Content moderation AI — manual queue for MVP.
+- Real payment capture (Stripe) — **deferred to v2**. Paid tours exist as listings with price and reservation; money movement is off-platform (see §9). **Built**: the v1.5 manual stage this section anticipates — SINPE Móvil bank-transfer evidence upload + agency review — shipped (migration `0026`). Stripe/v2 itself remains untouched, research-only.
+- PRO SaaS plan (CRM, reports, multi-user, branding) — v2. Still true, untouched.
+- Algorithmic feed / personalization beyond simple tabs + filters. Still true — feed is tabs (category/Near me/Verified) + price/date filters, no ranking algorithm.
+- Geo-fencing check-in, native mobile apps (KMP) — later phases. Still true; check-in shipped as a **manual roster tap-to-toggle**, not even QR/camera scanning (§4.6 below has the deviation note), let alone geo-fencing.
+- Content moderation AI — manual queue for MVP. Still true, manual queue only (`/admin/reports`).
 
 ---
 
@@ -95,6 +95,21 @@ draft ──publish──▶ published ──▶ full ──▶ in_progress ─�
 - `in_progress` auto at start_at; `completed` auto after end_at (host can also mark).
 - Recurs-generator: future instances created in bulk; past instances immutable via UI.
 
+**As actually built**: none of the automatic status transitions above
+exist — `full`/`in_progress`/`completed` are never set by any trigger or
+job; `confirmed_count` (a separate denominator column) is the only thing
+kept in sync automatically, and the UI derives "is this full" by
+comparing `confirmed_count` to `capacity` on the fly rather than storing
+a `full` status. `status` only ever moves `draft → published` (tours,
+via a dedicated publish action) or gets set directly by an admin/owner
+action (`suspended`, `cancelled` isn't actually reachable from any UI,
+`archived` is auto-set only for an emptied private plan). Recurrence
+(weekly pattern, `trip_series`/`recurrence_id`) was **never built** — no
+table, no generator, the column exists on `trips` unused. Multi-date
+tours (migration `0032`) cover a *different* need than recurrence —
+several genuinely independent bookable dates linked by
+`tour_group_id`, not a repeating series.
+
 ### 4.3 RSVP, Waitlist & Membership
 - **Social public**: open RSVP, instant `confirmed`. Host can remove anyone (with notification).
 - **Tour**: "Reserve spot" → `confirmed` (v2: becomes paid booking with payment state).
@@ -122,8 +137,8 @@ All accessible only to members; permission split:
 | Prerequisites | Items with `assigned_to` (who brings what) + status |
 | Budget / expenses | Expense: payer, amount CRC (int), concept; equal split auto-calculated across active members (not stored) |
 | Polls | Options + togglable votes; optional `closes_at`; owner deletes |
-| Shared docs | PDF/map/itinerary uploads (Supabase Storage); visible to all members |
-| Itinerary | Reuses `itinerary_blocks`; members contribute blocks; owner/co-hosts edit/delete |
+| Shared docs | PDF/map/itinerary uploads (Supabase Storage); visible to all members — **built** (migration `0029`, `trip_documents` table + private Storage bucket); upload is host-team-only (not "all members", a slightly narrower permission than sketched here), any confirmed member can view/download |
+| Itinerary | Reuses `itinerary_blocks`; members contribute blocks; owner/co-hosts edit/delete — **built**; any member can add (no separate co-host role — "owner/co-hosts" here means "host team", i.e. owner or, for a tour, agency staff), only host team can delete, no edit exists at all |
 
 Invitations:
 - **Direct**: by username or email within the app → notification.
@@ -134,6 +149,32 @@ Invitations:
 - **Reviews open only to attendees** (`checked_in` or `attended`) **after the trip completes**; 1–5 stars + text; optional agency response.
 - Private plans: **no reviews**.
 - Review moderation: report → pending → hidden. Fraud signal: reviewer marked `no_show`.
+
+**As actually built (deliberate deviations, not gaps)**:
+- Check-in is **manual only** — a roster with a tap-to-toggle "check in"
+  button per confirmed attendee, sets `attendance='attended'` directly.
+  No QR/camera scanning was built (decided explicitly: the value over a
+  tap-to-toggle roster didn't justify a camera-scanning dependency at
+  current scale). `checked_in` as an intermediate state before
+  `attended` isn't really used in practice — the manual flow goes
+  straight to `attended`.
+  Attendee-side self-scan (walking up and scanning a shown QR) also
+  doesn't exist — it's staff-initiated only.
+- Reviews are gated on the tour's `start_at` already being in the past
+  AND the reviewer's own `attendance = 'attended'`, **not** on
+  `trips.status` reaching `'completed'` — nothing in the app ever
+  transitions a trip to `'completed'` (no cron, no manual action), so
+  that gate as written would be permanently unreachable. Same practical
+  effect, actually reachable.
+  Reviews are **tour-only** — there is no social-trip host/participant
+  review feature at all, so "private plans: no reviews" is true but for
+  a broader reason than intended (no *social trip* has reviews either,
+  only tours).
+- No `pending → hidden` review moderation state — a review is either
+  live or deleted (by its own reviewer, or by an admin for moderation);
+  there's no intermediate hidden/reported status. No `no_show` fraud
+  signal is surfaced anywhere in review display, even though
+  `attendees.status` supports a `no_show` value.
 
 ### 4.7 Reputation & Badges
 - Score 0–5 (avg, recency-weighted) + review count. Shown on profiles / trip cards.
@@ -168,6 +209,23 @@ Marketing surface, product-shaped. One standalone homepage (PWA-installable shel
 - Tour publish: `draft → published` (super-admin review optional in MVP via toggle).
 - **PRO tier (v2)**: client CRM, revenue/reporting, multi-user strengthening, custom branding.
 
+**As actually built, deviations**: application has **no documents
+upload** — `agencies` has no `documents_paths` column and no Storage
+bucket for verification docs (explicit scope cut; the same Storage-
+bucket pattern used for payment evidence and trip documents is the
+template for whenever this is picked up). Tour publish is per-tour
+(`draft → published` via a dedicated publish endpoint, gated on the
+*agency's* approval status), but there's no admin review-toggle on
+individual tours — approval only ever happens at the agency level.
+Panel has no messaging (agencies use the same per-trip chat any social
+trip has, not a separate agency-to-buyer channel) and no reservations/
+attendance stats dashboard beyond the plain attendee roster. QR check-in
+was scoped down to manual (see §4.6). Two features beyond this section's
+original scope also shipped: **tour templates** (save a tour's content
+for reuse across dates) and **exclusive content for paid attendees**
+(gated markdown block, e.g. a WhatsApp group link, visible only once
+`payment_status='paid'`).
+
 ### 4.10 Super-Admin (platform owner)
 - Approve agencies + optionally tours.
 - Users: ban/suspend/unsuspend; view report tickets queue; moderate content (trips/messages/reviews/agencies).
@@ -175,6 +233,18 @@ Marketing surface, product-shaped. One standalone homepage (PWA-installable shel
 - Currency override; badges; manual booking flags (v1.5 manual payment marking).
 
 ### 4.11 Notifications
+
+**As actually built**: only the **in-app inbox** channel exists. Web
+Push (VAPID) and Email (Resend) are explicitly deferred (user decision)
+pending external account setup (a VAPID keypair, a Resend account) —
+the DB pipeline (`notifications` table + triggers) is already built to
+ride those channels once added. The event types actually implemented
+are a small subset of the list below:
+`trip_joined | waitlist_promoted | new_message | new_follower |
+plan_direct_invite`. None of the reminder (T-24h/T-2h), private-plan-
+event (beyond the one direct-invite type), agency, or admin
+notification types listed below exist yet.
+
 Channels: **in-app inbox + Web Push (VAPID) + Email (Resend)**.
 
 Events:
