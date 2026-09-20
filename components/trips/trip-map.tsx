@@ -27,10 +27,44 @@ export interface TripMapPin {
 // Costa Rica's rough center — used when there are no pins to fit bounds to.
 const DEFAULT_CENTER: [number, number] = [-84.0, 9.7];
 
+const SOURCE_ID = 'trips';
+const CLUSTER_LAYER = 'trip-clusters';
+const CLUSTER_COUNT_LAYER = 'trip-cluster-count';
+const POINT_LAYER = 'trip-points';
+
+// maplibre-gl doesn't ship its own geojson types and `@types/geojson`
+// isn't installed — a minimal local shape is enough for what this file
+// actually builds.
+interface PointFeatureCollection {
+  type: 'FeatureCollection';
+  features: {
+    type: 'Feature';
+    geometry: { type: 'Point'; coordinates: [number, number] };
+    properties: { id: string; title: string };
+  }[];
+}
+
+function toGeoJSON(pins: TripMapPin[]): PointFeatureCollection {
+  return {
+    type: 'FeatureCollection',
+    features: pins.map((pin) => ({
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [pin.lng, pin.lat] },
+      properties: { id: pin.id, title: pin.title },
+    })),
+  };
+}
+
+// GeoJSON source with cluster: true rather than one maplibregl.Marker DOM
+// element per pin (the previous approach) — clustering only exists at the
+// GeoJSON-source level in MapLibre, individually-placed DOM markers have
+// no equivalent. At current trip volumes this rarely visibly clusters
+// anything, but it's what keeps the feed map usable once pin density
+// grows in a city instead of turning into an unreadable pile of
+// overlapping dots.
 export function TripMap({ pins }: { pins: TripMapPin[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
-  const markersRef = useRef<maplibregl.Marker[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -47,41 +81,102 @@ export function TripMap({ pins }: { pins: TripMapPin[] }) {
     map.addControl(new maplibregl.NavigationControl(), 'top-right');
     mapRef.current = map;
 
+    map.on('load', () => {
+      map.addSource(SOURCE_ID, {
+        type: 'geojson',
+        data: toGeoJSON([]),
+        cluster: true,
+        clusterMaxZoom: 14,
+        clusterRadius: 50,
+      });
+
+      map.addLayer({
+        id: CLUSTER_LAYER,
+        type: 'circle',
+        source: SOURCE_ID,
+        filter: ['has', 'point_count'],
+        paint: {
+          'circle-color': '#1B4332',
+          'circle-radius': ['step', ['get', 'point_count'], 16, 10, 20, 25, 26],
+          'circle-stroke-width': 2,
+          'circle-stroke-color': '#ffffff',
+        },
+      });
+
+      map.addLayer({
+        id: CLUSTER_COUNT_LAYER,
+        type: 'symbol',
+        source: SOURCE_ID,
+        filter: ['has', 'point_count'],
+        layout: {
+          'text-field': ['get', 'point_count_abbreviated'],
+          'text-size': 12,
+          'text-font': ['Noto Sans Bold'],
+        },
+        paint: { 'text-color': '#ffffff' },
+      });
+
+      map.addLayer({
+        id: POINT_LAYER,
+        type: 'circle',
+        source: SOURCE_ID,
+        filter: ['!', ['has', 'point_count']],
+        paint: {
+          'circle-color': '#1B4332',
+          'circle-radius': 9,
+          'circle-stroke-width': 2,
+          'circle-stroke-color': '#ffffff',
+        },
+      });
+
+      map.on('mouseenter', CLUSTER_LAYER, () => {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+      map.on('mouseleave', CLUSTER_LAYER, () => {
+        map.getCanvas().style.cursor = '';
+      });
+      map.on('mouseenter', POINT_LAYER, () => {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+      map.on('mouseleave', POINT_LAYER, () => {
+        map.getCanvas().style.cursor = '';
+      });
+
+      map.on('click', CLUSTER_LAYER, async (e) => {
+        const features = map.queryRenderedFeatures(e.point, { layers: [CLUSTER_LAYER] });
+        const clusterId = features[0]?.properties?.cluster_id;
+        if (clusterId == null) return;
+        const source = map.getSource(SOURCE_ID) as maplibregl.GeoJSONSource;
+        const zoom = await source.getClusterExpansionZoom(clusterId);
+        const [lng, lat] = (features[0].geometry as { type: 'Point'; coordinates: [number, number] }).coordinates;
+        map.easeTo({ center: [lng, lat], zoom });
+      });
+
+      map.on('click', POINT_LAYER, (e) => {
+        const id = e.features?.[0]?.properties?.id;
+        if (id) router.push(`/trips/${id}`);
+      });
+    });
+
     return () => {
       map.remove();
       mapRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- router is stable from next-intl's navigation wrapper; re-running this effect on it would tear down and rebuild the whole map for no reason.
   }, []);
 
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
-    const attach = () => {
-      markersRef.current.forEach((m) => m.remove());
-      markersRef.current = [];
+    const applyData = () => {
+      const source = map.getSource(SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
+      if (!source) return;
+      source.setData(toGeoJSON(pins));
 
       if (pins.length === 0) return;
-
       const bounds = new maplibregl.LngLatBounds();
-
-      for (const pin of pins) {
-        const el = document.createElement('button');
-        el.type = 'button';
-        el.setAttribute('aria-label', pin.title);
-        el.className =
-          'h-6 w-6 rounded-full border-2 border-white bg-forest-600 shadow-md cursor-pointer';
-        el.addEventListener('click', () => router.push(`/trips/${pin.id}`));
-
-        const marker = new maplibregl.Marker({ element: el })
-          .setLngLat([pin.lng, pin.lat])
-          .setPopup(new maplibregl.Popup({ offset: 16 }).setText(pin.title))
-          .addTo(map);
-
-        markersRef.current.push(marker);
-        bounds.extend([pin.lng, pin.lat]);
-      }
-
+      for (const pin of pins) bounds.extend([pin.lng, pin.lat]);
       if (pins.length === 1) {
         map.jumpTo({ center: [pins[0].lng, pins[0].lat], zoom: 11 });
       } else {
@@ -89,9 +184,9 @@ export function TripMap({ pins }: { pins: TripMapPin[] }) {
       }
     };
 
-    if (map.isStyleLoaded()) attach();
-    else map.once('load', attach);
-  }, [pins, router]);
+    if (map.isStyleLoaded() && map.getSource(SOURCE_ID)) applyData();
+    else map.once('load', applyData);
+  }, [pins]);
 
   return (
     <div

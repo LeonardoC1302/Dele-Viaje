@@ -8,6 +8,7 @@ import {
   type NotificationData,
   type NotificationActor,
 } from '@/components/notifications/notification-bell';
+import { MobileNav } from '@/components/layout/mobile-nav';
 
 export default async function MainLayout({
   children,
@@ -24,6 +25,7 @@ export default async function MainLayout({
   let actors: Record<string, NotificationActor> = {};
   let tripTitles: Record<string, string> = {};
   let isAdmin = false;
+  let myAgencyId: string | null = null;
 
   if (user) {
     const { data: myProfile } = await supabase
@@ -32,6 +34,15 @@ export default async function MainLayout({
       .eq('id', user.id)
       .single();
     isAdmin = myProfile?.role === 'admin';
+
+    const { data: myMembership } = await supabase
+      .from('agency_members')
+      .select('agency_id')
+      .eq('profile_id', user.id)
+      .eq('status', 'active')
+      .limit(1)
+      .maybeSingle();
+    myAgencyId = myMembership?.agency_id ?? null;
 
     const { data: rows } = await supabase
       .from('notifications')
@@ -81,27 +92,58 @@ export default async function MainLayout({
             Dele Viaje
           </Link>
 
-          <nav className="flex items-center gap-4">
-            <Link
-              href="/feed"
-              className="text-sm font-medium text-neutral-600 transition-colors hover:text-forest-600 dark:text-neutral-300 dark:hover:text-forest-400"
-            >
-              {t('feed')}
-            </Link>
-            <Link
-              href="/trips/new"
-              className={buttonVariants({ size: 'sm', variant: 'primary' })}
-            >
-              {t('createTrip')}
-            </Link>
-            {isAdmin && (
+          <div className="flex items-center gap-2">
+            <nav className="hidden items-center gap-4 lg:flex">
               <Link
-                href="/admin/reports"
+                href="/feed"
                 className="text-sm font-medium text-neutral-600 transition-colors hover:text-forest-600 dark:text-neutral-300 dark:hover:text-forest-400"
               >
-                {t('admin')}
+                {t('feed')}
               </Link>
-            )}
+              {user && (
+                <Link
+                  href="/my-trips"
+                  className="text-sm font-medium text-neutral-600 transition-colors hover:text-forest-600 dark:text-neutral-300 dark:hover:text-forest-400"
+                >
+                  {t('myTrips')}
+                </Link>
+              )}
+              {user && (
+                <Link
+                  href={myAgencyId ? `/agencies/${myAgencyId}/panel` : '/agencies/new'}
+                  className="text-sm font-medium text-neutral-600 transition-colors hover:text-forest-600 dark:text-neutral-300 dark:hover:text-forest-400"
+                >
+                  {myAgencyId ? t('myAgency') : t('becomeAgency')}
+                </Link>
+              )}
+              <Link
+                href="/trips/new"
+                className={buttonVariants({ size: 'sm', variant: 'primary' })}
+              >
+                {t('createTrip')}
+              </Link>
+              {isAdmin && (
+                <Link
+                  href="/admin"
+                  className="text-sm font-medium text-neutral-600 transition-colors hover:text-forest-600 dark:text-neutral-300 dark:hover:text-forest-400"
+                >
+                  {t('admin')}
+                </Link>
+              )}
+              {user && (
+                <form action="/api/auth/signout" method="POST">
+                  <button
+                    type="submit"
+                    className={cn(
+                      buttonVariants({ size: 'sm', variant: 'ghost' })
+                    )}
+                  >
+                    {t('signOut')}
+                  </button>
+                </form>
+              )}
+            </nav>
+
             {user && (
               <NotificationBell
                 currentUserId={user.id}
@@ -110,19 +152,9 @@ export default async function MainLayout({
                 initialTripTitles={tripTitles}
               />
             )}
-            {user && (
-              <form action="/api/auth/signout" method="POST">
-                <button
-                  type="submit"
-                  className={cn(
-                    buttonVariants({ size: 'sm', variant: 'ghost' })
-                  )}
-                >
-                  {t('signOut')}
-                </button>
-              </form>
-            )}
-          </nav>
+
+            <MobileNav isAuthenticated={!!user} isAdmin={isAdmin} myAgencyId={myAgencyId} />
+          </div>
         </div>
       </header>
 

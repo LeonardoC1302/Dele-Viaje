@@ -30,7 +30,16 @@ export async function POST(
     );
   }
 
-  const { data, error } = await supabase.rpc('join_trip', { p_trip_id: id });
+  // join_trip() returns `table (status text)` — a set-returning function,
+  // not a scalar — so PostgREST hands back an array of rows (`[{status:
+  // "confirmed"}]`) unless .single() asks it to unwrap the one row. Without
+  // this, `data` was actually that array, and `{status: data}` shipped a
+  // nested `{status: [{status: "confirmed"}]}` to the client — JoinTripButton
+  // would set its local `status` state to that array instead of the string
+  // 'confirmed'/'waitlisted', so its own `status === 'confirmed'` checks
+  // silently failed until the page was fully reloaded and re-derived
+  // attendeeStatus server-side from the `attendees` table directly.
+  const { data, error } = await supabase.rpc('join_trip', { p_trip_id: id }).single();
 
   if (error) {
     const code = error.message;
@@ -43,5 +52,5 @@ export async function POST(
     );
   }
 
-  return NextResponse.json({ status: data as string });
+  return NextResponse.json({ status: (data as { status: string }).status });
 }

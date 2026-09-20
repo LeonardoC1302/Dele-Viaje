@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Trash } from '@phosphor-icons/react';
+import { Trash, PencilSimple, Check, X } from '@phosphor-icons/react';
 import { Link } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Avatar } from '@/components/ui/avatar';
@@ -17,6 +17,7 @@ export interface ChatMessage {
   body: string | null;
   createdAt: string;
   deletedAt: string | null;
+  editedAt: string | null;
   kind: 'user' | 'system';
   eventType: ChatEventType | null;
   actorId: string | null;
@@ -86,6 +87,7 @@ export function ChatRoom({
               body: string | null;
               created_at: string;
               deleted_at: string | null;
+              edited_at: string | null;
               kind: 'user' | 'system';
               event_type: ChatEventType | null;
               actor_id: string | null;
@@ -101,6 +103,7 @@ export function ChatRoom({
                       body: row.body,
                       createdAt: row.created_at,
                       deletedAt: row.deleted_at,
+                      editedAt: row.edited_at,
                       kind: row.kind,
                       eventType: row.event_type,
                       actorId: row.actor_id,
@@ -139,10 +142,17 @@ export function ChatRoom({
             filter: `trip_id=eq.${tripId}`,
           },
           (payload) => {
-            const row = payload.new as { id: string; deleted_at: string | null };
+            const row = payload.new as {
+              id: string;
+              body: string | null;
+              deleted_at: string | null;
+              edited_at: string | null;
+            };
             setMessages((prev) =>
               prev.map((m) =>
-                m.id === row.id ? { ...m, deletedAt: row.deleted_at } : m
+                m.id === row.id
+                  ? { ...m, body: row.body, deletedAt: row.deleted_at, editedAt: row.edited_at }
+                  : m
               )
             );
           }
@@ -171,7 +181,7 @@ export function ChatRoom({
     const { data: inserted, error: insertError } = await supabase
       .from('messages')
       .insert({ trip_id: tripId, sender_id: currentUserId, body: trimmed })
-      .select('id, sender_id, body, created_at, deleted_at')
+      .select('id, sender_id, body, created_at, deleted_at, edited_at')
       .single();
 
     if (insertError) {
@@ -191,6 +201,7 @@ export function ChatRoom({
                 body: inserted.body,
                 createdAt: inserted.created_at,
                 deletedAt: inserted.deleted_at,
+                editedAt: inserted.edited_at,
                 kind: 'user' as const,
                 eventType: null,
                 actorId: null,
@@ -207,6 +218,43 @@ export function ChatRoom({
       .from('messages')
       .update({ deleted_at: new Date().toISOString() })
       .eq('id', messageId);
+  };
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingBody, setEditingBody] = useState('');
+  const [editError, setEditError] = useState<string | null>(null);
+
+  const startEdit = (message: ChatMessage) => {
+    setEditingId(message.id);
+    setEditingBody(message.body ?? '');
+    setEditError(null);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditingBody('');
+  };
+
+  const saveEdit = async () => {
+    const trimmed = editingBody.trim();
+    if (!editingId || !trimmed) return;
+    setEditError(null);
+
+    const { error: editErr } = await supabase.rpc('edit_message', {
+      p_message_id: editingId,
+      p_body: trimmed,
+    });
+
+    if (editErr) {
+      setEditError(t('editError'));
+      return;
+    }
+
+    setMessages((prev) =>
+      prev.map((m) => (m.id === editingId ? { ...m, body: trimmed, editedAt: new Date().toISOString() } : m))
+    );
+    setEditingId(null);
+    setEditingBody('');
   };
 
   const timeFormatter = new Intl.DateTimeFormat(locale, {
@@ -272,13 +320,52 @@ export function ChatRoom({
                       <p className="text-sm italic text-neutral-400 dark:text-neutral-600">
                         {t('deletedMessage')}
                       </p>
+                    ) : editingId === message.id ? (
+                      <div className="mt-1 flex flex-col gap-2">
+                        <textarea
+                          value={editingBody}
+                          onChange={(e) => setEditingBody(e.target.value)}
+                          maxLength={2000}
+                          rows={2}
+                          autoFocus
+                          className="w-full resize-none rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm placeholder:text-neutral-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-600 dark:border-neutral-700 dark:bg-neutral-950"
+                        />
+                        {editError && (
+                          <p className="text-xs text-red-600 dark:text-red-400">{editError}</p>
+                        )}
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={saveEdit}
+                            aria-label={t('editSave')}
+                            className="flex items-center gap-1 text-xs font-medium text-forest-600 hover:text-forest-700 dark:text-forest-400"
+                          >
+                            <Check size={14} weight="bold" />
+                            {t('editSave')}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={cancelEdit}
+                            aria-label={t('editCancel')}
+                            className="flex items-center gap-1 text-xs font-medium text-neutral-500 hover:text-neutral-700 dark:text-neutral-400"
+                          >
+                            <X size={14} weight="bold" />
+                            {t('editCancel')}
+                          </button>
+                        </div>
+                      </div>
                     ) : (
                       <p className="whitespace-pre-wrap break-words text-sm text-neutral-700 dark:text-neutral-300">
                         {message.body}
+                        {message.editedAt && (
+                          <span className="ml-1.5 text-xs text-neutral-400 dark:text-neutral-600">
+                            {t('editedTag')}
+                          </span>
+                        )}
                       </p>
                     )}
                   </div>
-                  {!message.deletedAt && (
+                  {!message.deletedAt && editingId !== message.id && (
                     <div className="flex shrink-0 items-center gap-2">
                       {!isOwn && (
                         <ReportButton
@@ -288,6 +375,16 @@ export function ChatRoom({
                           label=""
                           ariaLabel={t('reportMessage')}
                         />
+                      )}
+                      {isOwn && (
+                        <button
+                          type="button"
+                          onClick={() => startEdit(message)}
+                          aria-label={t('editMessage')}
+                          className="text-neutral-300 hover:text-forest-600 dark:text-neutral-600 dark:hover:text-forest-400"
+                        >
+                          <PencilSimple size={16} weight="regular" strokeWidth={1.5} />
+                        </button>
                       )}
                       {canDelete && (
                         <button

@@ -4,7 +4,7 @@ import { useState, type FormEvent } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { MarkdownEditor } from '@/components/ui/markdown-editor';
 import { Select } from '@/components/ui/select';
 import { DateTimeField } from '@/components/ui/date-time-field';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,11 @@ import {
   type TripWaypointInput,
   type TripWaypointKind,
 } from '@/components/trips/trip-map-editor';
+import { CustomFieldsEditor, type TripCustomFieldInput } from '@/components/trips/custom-fields-editor';
+import { LinksEditor, type TripLinkInput } from '@/components/trips/links-editor';
 import { CATEGORY_KEYS } from '@/lib/constants/categories';
+import { extractErrorMessage } from '@/lib/format-validation-error';
+import { cn } from '@/lib/utils';
 
 type Status = 'idle' | 'loading' | 'error';
 
@@ -25,6 +29,8 @@ export interface TripFormInitialValues {
   lat: number | null;
   lng: number | null;
   waypoints: { label: string; lat: number; lng: number; kind: TripWaypointKind }[];
+  customFields: { label: string; value: string }[];
+  links: { url: string; label: string }[];
   startAt: string;
   endAt: string;
   capacity: number | null;
@@ -41,6 +47,7 @@ export function TripForm({ mode = 'create', tripId, initialValues }: TripFormPro
   const tCategories = useTranslations('categories');
   const router = useRouter();
 
+  const [visibility, setVisibility] = useState<'public' | 'private'>('public');
   const [title, setTitle] = useState(initialValues?.title ?? '');
   const [description, setDescription] = useState(initialValues?.description ?? '');
   const [category, setCategory] = useState<string>(initialValues?.category ?? CATEGORY_KEYS[0]);
@@ -49,6 +56,12 @@ export function TripForm({ mode = 'create', tripId, initialValues }: TripFormPro
   const [lng, setLng] = useState<number | null>(initialValues?.lng ?? null);
   const [waypoints, setWaypoints] = useState<TripWaypointInput[]>(
     initialValues?.waypoints.map((wp) => ({ id: crypto.randomUUID(), ...wp })) ?? []
+  );
+  const [customFields, setCustomFields] = useState<TripCustomFieldInput[]>(
+    initialValues?.customFields.map((f) => ({ id: crypto.randomUUID(), ...f })) ?? []
+  );
+  const [links, setLinks] = useState<TripLinkInput[]>(
+    initialValues?.links.map((l) => ({ id: crypto.randomUUID(), ...l })) ?? []
   );
   const [startAt, setStartAt] = useState<Date | null>(
     initialValues ? new Date(initialValues.startAt) : null
@@ -92,12 +105,19 @@ export function TripForm({ mode = 'create', tripId, initialValues }: TripFormPro
         title,
         description,
         category,
+        visibility,
         locationName,
         lat,
         lng,
         waypoints: waypoints
           .filter((wp) => wp.lat != null && wp.lng != null && wp.label.trim())
           .map((wp) => ({ label: wp.label.trim(), lat: wp.lat, lng: wp.lng, kind: wp.kind })),
+        customFields: customFields
+          .filter((f) => f.label.trim() && f.value.trim())
+          .map((f) => ({ label: f.label.trim(), value: f.value.trim() })),
+        links: links
+          .filter((l) => l.url.trim())
+          .map((l) => ({ url: l.url.trim(), label: l.label.trim() || undefined })),
         startAt: startAt.toISOString(),
         endAt: endAt.toISOString(),
         capacity: capacity ? Number(capacity) : null,
@@ -110,7 +130,7 @@ export function TripForm({ mode = 'create', tripId, initialValues }: TripFormPro
       setError(
         code === 'ERR_ACCOUNT_NOT_ACTIVE'
           ? t('accountNotActive')
-          : (body?.error?.message ?? t('genericError'))
+          : extractErrorMessage(body, t('genericError'))
       );
       setStatus('error');
       return;
@@ -134,6 +154,50 @@ export function TripForm({ mode = 'create', tripId, initialValues }: TripFormPro
       </p>
 
       <div className="mt-6 flex flex-col gap-5">
+        {mode === 'create' && (
+          <div>
+            <label className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+              {t('visibilityLabel')}
+            </label>
+            <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => setVisibility('public')}
+                className={cn(
+                  'rounded-lg border-2 p-3 text-left transition-colors',
+                  visibility === 'public'
+                    ? 'border-forest-600 bg-forest-50 dark:bg-forest-950'
+                    : 'border-neutral-200 hover:bg-neutral-50 dark:border-neutral-800 dark:hover:bg-neutral-900'
+                )}
+              >
+                <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                  {t('visibilityPublicLabel')}
+                </p>
+                <p className="mt-0.5 text-xs text-neutral-600 dark:text-neutral-400">
+                  {t('visibilityPublicHelper')}
+                </p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setVisibility('private')}
+                className={cn(
+                  'rounded-lg border-2 p-3 text-left transition-colors',
+                  visibility === 'private'
+                    ? 'border-forest-600 bg-forest-50 dark:bg-forest-950'
+                    : 'border-neutral-200 hover:bg-neutral-50 dark:border-neutral-800 dark:hover:bg-neutral-900'
+                )}
+              >
+                <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                  {t('visibilityPrivateLabel')}
+                </p>
+                <p className="mt-0.5 text-xs text-neutral-600 dark:text-neutral-400">
+                  {t('visibilityPrivateHelper')}
+                </p>
+              </button>
+            </div>
+          </div>
+        )}
+
         <Input
           label={t('titleLabel')}
           placeholder={t('titlePlaceholder')}
@@ -144,13 +208,13 @@ export function TripForm({ mode = 'create', tripId, initialValues }: TripFormPro
           maxLength={120}
         />
 
-        <Textarea
+        <MarkdownEditor
           label={t('descriptionLabel')}
           placeholder={t('descriptionPlaceholder')}
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          onChange={setDescription}
           required
-          maxLength={2000}
+          maxLength={4000}
         />
 
         <Select
@@ -182,6 +246,10 @@ export function TripForm({ mode = 'create', tripId, initialValues }: TripFormPro
           waypoints={waypoints}
           onWaypointsChange={setWaypoints}
         />
+
+        <CustomFieldsEditor fields={customFields} onChange={setCustomFields} />
+
+        <LinksEditor links={links} onChange={setLinks} />
 
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <DateTimeField

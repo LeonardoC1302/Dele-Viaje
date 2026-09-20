@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { CATEGORY_KEYS } from '@/lib/constants/categories';
+import { extractErrorMessage } from '@/lib/format-validation-error';
 
 type Status = 'idle' | 'loading' | 'error';
 
@@ -44,7 +45,7 @@ export function OnboardingForm() {
 
     if (!res.ok) {
       const body = await res.json().catch(() => null);
-      setError(body?.error?.message ?? t('genericError'));
+      setError(extractErrorMessage(body, t('genericError')));
       setStatus('error');
       return;
     }

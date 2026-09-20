@@ -34,11 +34,23 @@ export default async function EditTripPage({
     redirect({ href: `/trips/${id}`, locale });
   }
 
-  const { data: waypointRows } = await supabase
-    .from('trip_waypoints')
-    .select('label, lat, lng, kind')
-    .eq('trip_id', id)
-    .order('sort', { ascending: true });
+  const [waypointsResult, customFieldsResult, linksResult] = await Promise.all([
+    supabase
+      .from('trip_waypoints')
+      .select('label, lat, lng, kind')
+      .eq('trip_id', id)
+      .order('sort', { ascending: true }),
+    supabase
+      .from('trip_custom_fields')
+      .select('label, value')
+      .eq('trip_id', id)
+      .order('sort', { ascending: true }),
+    supabase
+      .from('trip_links')
+      .select('url, label')
+      .eq('trip_id', id)
+      .order('sort', { ascending: true }),
+  ]);
 
   const initialValues: TripFormInitialValues = {
     title: trip.title,
@@ -47,7 +59,9 @@ export default async function EditTripPage({
     locationName: trip.location_name,
     lat: trip.lat,
     lng: trip.lng,
-    waypoints: (waypointRows ?? []) as TripFormInitialValues['waypoints'],
+    waypoints: (waypointsResult.data ?? []) as TripFormInitialValues['waypoints'],
+    customFields: customFieldsResult.data ?? [],
+    links: (linksResult.data ?? []).map((l) => ({ url: l.url, label: l.label ?? '' })),
     startAt: trip.start_at,
     endAt: trip.end_at,
     capacity: trip.capacity,

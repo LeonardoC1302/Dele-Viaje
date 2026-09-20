@@ -2,9 +2,11 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createTripSchema } from '@/lib/validators/trip';
 import { geocodeLocation } from '@/lib/geocode';
+import { saveTripCustomFields, saveTripLinks } from '@/lib/trip-extras';
 
-// See docs/api.md §3. Only `type: social` / `visibility: public` trips are
-// supported until agencies (tours) and private plans land in later phases.
+// See docs/api.md §3. Only `type: social` trips are supported until
+// agencies (tours) land — both `visibility: public` (open social trips)
+// and `visibility: private` (invite-only plans, Phase 3) are creatable.
 export async function POST(request: Request) {
   const supabase = await createClient();
   const {
@@ -53,7 +55,7 @@ export async function POST(request: Request) {
     .insert({
       owner_id: user.id,
       type: 'social',
-      visibility: 'public',
+      visibility: validated.data.visibility ?? 'public',
       status: 'published',
       title: validated.data.title,
       description: validated.data.description,
@@ -96,6 +98,9 @@ export async function POST(request: Request) {
       console.error('Failed to save trip waypoints:', waypointsError);
     }
   }
+
+  await saveTripCustomFields(supabase, data.id, validated.data.customFields);
+  await saveTripLinks(supabase, data.id, user.id, validated.data.links);
 
   return NextResponse.json({ id: data.id }, { status: 201 });
 }

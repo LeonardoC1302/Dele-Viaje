@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @config "../tailwind.config.ts";
+@plugin "@tailwindcss/typography";
 
 /* Geist fonts via next/font (see app/layout.tsx) */
 @supports (font-variation-settings: normal) {

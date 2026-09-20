@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
 import { ReportQueue, type ReportTicketData } from '@/components/admin/report-queue';
+import { AdminNav } from '@/components/admin/admin-nav';
 
 export default async function AdminReportsPage() {
   const t = await getTranslations('admin');
@@ -116,8 +117,9 @@ export default async function AdminReportsPage() {
           {t('reportsTitle')}
         </h1>
         <div className="mt-6">
-          <ReportQueue tickets={data} />
+          <AdminNav active="reports" />
         </div>
+        <ReportQueue tickets={data} />
       </div>
     </main>
   );

@@ -13,14 +13,15 @@ export type NotificationType =
   | 'trip_joined'
   | 'waitlist_promoted'
   | 'new_message'
-  | 'new_follower';
+  | 'new_follower'
+  | 'plan_direct_invite';
 
 export interface NotificationData {
   id: string;
   type: NotificationType;
   tripId: string | null;
   actorId: string | null;
-  data: { preview?: string };
+  data: { preview?: string; token?: string; tripTitle?: string };
   readAt: string | null;
   createdAt: string;
 }
@@ -88,7 +89,7 @@ export function NotificationBell({
               type: NotificationType;
               trip_id: string | null;
               actor_id: string | null;
-              data: { preview?: string };
+              data: { preview?: string; token?: string; tripTitle?: string };
               read_at: string | null;
               created_at: string;
             };
@@ -192,12 +193,18 @@ export function NotificationBell({
         return t('newMessage', { actor: actorName ?? t('someone'), trip: tripTitle ?? '' });
       case 'new_follower':
         return t('newFollower', { actor: actorName ?? t('someone') });
+      case 'plan_direct_invite':
+        return t('planDirectInvite', {
+          actor: actorName ?? t('someone'),
+          trip: n.data.tripTitle ?? tripTitle ?? '',
+        });
       default:
         return '';
     }
   };
 
   const linkFor = (n: NotificationData) => {
+    if (n.type === 'plan_direct_invite' && n.data.token) return `/invite/${n.data.token}`;
     if (n.tripId) return `/trips/${n.tripId}`;
     if (n.type === 'new_follower' && n.actorId) return `/users/${n.actorId}`;
     return null;

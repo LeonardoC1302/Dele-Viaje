@@ -4,22 +4,31 @@ import { createClient } from '@/lib/supabase/server';
 import { CATEGORY_KEYS } from '@/lib/constants/categories';
 import { type TripCardData } from '@/components/trips/trip-card';
 import { FeedView } from '@/components/trips/feed-view';
+import { NearMeButton } from '@/components/trips/near-me-button';
+import { boundingBox, haversineKm } from '@/lib/geo';
 import { cn } from '@/lib/utils';
+
+const NEAR_ME_RADIUS_KM = 100;
 
 export default async function FeedPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string }>;
+  searchParams: Promise<{ category?: string; verified?: string; lat?: string; lng?: string }>;
 }) {
-  const { category } = await searchParams;
+  const { category, verified, lat, lng } = await searchParams;
   const t = await getTranslations('feed');
   const tCategories = await getTranslations('categories');
   const supabase = await createClient();
 
+  const showVerifiedOnly = verified === '1';
+  const userLat = lat ? Number(lat) : null;
+  const userLng = lng ? Number(lng) : null;
+  const nearMeActive = userLat != null && userLng != null && !Number.isNaN(userLat) && !Number.isNaN(userLng);
+
   let query = supabase
     .from('trips')
     .select(
-      'id, title, category, location_name, start_at, capacity, confirmed_count, lat, lng'
+      'id, title, category, location_name, start_at, capacity, confirmed_count, lat, lng, type, price_crc'
     )
     .eq('status', 'published')
     .eq('visibility', 'public')
@@ -34,9 +43,50 @@ export default async function FeedPage({
     query = query.eq('category', activeCategory);
   }
 
+  // No PostGIS in this project — a bounding box is a cheap SQL
+  // pre-filter (and rules out trips with no coordinates at all), then
+  // haversineKm() below gives the exact distance for the real radius cut
+  // and the sort order.
+  if (nearMeActive) {
+    const box = boundingBox(userLat, userLng, NEAR_ME_RADIUS_KM);
+    query = query
+      .not('lat', 'is', null)
+      .not('lng', 'is', null)
+      .gte('lat', box.minLat)
+      .lte('lat', box.maxLat)
+      .gte('lng', box.minLng)
+      .lte('lng', box.maxLng);
+  }
+
+  // "Verified" means tours from a currently-approved agency — checked at
+  // read time, not just at the moment the tour was published, since an
+  // agency can be suspended after publishing (nothing currently
+  // un-publishes its existing tours when that happens). Two queries
+  // rather than an embedded-resource filter (`agencies!inner(...)` +
+  // `.eq('agencies.status', 'approved')`) — same reasoning as My Trips:
+  // simpler and doesn't depend on PostgREST embedded-filter syntax this
+  // codebase hasn't otherwise relied on.
+  if (showVerifiedOnly) {
+    const { data: approvedAgencies } = await supabase.from('agencies').select('id').eq('status', 'approved');
+    const approvedIds = (approvedAgencies ?? []).map((a) => a.id);
+    query = query.eq('type', 'tour').in('agency_id', approvedIds.length > 0 ? approvedIds : ['00000000-0000-0000-0000-000000000000']);
+  }
+
   const { data: trips } = await query;
 
-  const tripCards: TripCardData[] = (trips ?? []).map((trip) => ({
+  let tripRows = trips ?? [];
+  if (nearMeActive) {
+    // The bounding box is a rectangle, not a circle — trim the corners
+    // out with the real distance, then sort nearest-first (the default
+    // start_at sort doesn't make sense once "near me" is the whole point
+    // of this view).
+    tripRows = tripRows
+      .filter((trip) => trip.lat != null && trip.lng != null)
+      .filter((trip) => haversineKm(userLat!, userLng!, trip.lat!, trip.lng!) <= NEAR_ME_RADIUS_KM)
+      .sort((a, b) => haversineKm(userLat!, userLng!, a.lat!, a.lng!) - haversineKm(userLat!, userLng!, b.lat!, b.lng!));
+  }
+
+  const tripCards: TripCardData[] = tripRows.map((trip) => ({
     id: trip.id,
     title: trip.title,
     category: trip.category,
@@ -46,6 +96,8 @@ export default async function FeedPage({
     confirmedCount: trip.confirmed_count,
     lat: trip.lat,
     lng: trip.lng,
+    type: trip.type,
+    priceCrc: trip.price_crc,
   }));
 
   return (
@@ -84,14 +136,32 @@ export default async function FeedPage({
               {tCategories(key)}
             </Link>
           ))}
+          <Link
+            href={{
+              pathname: '/feed',
+              query: {
+                ...(activeCategory ? { category: activeCategory } : {}),
+                ...(showVerifiedOnly ? {} : { verified: '1' }),
+              },
+            }}
+            className={cn(
+              'rounded-full border px-3 py-1.5 text-sm transition-colors',
+              showVerifiedOnly
+                ? 'border-forest-600 bg-forest-600 text-white'
+                : 'border-neutral-300 text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800'
+            )}
+          >
+            {t('verifiedTab')}
+          </Link>
+          <NearMeButton active={nearMeActive} category={activeCategory} />
         </div>
 
         <FeedView
           trips={tripCards}
-          emptyTitle={activeCategory ? t('noResultsTitle') : t('emptyTitle')}
-          emptyBody={activeCategory ? t('noResultsBody') : t('emptyBody')}
-          emptyCtaHref={activeCategory ? '/feed' : '/trips/new'}
-          emptyCtaLabel={activeCategory ? t('clearFilter') : t('emptyCta')}
+          emptyTitle={activeCategory || showVerifiedOnly || nearMeActive ? t('noResultsTitle') : t('emptyTitle')}
+          emptyBody={activeCategory || showVerifiedOnly || nearMeActive ? t('noResultsBody') : t('emptyBody')}
+          emptyCtaHref={activeCategory || showVerifiedOnly || nearMeActive ? '/feed' : '/trips/new'}
+          emptyCtaLabel={activeCategory || showVerifiedOnly || nearMeActive ? t('clearFilter') : t('emptyCta')}
         />
       </div>
     </main>

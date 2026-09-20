@@ -57,7 +57,7 @@ export default async function TripChatPage({
 
   const { data: messageRows } = await supabase
     .from('messages')
-    .select('id, sender_id, body, created_at, deleted_at, kind, event_type, actor_id')
+    .select('id, sender_id, body, created_at, deleted_at, edited_at, kind, event_type, actor_id')
     .eq('trip_id', trip.id)
     .order('created_at', { ascending: true })
     .limit(200);
@@ -68,6 +68,7 @@ export default async function TripChatPage({
     body: row.body,
     createdAt: row.created_at,
     deletedAt: row.deleted_at,
+    editedAt: row.edited_at,
     kind: row.kind as 'user' | 'system',
     eventType: row.event_type as 'joined' | 'left' | 'promoted' | null,
     actorId: row.actor_id,
