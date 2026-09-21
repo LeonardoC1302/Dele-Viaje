@@ -2,12 +2,14 @@
 
 import { useState, type FormEvent } from 'react';
 import { useTranslations } from 'next-intl';
+import { NotePencil, MapPin, Sliders, CalendarBlank } from '@phosphor-icons/react';
 import { useRouter } from '@/i18n/navigation';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/field';
 import { MarkdownEditor } from '@/components/ui/markdown-editor';
 import { Select } from '@/components/ui/select';
 import { DateTimeField } from '@/components/ui/date-time-field';
 import { Button } from '@/components/ui/button';
+import { FormSection } from '@/components/ui/form-section';
 import {
   TripMapEditor,
   type TripWaypointInput,
@@ -144,139 +146,146 @@ export function TripForm({ mode = 'create', tripId, initialValues }: TripFormPro
   return (
     <form
       onSubmit={handleSubmit}
-      className="w-full max-w-[560px] rounded-xl border border-neutral-200 bg-white p-8 dark:border-neutral-800 dark:bg-neutral-900"
+      className="w-full max-w-[560px] rounded-md border border-sand-200 bg-[color:var(--raised)] p-8 dark:border-sand-800"
     >
-      <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-50">
+      <h1 className="text-2xl font-extrabold text-sand-900 dark:text-sand-50">
         {mode === 'edit' ? t('editTitle') : t('newTitle')}
       </h1>
-      <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+      <p className="mt-2 text-sm text-sand-600 dark:text-sand-400">
         {mode === 'edit' ? t('editSubtitle') : t('newSubtitle')}
       </p>
 
-      <div className="mt-6 flex flex-col gap-5">
-        {mode === 'create' && (
-          <div>
-            <label className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-              {t('visibilityLabel')}
-            </label>
-            <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
-              <button
-                type="button"
-                onClick={() => setVisibility('public')}
-                className={cn(
-                  'rounded-lg border-2 p-3 text-left transition-colors',
-                  visibility === 'public'
-                    ? 'border-forest-600 bg-forest-50 dark:bg-forest-950'
-                    : 'border-neutral-200 hover:bg-neutral-50 dark:border-neutral-800 dark:hover:bg-neutral-900'
-                )}
-              >
-                <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                  {t('visibilityPublicLabel')}
-                </p>
-                <p className="mt-0.5 text-xs text-neutral-600 dark:text-neutral-400">
-                  {t('visibilityPublicHelper')}
-                </p>
-              </button>
-              <button
-                type="button"
-                onClick={() => setVisibility('private')}
-                className={cn(
-                  'rounded-lg border-2 p-3 text-left transition-colors',
-                  visibility === 'private'
-                    ? 'border-forest-600 bg-forest-50 dark:bg-forest-950'
-                    : 'border-neutral-200 hover:bg-neutral-50 dark:border-neutral-800 dark:hover:bg-neutral-900'
-                )}
-              >
-                <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                  {t('visibilityPrivateLabel')}
-                </p>
-                <p className="mt-0.5 text-xs text-neutral-600 dark:text-neutral-400">
-                  {t('visibilityPrivateHelper')}
-                </p>
-              </button>
+      <div className="mt-6 flex flex-col gap-6">
+        <FormSection icon={NotePencil} title={t('sectionDetails')}>
+          {mode === 'create' && (
+            <div>
+              <label className="text-sm font-medium text-sand-900 dark:text-sand-100">
+                {t('visibilityLabel')}
+              </label>
+              <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => setVisibility('public')}
+                  className={cn(
+                    'rounded-md border-2 p-3 text-left transition-colors',
+                    visibility === 'public'
+                      ? 'border-forest-600 bg-forest-50 dark:bg-forest-950'
+                      : 'border-sand-200 hover:bg-sand-50 dark:border-sand-800 dark:hover:bg-sand-900'
+                  )}
+                >
+                  <p className="text-sm font-semibold text-sand-900 dark:text-sand-100">
+                    {t('visibilityPublicLabel')}
+                  </p>
+                  <p className="mt-0.5 text-xs text-sand-600 dark:text-sand-400">
+                    {t('visibilityPublicHelper')}
+                  </p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setVisibility('private')}
+                  className={cn(
+                    'rounded-md border-2 p-3 text-left transition-colors',
+                    visibility === 'private'
+                      ? 'border-forest-600 bg-forest-50 dark:bg-forest-950'
+                      : 'border-sand-200 hover:bg-sand-50 dark:border-sand-800 dark:hover:bg-sand-900'
+                  )}
+                >
+                  <p className="text-sm font-semibold text-sand-900 dark:text-sand-100">
+                    {t('visibilityPrivateLabel')}
+                  </p>
+                  <p className="mt-0.5 text-xs text-sand-600 dark:text-sand-400">
+                    {t('visibilityPrivateHelper')}
+                  </p>
+                </button>
+              </div>
             </div>
+          )}
+
+          <Input
+            label={t('titleLabel')}
+            placeholder={t('titlePlaceholder')}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+            minLength={3}
+            maxLength={120}
+          />
+
+          <MarkdownEditor
+            label={t('descriptionLabel')}
+            placeholder={t('descriptionPlaceholder')}
+            value={description}
+            onChange={setDescription}
+            required
+            maxLength={4000}
+          />
+
+          <Select
+            label={t('categoryLabel')}
+            value={category}
+            onValueChange={setCategory}
+            options={categoryOptions}
+            required
+          />
+        </FormSection>
+
+        <FormSection icon={MapPin} title={t('sectionLocation')}>
+          <Input
+            label={t('locationLabel')}
+            placeholder={t('locationPlaceholder')}
+            value={locationName}
+            onChange={(e) => setLocationName(e.target.value)}
+            required
+            minLength={2}
+            maxLength={160}
+          />
+
+          <TripMapEditor
+            meetingPointName={locationName}
+            meetingPointLat={lat}
+            meetingPointLng={lng}
+            onMeetingPointChange={(newLat, newLng) => {
+              setLat(newLat);
+              setLng(newLng);
+            }}
+            waypoints={waypoints}
+            onWaypointsChange={setWaypoints}
+          />
+        </FormSection>
+
+        <FormSection icon={Sliders} title={t('sectionExtras')}>
+          <CustomFieldsEditor fields={customFields} onChange={setCustomFields} />
+          <LinksEditor links={links} onChange={setLinks} />
+        </FormSection>
+
+        <FormSection icon={CalendarBlank} title={t('sectionSchedule')}>
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <DateTimeField
+              label={t('startLabel')}
+              value={startAt}
+              onChange={setStartAt}
+              minDate={new Date()}
+              required
+            />
+            <DateTimeField
+              label={t('endLabel')}
+              value={endAt}
+              onChange={setEndAt}
+              minDate={startAt ?? new Date()}
+              required
+            />
           </div>
-        )}
 
-        <Input
-          label={t('titleLabel')}
-          placeholder={t('titlePlaceholder')}
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-          minLength={3}
-          maxLength={120}
-        />
-
-        <MarkdownEditor
-          label={t('descriptionLabel')}
-          placeholder={t('descriptionPlaceholder')}
-          value={description}
-          onChange={setDescription}
-          required
-          maxLength={4000}
-        />
-
-        <Select
-          label={t('categoryLabel')}
-          value={category}
-          onValueChange={setCategory}
-          options={categoryOptions}
-          required
-        />
-
-        <Input
-          label={t('locationLabel')}
-          placeholder={t('locationPlaceholder')}
-          value={locationName}
-          onChange={(e) => setLocationName(e.target.value)}
-          required
-          minLength={2}
-          maxLength={160}
-        />
-
-        <TripMapEditor
-          meetingPointName={locationName}
-          meetingPointLat={lat}
-          meetingPointLng={lng}
-          onMeetingPointChange={(newLat, newLng) => {
-            setLat(newLat);
-            setLng(newLng);
-          }}
-          waypoints={waypoints}
-          onWaypointsChange={setWaypoints}
-        />
-
-        <CustomFieldsEditor fields={customFields} onChange={setCustomFields} />
-
-        <LinksEditor links={links} onChange={setLinks} />
-
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <DateTimeField
-            label={t('startLabel')}
-            value={startAt}
-            onChange={setStartAt}
-            minDate={new Date()}
-            required
+          <Input
+            type="number"
+            label={t('capacityLabel')}
+            helperText={t('capacityHelper')}
+            value={capacity}
+            onChange={(e) => setCapacity(e.target.value)}
+            min={1}
+            max={500}
           />
-          <DateTimeField
-            label={t('endLabel')}
-            value={endAt}
-            onChange={setEndAt}
-            minDate={startAt ?? new Date()}
-            required
-          />
-        </div>
-
-        <Input
-          type="number"
-          label={t('capacityLabel')}
-          helperText={t('capacityHelper')}
-          value={capacity}
-          onChange={(e) => setCapacity(e.target.value)}
-          min={1}
-          max={500}
-        />
+        </FormSection>
 
         {error && (
           <p className="text-sm text-red-600 dark:text-red-400">{error}</p>

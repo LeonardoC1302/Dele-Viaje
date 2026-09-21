@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Plus, Trash, X } from '@phosphor-icons/react';
+import { Plus, Trash, X, ChartBar } from '@phosphor-icons/react';
+import { PanelHeading } from '@/components/ui/panel-heading';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/field';
 import { cn } from '@/lib/utils';
 
 export interface PollOption {
@@ -125,12 +126,12 @@ export function PollsList({ tripId, currentUserId, isHostTeam, initialPolls }: P
   };
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
-      <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">{t('pollsTitle')}</h2>
-      <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">{t('pollsHelper')}</p>
+    <div className="min-w-0">
+      <PanelHeading icon={ChartBar}>{t('pollsTitle')}</PanelHeading>
+      <p className="mt-1 text-xs text-sand-600 dark:text-sand-400">{t('pollsHelper')}</p>
 
       {polls.length === 0 ? (
-        <p className="mt-4 text-sm text-neutral-500 dark:text-neutral-400">{t('pollsEmpty')}</p>
+        <p className="mt-4 text-sm text-sand-500 dark:text-sand-400">{t('pollsEmpty')}</p>
       ) : (
         <ul className="mt-4 flex flex-col gap-4">
           {polls.map((poll) => {
@@ -139,9 +140,9 @@ export function PollsList({ tripId, currentUserId, isHostTeam, initialPolls }: P
             const canManage = poll.createdBy === currentUserId || isHostTeam;
 
             return (
-              <li key={poll.id} className="rounded-lg border border-neutral-200 p-3 dark:border-neutral-800">
+              <li key={poll.id} className="rounded-md border border-sand-200 p-3 dark:border-sand-800">
                 <div className="flex items-start justify-between gap-2">
-                  <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                  <p className="text-sm font-medium text-sand-900 dark:text-sand-100">
                     {poll.question}
                   </p>
                   {canManage && (
@@ -165,7 +166,7 @@ export function PollsList({ tripId, currentUserId, isHostTeam, initialPolls }: P
                 </div>
 
                 {isClosed && (
-                  <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
+                  <p className="mt-1 text-xs text-dawn-700 dark:text-dawn-400">
                     {t('pollClosedOn', { date: dateFormatter.format(new Date(poll.closesAt!)) })}
                   </p>
                 )}
@@ -183,10 +184,10 @@ export function PollsList({ tripId, currentUserId, isHostTeam, initialPolls }: P
                         disabled={isClosed}
                         onClick={() => vote(poll.id, option.key)}
                         className={cn(
-                          'relative overflow-hidden rounded-lg border p-2 text-left text-sm transition-colors disabled:cursor-not-allowed',
+                          'relative overflow-hidden rounded-md border p-2 text-left text-sm transition-colors disabled:cursor-not-allowed',
                           isMine
                             ? 'border-forest-500 bg-forest-50 dark:bg-forest-950'
-                            : 'border-neutral-200 hover:bg-neutral-50 dark:border-neutral-800 dark:hover:bg-neutral-900'
+                            : 'border-sand-200 hover:bg-sand-50 dark:border-sand-800 dark:hover:bg-sand-900'
                         )}
                       >
                         <div
@@ -194,8 +195,8 @@ export function PollsList({ tripId, currentUserId, isHostTeam, initialPolls }: P
                           style={{ width: `${pct}%` }}
                         />
                         <div className="relative flex items-center justify-between">
-                          <span className="text-neutral-800 dark:text-neutral-200">{option.label}</span>
-                          <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                          <span className="text-sand-800 dark:text-sand-200">{option.label}</span>
+                          <span className="text-xs text-sand-500 dark:text-sand-400">
                             {t('pollVoteCount', { count })}
                           </span>
                         </div>
@@ -209,7 +210,7 @@ export function PollsList({ tripId, currentUserId, isHostTeam, initialPolls }: P
         </ul>
       )}
 
-      <div className="mt-4 flex flex-col gap-2 border-t border-neutral-200 pt-4 dark:border-neutral-800">
+      <div className="mt-4 flex flex-col gap-2 border-t border-sand-200 pt-4 dark:border-sand-800">
         <Input
           label={t('pollQuestionLabel')}
           placeholder={t('pollQuestionPlaceholder')}

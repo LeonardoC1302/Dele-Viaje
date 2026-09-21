@@ -65,7 +65,7 @@ export function UserManager({
 
   if (users.length === 0) {
     return (
-      <p className="rounded-xl border border-neutral-200 bg-white p-8 text-center text-sm text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
+      <p className="rounded-md border border-sand-200 bg-[color:var(--raised)] p-8 text-center text-sm text-sand-500 dark:border-sand-800 dark:text-sand-400">
         {t('usersEmpty')}
       </p>
     );
@@ -77,18 +77,18 @@ export function UserManager({
       {users.map((user) => (
         <div
           key={user.id}
-          className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-sand-200 bg-[color:var(--raised)] p-4 dark:border-sand-800"
         >
           <div className="flex items-center gap-3">
             <Avatar src={user.avatarUrl ?? undefined} fallback={user.displayName ?? undefined} />
             <div>
               <Link
                 href={`/users/${user.id}`}
-                className="font-medium text-neutral-900 hover:underline dark:text-neutral-100"
+                className="font-medium text-sand-900 hover:underline dark:text-sand-100"
               >
                 {user.displayName ?? '—'}
               </Link>
-              <p className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
+              <p className="mt-0.5 text-xs text-sand-500 dark:text-sand-400">
                 {t('userSince', { date: dateFormatter.format(new Date(user.createdAt)) })}
               </p>
             </div>

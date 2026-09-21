@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
+import { SealCheck } from '@phosphor-icons/react';
 import { useRouter } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
+import { PanelHeading } from '@/components/ui/panel-heading';
 
 export interface AllBadgeData {
   code: string;
@@ -57,10 +59,8 @@ export function BadgeManager({ profileId, allBadges, grantedCodes }: BadgeManage
   };
 
   return (
-    <div className="mt-6 rounded-xl border border-dashed border-neutral-300 p-4 dark:border-neutral-700">
-      <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-        {t('manageBadges')}
-      </h3>
+    <div className="mt-6 rounded-md border border-dashed border-sand-300 p-4 dark:border-sand-700">
+      <PanelHeading as="h3" icon={SealCheck}>{t('manageBadges')}</PanelHeading>
       {error && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
       <div className="mt-3 flex flex-wrap gap-2">
         {allBadges.map((badge) => {

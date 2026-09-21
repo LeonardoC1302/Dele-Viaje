@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
 import { ReportQueue, type ReportTicketData } from '@/components/admin/report-queue';
 import { AdminNav } from '@/components/admin/admin-nav';
+import { CaseHeader, PageBody } from '@/components/cordillera/folder';
 
 export default async function AdminReportsPage() {
   const t = await getTranslations('admin');
@@ -111,14 +112,10 @@ export default async function AdminReportsPage() {
   }));
 
   return (
-    <main className="min-h-[100dvh] bg-neutral-50 py-12 dark:bg-neutral-950">
-      <div className="mx-auto max-w-[900px] px-4 sm:px-6 lg:px-8">
-        <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-50">
-          {t('reportsTitle')}
-        </h1>
-        <div className="mt-6">
-          <AdminNav active="reports" />
-        </div>
+    <main>
+      <div className="mx-auto w-full max-w-[900px] px-4 py-8 sm:px-7 sm:py-10">
+        <CaseHeader title={t('reportsTitle')} />
+        <AdminNav active="reports" />
         <ReportQueue tickets={data} />
       </div>
     </main>
@@ -128,7 +125,7 @@ export default async function AdminReportsPage() {
 function NotAllowed({ message }: { message: string }) {
   return (
     <main className="flex min-h-[60vh] items-center justify-center">
-      <p className="text-sm text-neutral-500 dark:text-neutral-400">{message}</p>
+      <p className="text-sm text-sand-500 dark:text-sand-400">{message}</p>
     </main>
   );
 }

@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
 import { AgencyQueue, type AgencyQueueData } from '@/components/admin/agency-queue';
 import { AdminNav } from '@/components/admin/admin-nav';
+import { CaseHeader, PageBody } from '@/components/cordillera/folder';
 
 export default async function AdminAgenciesPage() {
   const t = await getTranslations('admin');
@@ -34,14 +35,10 @@ export default async function AdminAgenciesPage() {
   }));
 
   return (
-    <main className="min-h-[100dvh] bg-neutral-50 py-12 dark:bg-neutral-950">
-      <div className="mx-auto max-w-[800px] px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
-          {t('agenciesTitle')}
-        </h1>
-        <div className="mt-6">
-          <AdminNav active="agencies" />
-        </div>
+    <main>
+      <div className="mx-auto w-full max-w-[800px] px-4 py-8 sm:px-7 sm:py-10">
+        <CaseHeader title={t('agenciesTitle')} />
+        <AdminNav active="agencies" />
         <AgencyQueue initialAgencies={agencies} />
       </div>
     </main>
@@ -51,7 +48,7 @@ export default async function AdminAgenciesPage() {
 function NotAllowed({ message }: { message: string }) {
   return (
     <main className="flex min-h-[60vh] items-center justify-center">
-      <p className="text-sm text-neutral-500 dark:text-neutral-400">{message}</p>
+      <p className="text-sm text-sand-500 dark:text-sand-400">{message}</p>
     </main>
   );
 }

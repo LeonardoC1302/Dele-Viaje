@@ -2,13 +2,14 @@
 
 import { useState, type FormEvent } from 'react';
 import { useTranslations } from 'next-intl';
-import { Plus, Trash } from '@phosphor-icons/react';
+import { Plus, Trash, NotePencil, MapPin, Sliders, CalendarBlank, Ticket } from '@phosphor-icons/react';
 import { useRouter, Link } from '@/i18n/navigation';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/field';
 import { MarkdownEditor } from '@/components/ui/markdown-editor';
 import { Select } from '@/components/ui/select';
 import { DateTimeField } from '@/components/ui/date-time-field';
 import { Button } from '@/components/ui/button';
+import { FormSection } from '@/components/ui/form-section';
 import {
   TripMapEditor,
   type TripWaypointInput,
@@ -168,192 +169,201 @@ export function TourForm({ agencyId, mode = 'create', tripId, initialValues, tem
   return (
     <form
       onSubmit={handleSubmit}
-      className="w-full max-w-[560px] rounded-xl border border-neutral-200 bg-white p-8 dark:border-neutral-800 dark:bg-neutral-900"
+      className="w-full max-w-[560px] rounded-md border border-sand-200 bg-[color:var(--raised)] p-8 dark:border-sand-800"
     >
-      <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-50">
+      <h1 className="text-2xl font-extrabold text-sand-900 dark:text-sand-50">
         {mode === 'edit' ? t('tourEditTitle') : t('tourNewTitle')}
       </h1>
-      <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+      <p className="mt-2 text-sm text-sand-600 dark:text-sand-400">
         {mode === 'edit' ? t('tourEditSubtitle') : t('tourNewSubtitle')}
       </p>
 
-      <div className="mt-6 flex flex-col gap-5">
-        <Input
-          label={tTrips('titleLabel')}
-          placeholder={tTrips('titlePlaceholder')}
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-          minLength={3}
-          maxLength={120}
-        />
-
-        <MarkdownEditor
-          label={tTrips('descriptionLabel')}
-          placeholder={tTrips('descriptionPlaceholder')}
-          value={description}
-          onChange={setDescription}
-          required
-          maxLength={4000}
-        />
-
-        <Select
-          label={tTrips('categoryLabel')}
-          value={category}
-          onValueChange={setCategory}
-          options={categoryOptions}
-          required
-        />
-
-        <Input
-          label={tTrips('locationLabel')}
-          placeholder={tTrips('locationPlaceholder')}
-          value={locationName}
-          onChange={(e) => setLocationName(e.target.value)}
-          required
-          minLength={2}
-          maxLength={160}
-        />
-
-        <TripMapEditor
-          meetingPointName={locationName}
-          meetingPointLat={lat}
-          meetingPointLng={lng}
-          onMeetingPointChange={(newLat, newLng) => {
-            setLat(newLat);
-            setLng(newLng);
-          }}
-          waypoints={waypoints}
-          onWaypointsChange={setWaypoints}
-        />
-
-        <CustomFieldsEditor fields={customFields} onChange={setCustomFields} />
-
-        <LinksEditor links={links} onChange={setLinks} />
-
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <DateTimeField
-            label={tTrips('startLabel')}
-            value={startAt}
-            onChange={setStartAt}
-            minDate={new Date()}
-            required
-          />
-          <DateTimeField
-            label={tTrips('endLabel')}
-            value={endAt}
-            onChange={setEndAt}
-            minDate={startAt ?? new Date()}
-            required
-          />
-        </div>
-
-        {mode === 'create' && (
-          <div className="flex flex-col gap-3 rounded-lg border border-dashed border-neutral-300 p-4 dark:border-neutral-700">
-            <div>
-              <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                {t('tourAdditionalDatesLabel')}
-              </p>
-              <p className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
-                {t('tourAdditionalDatesHelper')}
-              </p>
-            </div>
-
-            {additionalDates.map((entry, index) => (
-              <div key={entry.id} className="flex flex-col gap-3 sm:flex-row sm:items-start">
-                <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2">
-                  <DateTimeField
-                    label={t('tourAdditionalDateStart', { number: index + 1 })}
-                    value={entry.startAt}
-                    onChange={(date) =>
-                      setAdditionalDates((prev) =>
-                        prev.map((d) => (d.id === entry.id ? { ...d, startAt: date } : d))
-                      )
-                    }
-                    minDate={new Date()}
-                  />
-                  <DateTimeField
-                    label={tTrips('endLabel')}
-                    value={entry.endAt}
-                    onChange={(date) =>
-                      setAdditionalDates((prev) =>
-                        prev.map((d) => (d.id === entry.id ? { ...d, endAt: date } : d))
-                      )
-                    }
-                    minDate={entry.startAt ?? new Date()}
-                  />
-                </div>
-                <Button
-                  type="button"
-                  size="xs"
-                  variant="ghost"
-                  className="mt-1 shrink-0 self-start text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950 sm:mt-7"
-                  onClick={() => setAdditionalDates((prev) => prev.filter((d) => d.id !== entry.id))}
-                  aria-label={t('tourAdditionalDateRemove')}
-                >
-                  <Trash size={14} weight="regular" strokeWidth={1.5} />
-                </Button>
-              </div>
-            ))}
-
-            <Button
-              type="button"
-              size="xs"
-              variant="secondary"
-              className="self-start"
-              onClick={() =>
-                setAdditionalDates((prev) => [...prev, { id: crypto.randomUUID(), startAt: null, endAt: null }])
-              }
-            >
-              <Plus size={14} weight="bold" />
-              {t('tourAdditionalDateAdd')}
-            </Button>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+      <div className="mt-6 flex flex-col gap-6">
+        <FormSection icon={NotePencil} title={tTrips('sectionDetails')}>
           <Input
-            type="number"
-            label={tTrips('capacityLabel')}
-            value={capacity}
-            onChange={(e) => setCapacity(e.target.value)}
+            label={tTrips('titleLabel')}
+            placeholder={tTrips('titlePlaceholder')}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
             required
-            min={1}
-            max={500}
+            minLength={3}
+            maxLength={120}
           />
-          <Input
-            type="number"
-            label={t('tourMinParticipantsLabel')}
-            helperText={t('tourMinParticipantsHelper')}
-            value={minParticipants}
-            onChange={(e) => setMinParticipants(e.target.value)}
-            min={1}
-            max={500}
-          />
-        </div>
 
-        <Input
-          type="number"
-          label={t('tourPriceLabel')}
-          helperText={t('tourPriceHelper')}
-          value={priceCrc}
-          onChange={(e) => setPriceCrc(e.target.value)}
-          required
-          min={1000}
-        />
-
-        <div>
           <MarkdownEditor
-            label={t('tourExclusiveContentLabel')}
-            placeholder={t('tourExclusiveContentPlaceholder')}
-            value={exclusiveContent}
-            onChange={setExclusiveContent}
+            label={tTrips('descriptionLabel')}
+            placeholder={tTrips('descriptionPlaceholder')}
+            value={description}
+            onChange={setDescription}
+            required
             maxLength={4000}
           />
-          <p className="mt-1.5 text-xs text-neutral-500 dark:text-neutral-400">
-            {t('tourExclusiveContentHelper')}
-          </p>
-        </div>
+
+          <Select
+            label={tTrips('categoryLabel')}
+            value={category}
+            onValueChange={setCategory}
+            options={categoryOptions}
+            required
+          />
+        </FormSection>
+
+        <FormSection icon={MapPin} title={tTrips('sectionLocation')}>
+          <Input
+            label={tTrips('locationLabel')}
+            placeholder={tTrips('locationPlaceholder')}
+            value={locationName}
+            onChange={(e) => setLocationName(e.target.value)}
+            required
+            minLength={2}
+            maxLength={160}
+          />
+
+          <TripMapEditor
+            meetingPointName={locationName}
+            meetingPointLat={lat}
+            meetingPointLng={lng}
+            onMeetingPointChange={(newLat, newLng) => {
+              setLat(newLat);
+              setLng(newLng);
+            }}
+            waypoints={waypoints}
+            onWaypointsChange={setWaypoints}
+          />
+        </FormSection>
+
+        <FormSection icon={Sliders} title={tTrips('sectionExtras')}>
+          <CustomFieldsEditor fields={customFields} onChange={setCustomFields} />
+          <LinksEditor links={links} onChange={setLinks} />
+        </FormSection>
+
+        <FormSection icon={CalendarBlank} title={tTrips('sectionSchedule')}>
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <DateTimeField
+              label={tTrips('startLabel')}
+              value={startAt}
+              onChange={setStartAt}
+              minDate={new Date()}
+              required
+            />
+            <DateTimeField
+              label={tTrips('endLabel')}
+              value={endAt}
+              onChange={setEndAt}
+              minDate={startAt ?? new Date()}
+              required
+            />
+          </div>
+
+          {mode === 'create' && (
+            <div className="flex flex-col gap-3 rounded-md border border-dashed border-sand-300 p-4 dark:border-sand-700">
+              <div>
+                <p className="text-sm font-medium text-sand-900 dark:text-sand-100">
+                  {t('tourAdditionalDatesLabel')}
+                </p>
+                <p className="mt-0.5 text-xs text-sand-500 dark:text-sand-400">
+                  {t('tourAdditionalDatesHelper')}
+                </p>
+              </div>
+
+              {additionalDates.map((entry, index) => (
+                <div key={entry.id} className="flex flex-col gap-3 sm:flex-row sm:items-start">
+                  <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2">
+                    <DateTimeField
+                      label={t('tourAdditionalDateStart', { number: index + 1 })}
+                      value={entry.startAt}
+                      onChange={(date) =>
+                        setAdditionalDates((prev) =>
+                          prev.map((d) => (d.id === entry.id ? { ...d, startAt: date } : d))
+                        )
+                      }
+                      minDate={new Date()}
+                    />
+                    <DateTimeField
+                      label={tTrips('endLabel')}
+                      value={entry.endAt}
+                      onChange={(date) =>
+                        setAdditionalDates((prev) =>
+                          prev.map((d) => (d.id === entry.id ? { ...d, endAt: date } : d))
+                        )
+                      }
+                      minDate={entry.startAt ?? new Date()}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    size="xs"
+                    variant="ghost"
+                    className="mt-1 shrink-0 self-start text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950 sm:mt-7"
+                    onClick={() => setAdditionalDates((prev) => prev.filter((d) => d.id !== entry.id))}
+                    aria-label={t('tourAdditionalDateRemove')}
+                  >
+                    <Trash size={14} weight="regular" strokeWidth={1.5} />
+                  </Button>
+                </div>
+              ))}
+
+              <Button
+                type="button"
+                size="xs"
+                variant="secondary"
+                className="self-start"
+                onClick={() =>
+                  setAdditionalDates((prev) => [...prev, { id: crypto.randomUUID(), startAt: null, endAt: null }])
+                }
+              >
+                <Plus size={14} weight="bold" />
+                {t('tourAdditionalDateAdd')}
+              </Button>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <Input
+              type="number"
+              label={tTrips('capacityLabel')}
+              value={capacity}
+              onChange={(e) => setCapacity(e.target.value)}
+              required
+              min={1}
+              max={500}
+            />
+            <Input
+              type="number"
+              label={t('tourMinParticipantsLabel')}
+              helperText={t('tourMinParticipantsHelper')}
+              value={minParticipants}
+              onChange={(e) => setMinParticipants(e.target.value)}
+              min={1}
+              max={500}
+            />
+          </div>
+        </FormSection>
+
+        <FormSection icon={Ticket} title={t('sectionPricing')}>
+          <Input
+            type="number"
+            label={t('tourPriceLabel')}
+            helperText={t('tourPriceHelper')}
+            value={priceCrc}
+            onChange={(e) => setPriceCrc(e.target.value)}
+            required
+            min={1000}
+          />
+
+          <div>
+            <MarkdownEditor
+              label={t('tourExclusiveContentLabel')}
+              placeholder={t('tourExclusiveContentPlaceholder')}
+              value={exclusiveContent}
+              onChange={setExclusiveContent}
+              maxLength={4000}
+            />
+            <p className="mt-1.5 text-xs text-sand-500 dark:text-sand-400">
+              {t('tourExclusiveContentHelper')}
+            </p>
+          </div>
+        </FormSection>
 
         {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
@@ -363,7 +373,7 @@ export function TourForm({ agencyId, mode = 'create', tripId, initialValues, tem
           </Button>
           <Link
             href={mode === 'edit' && tripId ? `/trips/${tripId}` : `/agencies/${agencyId}/panel`}
-            className="text-sm font-medium text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+            className="text-sm font-medium text-sand-600 hover:text-sand-900 dark:text-sand-400 dark:hover:text-sand-100"
           >
             {t('cancel')}
           </Link>

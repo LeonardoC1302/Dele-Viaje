@@ -2,112 +2,211 @@
 @config "../tailwind.config.ts";
 @plugin "@tailwindcss/typography";
 
-/* Geist fonts via next/font (see app/layout.tsx) */
-@supports (font-variation-settings: normal) {
-  :root {
-    font-family: var(--font-geist-sans, system-ui);
-  }
-}
+/* ==========================================================================
+   Cordillera — global foundation
+   See tailwind.config.ts for the reasoning behind the token families.
+   ========================================================================== */
 
 :root {
-  /* Light mode (default) */
-  --color-bg: hsl(0, 0%, 98%);         /* #fafaf8 */
-  --color-surface: hsl(0, 0%, 100%);   /* #ffffff */
-  --color-text-primary: hsl(0, 0%, 6%);      /* #0f0f0e (off-black) */
-  --color-text-secondary: hsl(0, 0%, 30%);   /* Muted text */
-  --color-border: hsl(0, 0%, 91%);    /* Neutral 200 */
-  --color-accent: hsl(163, 73%, 16%); /* #1B4332 (Forest Green) */
-  --color-accent-light: hsl(163, 50%, 35%); /* #2D6A4F */
-  --color-accent-dark: hsl(163, 96%, 5%);   /* #081C15 */
+  /* Surfaces climb the sand ramp. `raised` is the panel sitting on
+     `page`; `sunken` is a well pressed into it (inputs, code, empty
+     states). Depth is tint, not shadow. */
+  --page: #fbf8f2;
+  /* The folder face. Manila-tinted rather than white — a pure #fff panel
+     on warm paper reads as a hole punched in the page, not as a card
+     laid on it. */
+  --raised: #fffdf7;
+  --sunken: #f5f0e6;
+  --hairline: #eae2d3;
+  --hairline-strong: #d9cdb8;
 
-  /* Typography */
-  --leading-tight: 1.2;
-  --leading-normal: 1.5;
-  --leading-relaxed: 1.625;
+  --ink: #1a1611;
+  --ink-muted: #6b5d47;
+  --ink-faint: #8e7e64;
 
-  /* Spacing (Tailwind-aligned) */
-  --radius-sm: 4px;
-  --radius-base: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-  --radius-full: 9999px;
+  --brand: #1b4332;
+  --brand-hover: #2d6a4f;
+  --accent: #e8823c;
+
+  /* One ring definition so focus looks identical on every control. */
+  --ring: #e8823c;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    /* Dark mode */
-    --color-bg: hsl(0, 0%, 6%);        /* #0f0f0e (off-black) */
-    --color-surface: hsl(0, 0%, 9%);   /* Slightly lighter than bg */
-    --color-text-primary: hsl(0, 0%, 98%);  /* #fafaf8 (off-white) */
-    --color-text-secondary: hsl(0, 0%, 70%); /* Muted text */
-    --color-border: hsl(0, 0%, 20%);   /* Subtle dividers */
-    --color-accent: hsl(163, 96%, 25%); /* Lighter forest for dark mode */
-    --color-accent-light: hsl(163, 90%, 35%);
-    --color-accent-dark: hsl(163, 96%, 5%);
+    /* Dark mode is not an inversion — it's nightfall on the same
+       mountain. Surfaces stay warm (they sit on the sand ramp's dark
+       end, not on neutral gray) and the brand green lightens so it
+       still reads as green rather than as black. */
+    --page: #100d0a;
+    --raised: #1a1611;
+    --sunken: #241e18;
+    --hairline: #2e2720;
+    --hairline-strong: #4c4132;
+
+    --ink: #f5f0e6;
+    --ink-muted: #b9a88c;
+    --ink-faint: #8e7e64;
+
+    --brand: #4fb096;
+    --brand-hover: #81c9b3;
+    --accent: #f2a35e;
+
+    --ring: #f2a35e;
   }
 }
 
-/* Allow user preference override */
-[data-theme="light"] {
-  --color-bg: hsl(0, 0%, 98%);
-  --color-surface: hsl(0, 0%, 100%);
-  --color-text-primary: hsl(0, 0%, 6%);
-  --color-text-secondary: hsl(0, 0%, 30%);
-  --color-border: hsl(0, 0%, 91%);
-  --color-accent: hsl(163, 73%, 16%);
-  --color-accent-light: hsl(163, 50%, 35%);
-  --color-accent-dark: hsl(163, 96%, 5%);
-}
-
-[data-theme="dark"] {
-  --color-bg: hsl(0, 0%, 6%);
-  --color-surface: hsl(0, 0%, 9%);
-  --color-text-primary: hsl(0, 0%, 98%);
-  --color-text-secondary: hsl(0, 0%, 70%);
-  --color-border: hsl(0, 0%, 20%);
-  --color-accent: hsl(163, 96%, 25%);
-  --color-accent-light: hsl(163, 90%, 35%);
-  --color-accent-dark: hsl(163, 96%, 5%);
-}
-
-/*
- * Base element defaults live in @layer base so Tailwind utility classes
- * (e.g. text-white on a <Link>-rendered <a>) correctly override them.
- * Unlayered rules always beat layered ones under CSS Cascade Layers,
- * regardless of specificity, which previously made every Link-styled
- * button's text color fall back to --color-accent instead of its
- * intended utility color.
- */
 @layer base {
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-size-adjust: 100%;
   }
 
   body {
-    background-color: var(--color-bg);
-    color: var(--color-text-primary);
-    transition: background-color 0.3s ease, color 0.3s ease;
+    background-color: var(--page);
+    color: var(--ink);
+    font-family: var(--font-work-sans), ui-sans-serif, system-ui, sans-serif;
   }
 
-  /* Links */
+  /* The display face is applied by tag, so a heading is correct by
+     default and `font-display` is only needed on things that want the
+     product voice without being a heading (buttons, nav, micro-labels). */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-schibsted), ui-sans-serif, system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Links inherit their surrounding color by default. The previous
+     system colored every `<a>` brand-green at the element level, which
+     meant any link styled as a button had to fight the base rule to get
+     its own text color back. Links that should look like links opt in
+     via `.link` below. */
   a {
-    color: var(--color-accent);
+    color: inherit;
     text-decoration: none;
   }
 
-  a:hover {
-    color: var(--color-accent-light);
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 2px;
   }
 
-  /* Focus visible (keyboard nav) */
-  :focus-visible {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 2px;
+  ::selection {
+    background-color: var(--accent);
+    color: #1a1611;
+  }
+
+  /* Form controls inherit the body face rather than the UA's. */
+  input, textarea, select, button {
+    font-family: inherit;
   }
 }
 
-/* Respect reduced motion */
+@layer components {
+  /**
+   * The signature label of the system: uppercase, wide-tracked, faint.
+   * It sits above section titles, heads data columns, and marks panel
+   * regions. Using it consistently is most of what makes unrelated
+   * pages read as one product.
+   */
+  .micro-label {
+    font-family: var(--font-schibsted), ui-sans-serif, system-ui, sans-serif;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  /**
+   * A link that should look like one. Underline sits below the text
+   * baseline and thickens on hover rather than appearing from nothing,
+   * so the row doesn't shift.
+   */
+  .link {
+    color: var(--brand);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+    transition: text-decoration-thickness 0.15s ease, color 0.15s ease;
+  }
+
+  .link:hover {
+    color: var(--brand-hover);
+    text-decoration-thickness: 2px;
+  }
+
+  /**
+   * MapLibre's own chrome ships hard-coded white. The tiles are themed
+   * in lib/map-style.ts, but the zoom buttons and the attribution bar
+   * are DOM, not canvas, so they stay bright on a dark page unless they
+   * are overridden here. Scoped to the vendor classes so nothing else
+   * picks these up.
+   */
+  .maplibregl-ctrl-group {
+    background: var(--raised);
+    border: 1px solid var(--hairline);
+    box-shadow: none;
+  }
+
+  .maplibregl-ctrl-group button + button {
+    border-top-color: var(--hairline);
+  }
+
+  .maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+    filter: var(--map-icon-filter, none);
+  }
+
+  .maplibregl-ctrl-attrib {
+    background: color-mix(in srgb, var(--raised) 88%, transparent) !important;
+    color: var(--ink-muted);
+  }
+
+  .maplibregl-ctrl-attrib a {
+    color: var(--ink-muted);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* MapLibre's control glyphs are black PNGs; invert them so they
+       read on the dark control surface above. */
+    --map-icon-filter: invert(1) brightness(0.85);
+  }
+}
+
+@layer utilities {
+  /**
+   * Tabular figures for anything where digits stack in a column —
+   * prices, counts, times. Without this, proportional digits make
+   * a column of numbers look ragged.
+   */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum';
+  }
+
+  /* Skeleton shimmer, tinted to the sand ramp rather than gray. */
+  .shimmer {
+    background-image: linear-gradient(
+      90deg,
+      var(--sunken) 0%,
+      var(--hairline) 50%,
+      var(--sunken) 100%
+    );
+    background-size: 200% 100%;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -119,35 +218,28 @@
   }
 }
 
-/* Scrollbar styling (optional, light/dark aware) */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-bg);
+  background: var(--page);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: var(--radius-sm);
+  background: var(--hairline-strong);
+  border: 3px solid var(--page);
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-accent-light);
+  background: var(--ink-faint);
 }
 
-/* Selection styling */
-::selection {
-  background-color: var(--color-accent);
-  color: var(--color-surface);
-}
-
-/* Print styles */
 @media print {
   body {
-    background: white;
-    color: black;
+    background: #fff;
+    color: #000;
   }
 }

@@ -1,7 +1,9 @@
 import { getTranslations } from 'next-intl/server';
+import { UsersThree } from '@phosphor-icons/react/dist/ssr';
 import { Link } from '@/i18n/navigation';
 import { Avatar } from '@/components/ui/avatar';
 import { ReportButton } from '@/components/reports/report-button';
+import { PanelHeading } from '@/components/ui/panel-heading';
 
 export interface AttendeeData {
   id: string;
@@ -20,17 +22,19 @@ export async function AttendeeList({
   const tReports = await getTranslations('reports');
 
   return (
-    <div className="mt-6 border-t border-neutral-200 pt-6 dark:border-neutral-800">
-      <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+    // Layout-neutral: this used to carry `mt-6 border-t pt-6` from when
+    // it sat at the foot of a card. Inside a folder tab it's the first
+    // thing on the sheet, and that rule rendered as an empty strip above
+    // the heading. Spacing is the container's job.
+    <div>
+      <PanelHeading icon={UsersThree}>
         {t('attendeesTitle', { count: attendees.length })}
-      </h2>
+      </PanelHeading>
 
       {attendees.length === 0 ? (
-        <p className="mt-3 text-sm text-neutral-500 dark:text-neutral-400">
-          {t('noAttendeesYet')}
-        </p>
+        <p className="text-sm text-sand-500 dark:text-sand-400">{t('noAttendeesYet')}</p>
       ) : (
-        <ul className="mt-4 flex flex-col gap-3">
+        <ul className="flex flex-col gap-3">
           {attendees.map((attendee) => (
             <li key={attendee.id} className="flex items-center gap-3">
               <Link href={`/users/${attendee.id}`} className="flex items-center gap-3">
@@ -39,7 +43,7 @@ export async function AttendeeList({
                   alt={attendee.displayName ?? ''}
                   fallback={attendee.displayName ?? undefined}
                 />
-                <span className="text-sm text-neutral-800 hover:underline dark:text-neutral-200">
+                <span className="text-sm text-sand-800 hover:underline dark:text-sand-200">
                   {attendee.displayName ?? '—'}
                 </span>
               </Link>
@@ -47,7 +51,7 @@ export async function AttendeeList({
                 <ReportButton
                   targetType="user"
                   targetId={attendee.id}
-                  className="ml-auto text-neutral-300 hover:text-red-600 dark:text-neutral-600 dark:hover:text-red-400"
+                  className="ml-auto text-sand-300 hover:text-red-600 dark:text-sand-600 dark:hover:text-red-400"
                   label=""
                   ariaLabel={tReports('report')}
                 />

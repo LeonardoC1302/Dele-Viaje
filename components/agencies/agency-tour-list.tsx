@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Plus, PencilSimple, BookmarkSimple } from '@phosphor-icons/react';
+import { Plus, PencilSimple, BookmarkSimple, MapTrifold } from '@phosphor-icons/react';
+import { PanelHeading } from '@/components/ui/panel-heading';
 import { Link, useRouter } from '@/i18n/navigation';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -76,9 +77,9 @@ export function AgencyTourList({
   };
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
+    <div className="min-w-0">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">{t('toursTitle')}</h2>
+        <PanelHeading icon={MapTrifold}>{t('toursTitle')}</PanelHeading>
         <Link href={`/agencies/${agencyId}/tours/new`} className={buttonVariants({ size: 'xs', variant: 'secondary' })}>
           <Plus size={14} weight="bold" />
           {t('tourCreate')}
@@ -87,19 +88,19 @@ export function AgencyTourList({
       {error && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       {tours.length === 0 ? (
-        <p className="mt-4 text-sm text-neutral-500 dark:text-neutral-400">{t('toursEmpty')}</p>
+        <p className="mt-4 text-sm text-sand-500 dark:text-sand-400">{t('toursEmpty')}</p>
       ) : (
         <ul className="mt-4 flex flex-col gap-2">
           {tours.map((tour) => (
             <li
               key={tour.id}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-neutral-200 p-3 text-sm dark:border-neutral-800"
+              className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-sand-200 p-3 text-sm dark:border-sand-800"
             >
               <div className="min-w-0">
-                <Link href={`/trips/${tour.id}`} className="font-medium text-neutral-900 hover:underline dark:text-neutral-100">
+                <Link href={`/trips/${tour.id}`} className="font-medium text-sand-900 hover:underline dark:text-sand-100">
                   {tour.title}
                 </Link>
-                <p className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
+                <p className="mt-0.5 text-xs text-sand-500 dark:text-sand-400">
                   {dateFormatter.format(new Date(tour.startAt))}
                   {' · '}
                   {tour.priceCrc != null ? currency.format(tour.priceCrc) : ''}
@@ -137,7 +138,7 @@ export function AgencyTourList({
                       href={`/agencies/${agencyId}/tours/${tour.id}/edit`}
                       aria-label={t('tourEdit')}
                       title={t('tourEdit')}
-                      className="flex h-7 w-7 items-center justify-center rounded text-neutral-500 transition-colors hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800"
+                      className="flex h-7 w-7 items-center justify-center rounded text-sand-500 transition-colors hover:bg-sand-100 dark:text-sand-400 dark:hover:bg-sand-800"
                     >
                       <PencilSimple size={14} weight="regular" strokeWidth={1.5} />
                     </Link>

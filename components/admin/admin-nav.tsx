@@ -1,33 +1,25 @@
 import { getTranslations } from 'next-intl/server';
-import { Link } from '@/i18n/navigation';
-import { cn } from '@/lib/utils';
+import { FolderTabs, type FolderTab } from '@/components/cordillera/folder';
 
-export async function AdminNav({ active }: { active: 'dashboard' | 'reports' | 'agencies' | 'users' }) {
+/**
+ * Admin's four pages are sections of one folder, not four destinations,
+ * so they get the same cut tabs a trip's sections get rather than a
+ * separate pill nav. Each page renders its body inside a `FolderFace`
+ * with `seam`, which is what joins the active tab to the sheet.
+ */
+export async function AdminNav({
+  active,
+}: {
+  active: 'dashboard' | 'reports' | 'agencies' | 'users';
+}) {
   const t = await getTranslations('admin');
 
-  const items = [
-    { key: 'dashboard', href: '/admin', label: t('navDashboard') },
-    { key: 'reports', href: '/admin/reports', label: t('reportsTitle') },
-    { key: 'agencies', href: '/admin/agencies', label: t('agenciesTitle') },
-    { key: 'users', href: '/admin/users', label: t('usersTitle') },
-  ] as const;
+  const tabs: FolderTab[] = [
+    { href: '/admin', label: t('navDashboard'), active: active === 'dashboard' },
+    { href: '/admin/reports', label: t('reportsTitle'), active: active === 'reports' },
+    { href: '/admin/agencies', label: t('agenciesTitle'), active: active === 'agencies' },
+    { href: '/admin/users', label: t('usersTitle'), active: active === 'users' },
+  ];
 
-  return (
-    <nav className="mb-8 flex flex-wrap gap-2">
-      {items.map((item) => (
-        <Link
-          key={item.key}
-          href={item.href}
-          className={cn(
-            'rounded-full border px-3 py-1.5 text-sm transition-colors',
-            active === item.key
-              ? 'border-forest-600 bg-forest-600 text-white'
-              : 'border-neutral-300 text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800'
-          )}
-        >
-          {item.label}
-        </Link>
-      ))}
-    </nav>
-  );
+  return <FolderTabs tabs={tabs} />;
 }

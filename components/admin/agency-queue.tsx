@@ -52,7 +52,7 @@ export function AgencyQueue({ initialAgencies }: { initialAgencies: AgencyQueueD
   };
 
   if (agencies.length === 0) {
-    return <p className="text-sm text-neutral-500 dark:text-neutral-400">{t('agenciesEmpty')}</p>;
+    return <p className="text-sm text-sand-500 dark:text-sand-400">{t('agenciesEmpty')}</p>;
   }
 
   return (
@@ -61,13 +61,13 @@ export function AgencyQueue({ initialAgencies }: { initialAgencies: AgencyQueueD
       {agencies.map((agency) => (
         <div
           key={agency.id}
-          className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-neutral-200 p-4 dark:border-neutral-800"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-sand-200 p-4 dark:border-sand-800"
         >
           <div>
-            <Link href={`/agencies/${agency.id}`} className="font-medium text-neutral-900 hover:underline dark:text-neutral-100">
+            <Link href={`/agencies/${agency.id}`} className="font-medium text-sand-900 hover:underline dark:text-sand-100">
               {agency.businessName}
             </Link>
-            <p className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
+            <p className="mt-0.5 text-xs text-sand-500 dark:text-sand-400">
               {dateFormatter.format(new Date(agency.createdAt))}
             </p>
           </div>

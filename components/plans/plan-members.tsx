@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { SignOut, Crown, UserMinus } from '@phosphor-icons/react';
+import { SignOut, Crown, UserMinus, UsersThree } from '@phosphor-icons/react';
+import { PanelHeading } from '@/components/ui/panel-heading';
 import { useRouter } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Avatar } from '@/components/ui/avatar';
@@ -86,10 +87,8 @@ export function PlanMembers({ tripId, currentUserId, ownerId, isOwner, members }
   };
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
-      <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-        {t('membersTitle')}
-      </h2>
+    <div className="min-w-0">
+      <PanelHeading icon={UsersThree}>{t('membersTitle')}</PanelHeading>
       {error && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       <ul className="mt-4 flex flex-col gap-2">
@@ -99,10 +98,10 @@ export function PlanMembers({ tripId, currentUserId, ownerId, isOwner, members }
           return (
             <li
               key={member.id}
-              className="flex items-center gap-3 rounded-lg border border-neutral-200 p-2 dark:border-neutral-800"
+              className="flex items-center gap-3 rounded-md border border-sand-200 p-2 dark:border-sand-800"
             >
               <Avatar src={member.avatarUrl ?? undefined} fallback={member.displayName ?? undefined} />
-              <span className="flex-1 truncate text-sm text-neutral-800 dark:text-neutral-200">
+              <span className="flex-1 truncate text-sm text-sand-800 dark:text-sand-200">
                 {member.displayName ?? '—'}
               </span>
               {isMemberOwner && (
@@ -118,7 +117,7 @@ export function PlanMembers({ tripId, currentUserId, ownerId, isOwner, members }
                     onClick={() => setPending({ type: 'transfer', member })}
                     aria-label={t('membersTransfer')}
                     title={t('membersTransfer')}
-                    className="text-neutral-500 hover:text-forest-600 dark:text-neutral-400 dark:hover:text-forest-400"
+                    className="text-sand-500 hover:text-forest-600 dark:text-sand-400 dark:hover:text-forest-400"
                   >
                     <Crown size={14} weight="regular" strokeWidth={1.5} />
                   </Button>
@@ -151,7 +150,7 @@ export function PlanMembers({ tripId, currentUserId, ownerId, isOwner, members }
       </ul>
 
       {isOwner && (
-        <p className="mt-3 text-xs text-neutral-500 dark:text-neutral-400">{t('membersOwnerHelper')}</p>
+        <p className="mt-3 text-xs text-sand-500 dark:text-sand-400">{t('membersOwnerHelper')}</p>
       )}
 
       <Dialog open={pending !== null} onOpenChange={(open) => !open && setPending(null)}>

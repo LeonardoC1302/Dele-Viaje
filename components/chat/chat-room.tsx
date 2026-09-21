@@ -263,10 +263,10 @@ export function ChatRoom({
   });
 
   return (
-    <div className="flex h-[70vh] flex-col rounded-xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+    <div className="flex h-[70vh] flex-col rounded-md border border-sand-200 bg-[color:var(--raised)] dark:border-sand-800">
       <div className="flex-1 overflow-y-auto p-4">
         {messages.length === 0 ? (
-          <p className="mt-8 text-center text-sm text-neutral-500 dark:text-neutral-400">
+          <p className="mt-8 text-center text-sm text-sand-500 dark:text-sand-400">
             {t('empty')}
           </p>
         ) : (
@@ -284,7 +284,7 @@ export function ChatRoom({
 
                 return (
                   <li key={message.id} className="flex justify-center">
-                    <span className="text-xs text-neutral-400 dark:text-neutral-500">
+                    <span className="text-xs text-sand-400 dark:text-sand-500">
                       {text} · {timeFormatter.format(new Date(message.createdAt))}
                     </span>
                   </li>
@@ -308,16 +308,16 @@ export function ChatRoom({
                     <div className="flex items-baseline gap-2">
                       <Link
                         href={`/users/${message.senderId}`}
-                        className="text-sm font-medium text-neutral-900 hover:underline dark:text-neutral-100"
+                        className="text-sm font-medium text-sand-900 hover:underline dark:text-sand-100"
                       >
                         {profile?.displayName ?? '—'}
                       </Link>
-                      <span className="text-xs text-neutral-400 dark:text-neutral-500">
+                      <span className="text-xs text-sand-400 dark:text-sand-500">
                         {timeFormatter.format(new Date(message.createdAt))}
                       </span>
                     </div>
                     {message.deletedAt ? (
-                      <p className="text-sm italic text-neutral-400 dark:text-neutral-600">
+                      <p className="text-sm italic text-sand-400 dark:text-sand-600">
                         {t('deletedMessage')}
                       </p>
                     ) : editingId === message.id ? (
@@ -328,7 +328,7 @@ export function ChatRoom({
                           maxLength={2000}
                           rows={2}
                           autoFocus
-                          className="w-full resize-none rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm placeholder:text-neutral-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-600 dark:border-neutral-700 dark:bg-neutral-950"
+                          className="w-full resize-none rounded-md border border-sand-300 bg-[color:var(--raised)] px-3 py-2 text-sm placeholder:text-sand-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-600 dark:border-sand-700 dark:bg-[color:var(--page)]"
                         />
                         {editError && (
                           <p className="text-xs text-red-600 dark:text-red-400">{editError}</p>
@@ -347,7 +347,7 @@ export function ChatRoom({
                             type="button"
                             onClick={cancelEdit}
                             aria-label={t('editCancel')}
-                            className="flex items-center gap-1 text-xs font-medium text-neutral-500 hover:text-neutral-700 dark:text-neutral-400"
+                            className="flex items-center gap-1 text-xs font-medium text-sand-500 hover:text-sand-700 dark:text-sand-400"
                           >
                             <X size={14} weight="bold" />
                             {t('editCancel')}
@@ -355,10 +355,10 @@ export function ChatRoom({
                         </div>
                       </div>
                     ) : (
-                      <p className="whitespace-pre-wrap break-words text-sm text-neutral-700 dark:text-neutral-300">
+                      <p className="whitespace-pre-wrap break-words text-sm text-sand-700 dark:text-sand-300">
                         {message.body}
                         {message.editedAt && (
-                          <span className="ml-1.5 text-xs text-neutral-400 dark:text-neutral-600">
+                          <span className="ml-1.5 text-xs text-sand-400 dark:text-sand-600">
                             {t('editedTag')}
                           </span>
                         )}
@@ -371,7 +371,7 @@ export function ChatRoom({
                         <ReportButton
                           targetType="message"
                           targetId={message.id}
-                          className="text-neutral-300 hover:text-red-600 dark:text-neutral-600 dark:hover:text-red-400"
+                          className="text-sand-300 hover:text-red-600 dark:text-sand-600 dark:hover:text-red-400"
                           label=""
                           ariaLabel={t('reportMessage')}
                         />
@@ -381,7 +381,7 @@ export function ChatRoom({
                           type="button"
                           onClick={() => startEdit(message)}
                           aria-label={t('editMessage')}
-                          className="text-neutral-300 hover:text-forest-600 dark:text-neutral-600 dark:hover:text-forest-400"
+                          className="text-sand-300 hover:text-forest-600 dark:text-sand-600 dark:hover:text-forest-400"
                         >
                           <PencilSimple size={16} weight="regular" strokeWidth={1.5} />
                         </button>
@@ -391,7 +391,7 @@ export function ChatRoom({
                           type="button"
                           onClick={() => handleDelete(message.id)}
                           aria-label={t('deleteMessage')}
-                          className="text-neutral-300 hover:text-red-600 dark:text-neutral-600 dark:hover:text-red-400"
+                          className="text-sand-300 hover:text-red-600 dark:text-sand-600 dark:hover:text-red-400"
                         >
                           <Trash size={16} weight="regular" strokeWidth={1.5} />
                         </button>
@@ -406,7 +406,7 @@ export function ChatRoom({
         <div ref={bottomRef} />
       </div>
 
-      <div className="border-t border-neutral-200 p-3 dark:border-neutral-800">
+      <div className="border-t border-sand-200 p-3 dark:border-sand-800">
         {canSend ? (
           <form onSubmit={handleSubmit} className="flex items-end gap-2">
             <textarea
@@ -415,7 +415,7 @@ export function ChatRoom({
               placeholder={t('placeholder')}
               maxLength={2000}
               rows={1}
-              className="flex-1 resize-none rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm placeholder:text-neutral-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-600 dark:border-neutral-700 dark:bg-neutral-950 dark:placeholder:text-neutral-400"
+              className="flex-1 resize-none rounded-md border border-sand-300 bg-[color:var(--raised)] px-3 py-2 text-sm placeholder:text-sand-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-600 dark:border-sand-700 dark:bg-[color:var(--page)] dark:placeholder:text-sand-400"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
@@ -428,7 +428,7 @@ export function ChatRoom({
             </Button>
           </form>
         ) : (
-          <p className="text-sm text-neutral-500 dark:text-neutral-400">
+          <p className="text-sm text-sand-500 dark:text-sand-400">
             {t('readOnlyNote')}
           </p>
         )}

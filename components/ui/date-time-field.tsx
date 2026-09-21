@@ -73,7 +73,7 @@ export function DateTimeField({
   return (
     <div className="flex flex-col gap-2">
       {label && (
-        <label className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+        <label className="text-sm font-medium text-sand-900 dark:text-sand-100">
           {label}
           {required && <span className="text-red-600"> *</span>}
         </label>
@@ -85,16 +85,16 @@ export function DateTimeField({
             <button
               type="button"
               className={cn(
-                'flex h-10 flex-1 items-center gap-2 whitespace-nowrap rounded-lg border border-neutral-300 bg-white px-3 text-left text-sm text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-600 focus-visible:ring-offset-0 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100',
+                'flex h-10 flex-1 items-center gap-2 whitespace-nowrap rounded-md border border-sand-300 bg-[color:var(--raised)] px-3 text-left text-sm text-sand-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-600 focus-visible:ring-offset-0 dark:border-sand-700 dark:bg-[color:var(--page)] dark:text-sand-100',
                 error && 'border-red-500 focus-visible:ring-red-600',
-                !value && 'text-neutral-500 dark:text-neutral-400'
+                !value && 'text-sand-500 dark:text-sand-400'
               )}
             >
               <CalendarBlank
                 size={16}
                 weight="regular"
                 strokeWidth={1.5}
-                className="shrink-0 text-neutral-500"
+                className="shrink-0 text-sand-500"
               />
               {value ? dateFormatter.format(value) : t('selectDate')}
             </button>

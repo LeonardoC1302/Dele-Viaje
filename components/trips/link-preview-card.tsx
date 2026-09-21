@@ -23,7 +23,7 @@ export function LinkPreviewCard({ link }: { link: TripLinkData }) {
       href={link.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex gap-3 overflow-hidden rounded-lg border border-neutral-200 transition-colors hover:bg-neutral-50 dark:border-neutral-800 dark:hover:bg-neutral-900"
+      className="flex gap-3 overflow-hidden rounded-md border border-sand-200 transition-colors hover:bg-sand-50 dark:border-sand-800 dark:hover:bg-sand-900"
     >
       {link.ogImageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element -- arbitrary external preview images can't be pre-registered in next.config.ts remotePatterns.
@@ -38,11 +38,11 @@ export function LinkPreviewCard({ link }: { link: TripLinkData }) {
         </div>
       )}
       <div className="min-w-0 flex-1 py-2 pr-3">
-        <p className="truncate text-sm font-medium text-neutral-900 dark:text-neutral-100">
+        <p className="truncate text-sm font-medium text-sand-900 dark:text-sand-100">
           {title}
         </p>
         {link.ogDescription && (
-          <p className="mt-0.5 line-clamp-2 text-xs text-neutral-600 dark:text-neutral-400">
+          <p className="mt-0.5 line-clamp-2 text-xs text-sand-600 dark:text-sand-400">
             {link.ogDescription}
           </p>
         )}

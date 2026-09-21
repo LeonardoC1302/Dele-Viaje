@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Flag } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
+import { Textarea } from '@/components/ui/field';
 import {
   Dialog,
   DialogContent,
@@ -91,7 +91,7 @@ export function ReportButton({
           aria-label={ariaLabel ?? (label || t('report'))}
           className={
             className ??
-            'flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-red-600 dark:text-neutral-400 dark:hover:text-red-400'
+            'flex items-center gap-1.5 text-sm font-medium text-sand-500 hover:text-red-600 dark:text-sand-400 dark:hover:text-red-400'
           }
         >
           <Flag size={16} weight="regular" strokeWidth={1.5} />

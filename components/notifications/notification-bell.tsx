@@ -70,6 +70,12 @@ export function NotificationBell({
     let cancelled = false;
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
+    // The session must resolve before the channel opens. Subscribing
+    // first yields a channel that silently receives zero events until a
+    // reload, because RLS evaluates the subscription against an
+    // unauthenticated connection. This is a historical bug in this
+    // codebase, not a theoretical one — see the redesign non-negotiables
+    // in docs/frontend-migration-reference.md §5.
     supabase.auth.getSession().then(() => {
       if (cancelled) return;
 
@@ -83,7 +89,7 @@ export function NotificationBell({
             table: 'notifications',
             filter: `profile_id=eq.${currentUserId}`,
           },
-          async (payload) => {
+          (payload) => {
             const row = payload.new as {
               id: string;
               type: NotificationType;
@@ -119,7 +125,10 @@ export function NotificationBell({
                   .eq('id', row.actor_id)
                   .single()
                   .then(({ data }) => {
-                    const profile = data as { display_name: string | null; avatar_url: string | null } | null;
+                    const profile = data as {
+                      display_name: string | null;
+                      avatar_url: string | null;
+                    } | null;
                     if (profile) {
                       setActors((p) => ({
                         ...p,
@@ -169,6 +178,8 @@ export function NotificationBell({
       prev.map((n) => (n.readAt ? n : { ...n, readAt: new Date().toISOString() }))
     );
 
+    // read_at is the only column the grants allow this client to write
+    // on notifications — never PATCH the whole row here.
     await supabase
       .from('notifications')
       .update({ read_at: new Date().toISOString() })
@@ -216,21 +227,23 @@ export function NotificationBell({
         <button
           type="button"
           aria-label={t('title')}
-          className="relative flex h-10 w-10 items-center justify-center rounded-full text-neutral-700 transition-colors hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-900"
+          className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-forest-100/70 transition-colors hover:bg-forest-600/50 hover:text-white"
         >
-          <Bell size={20} weight="regular" strokeWidth={1.5} />
+          <Bell size={19} weight={unreadCount > 0 ? 'fill' : 'regular'} />
           {unreadCount > 0 && (
-            <span className="absolute right-1.5 top-1.5 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-forest-600 ring-2 ring-neutral-50 dark:ring-neutral-950" />
+            <span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full bg-dawn-500 ring-2 ring-forest-700" />
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 p-0">
-        <div className="border-b border-neutral-200 px-4 py-3 text-sm font-semibold text-neutral-900 dark:border-neutral-800 dark:text-neutral-100">
-          {t('title')}
+
+      <PopoverContent align="start" side="top" className="w-[19rem] p-0">
+        <div className="border-b border-sand-200 px-4 py-3 dark:border-sand-800">
+          <p className="micro-label">{t('title')}</p>
         </div>
+
         <div className="max-h-96 overflow-y-auto">
           {notifications.length === 0 ? (
-            <p className="px-4 py-6 text-center text-sm text-neutral-500 dark:text-neutral-400">
+            <p className="px-4 py-8 text-center text-sm text-sand-500 dark:text-sand-400">
               {t('empty')}
             </p>
           ) : (
@@ -239,21 +252,23 @@ export function NotificationBell({
               const content = (
                 <div
                   className={cn(
-                    'flex items-start gap-3 px-4 py-3 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-900',
-                    !n.readAt && 'bg-forest-50/60 dark:bg-forest-950/30'
+                    'flex items-start gap-3 border-b border-sand-200 px-4 py-3 transition-colors last:border-b-0 hover:bg-sand-100 dark:border-sand-800 dark:hover:bg-sand-800',
+                    // Unread is marked by a dawn edge rather than a
+                    // tinted row — a filled row would put a second
+                    // accent field next to the primary action.
+                    !n.readAt && 'border-l-2 border-l-dawn-500 pl-[0.875rem]'
                   )}
                 >
                   <Avatar
+                    size={34}
                     src={actor?.avatarUrl ?? undefined}
                     fallback={actor?.displayName ?? undefined}
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm text-neutral-800 dark:text-neutral-200">
+                    <p className="text-sm leading-snug text-sand-800 dark:text-sand-200">
                       {describe(n)}
                     </p>
-                    <p className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-500">
-                      {relativeTime(n.createdAt, locale)}
-                    </p>
+                    <p className="micro-label mt-1.5">{relativeTime(n.createdAt, locale)}</p>
                   </div>
                 </div>
               );

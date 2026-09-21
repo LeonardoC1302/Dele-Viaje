@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { UserMinus } from '@phosphor-icons/react';
+import { UserMinus, Users } from '@phosphor-icons/react';
+import { PanelHeading } from '@/components/ui/panel-heading';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/field';
 import { Select } from '@/components/ui/select';
 
 export interface AgencyMemberData {
@@ -83,19 +84,19 @@ export function AgencyStaffManager({
   };
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
-      <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">{t('staffTitle')}</h2>
+    <div className="min-w-0">
+      <PanelHeading icon={Users}>{t('staffTitle')}</PanelHeading>
 
       <ul className="mt-4 flex flex-col gap-2">
         {members.map((member) => (
           <li
             key={member.id}
-            className="flex items-center gap-3 rounded-lg border border-neutral-200 p-2 text-sm dark:border-neutral-800"
+            className="flex items-center gap-3 rounded-md border border-sand-200 p-2 text-sm dark:border-sand-800"
           >
-            <span className="flex-1 truncate text-neutral-800 dark:text-neutral-200">
+            <span className="flex-1 truncate text-sand-800 dark:text-sand-200">
               {member.displayName ?? '—'}
             </span>
-            <span className="shrink-0 text-xs text-neutral-500 dark:text-neutral-400">
+            <span className="shrink-0 text-xs text-sand-500 dark:text-sand-400">
               {t(`role${member.role.charAt(0).toUpperCase()}${member.role.slice(1)}` as const)}
             </span>
             {member.role !== 'owner' && member.profileId !== currentProfileId && (
@@ -114,7 +115,7 @@ export function AgencyStaffManager({
         ))}
       </ul>
 
-      <div className="mt-4 flex flex-wrap items-end gap-2 border-t border-neutral-200 pt-4 dark:border-neutral-800">
+      <div className="mt-4 flex flex-wrap items-end gap-2 border-t border-sand-200 pt-4 dark:border-sand-800">
         <Input
           type="email"
           label={t('staffAddLabel')}

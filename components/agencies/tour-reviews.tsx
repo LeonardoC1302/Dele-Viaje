@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Star, Trash } from '@phosphor-icons/react';
+import { PanelHeading } from '@/components/ui/panel-heading';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { Textarea } from '@/components/ui/field';
 import { cn } from '@/lib/utils';
 
 export interface ReviewData {
@@ -36,7 +37,7 @@ export function Stars({ value, size = 14 }: { value: number; size?: number }) {
           size={size}
           weight={n <= value ? 'fill' : 'regular'}
           strokeWidth={1.5}
-          className={n <= value ? 'text-amber-500' : 'text-neutral-300 dark:text-neutral-700'}
+          className={n <= value ? 'text-dawn-500' : 'text-sand-300 dark:text-sand-700'}
         />
       ))}
     </span>
@@ -131,13 +132,13 @@ export function TourReviews({ tripId, currentUserId, isHostTeam, canReview, init
   };
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
+    <div className="min-w-0">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">{t('reviewsTitle')}</h2>
+        <PanelHeading icon={Star}>{t('reviewsTitle')}</PanelHeading>
         {average != null && (
           <div className="flex items-center gap-1.5">
             <Stars value={Math.round(average)} />
-            <span className="text-xs text-neutral-500 dark:text-neutral-400">
+            <span className="text-xs text-sand-500 dark:text-sand-400">
               {t('reviewsAverage', { average: average.toFixed(1), count: reviews.length })}
             </span>
           </div>
@@ -146,15 +147,15 @@ export function TourReviews({ tripId, currentUserId, isHostTeam, canReview, init
       {error && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       {reviews.length === 0 ? (
-        <p className="mt-4 text-sm text-neutral-500 dark:text-neutral-400">{t('reviewsEmpty')}</p>
+        <p className="mt-4 text-sm text-sand-500 dark:text-sand-400">{t('reviewsEmpty')}</p>
       ) : (
         <ul className="mt-4 flex flex-col gap-4">
           {reviews.map((review) => (
-            <li key={review.id} className="rounded-lg border border-neutral-200 p-3 dark:border-neutral-800">
+            <li key={review.id} className="rounded-md border border-sand-200 p-3 dark:border-sand-800">
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <Stars value={review.rating} />
-                  <p className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
+                  <p className="mt-0.5 text-xs text-sand-500 dark:text-sand-400">
                     {review.reviewerName ?? '—'} · {dateFormatter.format(new Date(review.createdAt))}
                   </p>
                 </div>
@@ -171,12 +172,12 @@ export function TourReviews({ tripId, currentUserId, isHostTeam, canReview, init
                   </Button>
                 )}
               </div>
-              {review.body && <p className="mt-2 text-sm text-neutral-800 dark:text-neutral-200">{review.body}</p>}
+              {review.body && <p className="mt-2 text-sm text-sand-800 dark:text-sand-200">{review.body}</p>}
 
               {review.responseText ? (
-                <div className="mt-2 rounded-lg bg-forest-50 p-3 text-sm dark:bg-forest-600/10">
+                <div className="mt-2 rounded-md bg-forest-50 p-3 text-sm dark:bg-forest-600/10">
                   <p className="text-xs font-medium text-forest-700 dark:text-forest-400">{t('qaAnsweredByAgency')}</p>
-                  <p className="mt-1 text-neutral-800 dark:text-neutral-200">{review.responseText}</p>
+                  <p className="mt-1 text-sand-800 dark:text-sand-200">{review.responseText}</p>
                 </div>
               ) : (
                 isHostTeam && (
@@ -206,8 +207,8 @@ export function TourReviews({ tripId, currentUserId, isHostTeam, canReview, init
       )}
 
       {canReview && !posted && (
-        <div className="mt-4 flex flex-col gap-2 border-t border-neutral-200 pt-4 dark:border-neutral-800">
-          <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">{t('reviewYourRating')}</p>
+        <div className="mt-4 flex flex-col gap-2 border-t border-sand-200 pt-4 dark:border-sand-800">
+          <p className="text-sm font-medium text-sand-900 dark:text-sand-100">{t('reviewYourRating')}</p>
           <div className="flex items-center gap-1">
             {[1, 2, 3, 4, 5].map((n) => (
               <button key={n} type="button" onClick={() => setRating(n)} aria-label={String(n)}>
@@ -215,7 +216,7 @@ export function TourReviews({ tripId, currentUserId, isHostTeam, canReview, init
                   size={22}
                   weight={n <= rating ? 'fill' : 'regular'}
                   strokeWidth={1.5}
-                  className={cn(n <= rating ? 'text-amber-500' : 'text-neutral-300 dark:text-neutral-700')}
+                  className={cn(n <= rating ? 'text-dawn-500' : 'text-sand-300 dark:text-sand-700')}
                 />
               </button>
             ))}

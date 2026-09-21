@@ -3,6 +3,8 @@
 import { useEffect, useRef } from 'react';
 import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { cordilleraMapStyle } from '@/lib/map-style';
+import { useColorScheme } from '@/lib/use-color-scheme';
 import { useRouter } from '@/i18n/navigation';
 
 // Turbopack (Next 16's dev bundler) doesn't yet resolve maplibre-gl's
@@ -64,6 +66,7 @@ function toGeoJSON(pins: TripMapPin[]): PointFeatureCollection {
 // overlapping dots.
 export function TripMap({ pins }: { pins: TripMapPin[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const scheme = useColorScheme();
   const mapRef = useRef<maplibregl.Map | null>(null);
   const router = useRouter();
 
@@ -74,7 +77,7 @@ export function TripMap({ pins }: { pins: TripMapPin[] }) {
     // "free stack only" constraint).
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: 'https://tiles.openfreemap.org/styles/liberty',
+      style: cordilleraMapStyle(scheme),
       center: DEFAULT_CENTER,
       zoom: 7,
     });
@@ -163,7 +166,7 @@ export function TripMap({ pins }: { pins: TripMapPin[] }) {
       mapRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- router is stable from next-intl's navigation wrapper; re-running this effect on it would tear down and rebuild the whole map for no reason.
-  }, []);
+  }, [scheme]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -191,7 +194,7 @@ export function TripMap({ pins }: { pins: TripMapPin[] }) {
   return (
     <div
       ref={containerRef}
-      className="h-[500px] w-full overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-800"
+      className="h-[500px] w-full overflow-hidden rounded-md border border-sand-200 dark:border-sand-800"
     />
   );
 }

@@ -1,13 +1,17 @@
 import { getTranslations } from 'next-intl/server';
+import { SealCheck, Plus } from '@phosphor-icons/react/dist/ssr';
 import { Link } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { CATEGORY_KEYS } from '@/lib/constants/categories';
+import { CATEGORY_ICONS } from '@/lib/constants/category-visuals';
 import { type TripCardData } from '@/components/trips/trip-card';
 import { FeedView } from '@/components/trips/feed-view';
 import { NearMeButton } from '@/components/trips/near-me-button';
 import { FeedFilters } from '@/components/trips/feed-filters';
+import { CaseHeader, PageBody } from '@/components/cordillera/folder';
+import { chipClasses } from '@/components/ui/chip';
+import { buttonVariants } from '@/components/ui/button';
 import { boundingBox, haversineKm } from '@/lib/geo';
-import { cn } from '@/lib/utils';
 
 const NEAR_ME_RADIUS_KM = 100;
 
@@ -27,12 +31,14 @@ export default async function FeedPage({
   const { category, verified, lat, lng, maxPrice, dateFrom, dateTo } = await searchParams;
   const t = await getTranslations('feed');
   const tCategories = await getTranslations('categories');
+  const tNav = await getTranslations('mainNav');
   const supabase = await createClient();
 
   const showVerifiedOnly = verified === '1';
   const userLat = lat ? Number(lat) : null;
   const userLng = lng ? Number(lng) : null;
-  const nearMeActive = userLat != null && userLng != null && !Number.isNaN(userLat) && !Number.isNaN(userLng);
+  const nearMeActive =
+    userLat != null && userLng != null && !Number.isNaN(userLat) && !Number.isNaN(userLng);
 
   // dateFrom only ever narrows the lower bound further into the future —
   // a past date picked here still can't surface trips that have already
@@ -49,7 +55,10 @@ export default async function FeedPage({
       ? new Date(parsedDateTo.getTime() + 24 * 60 * 60 * 1000)
       : null;
   const parsedMaxPrice = maxPrice ? Number(maxPrice) : null;
-  const validMaxPrice = parsedMaxPrice != null && !Number.isNaN(parsedMaxPrice) && parsedMaxPrice > 0 ? parsedMaxPrice : null;
+  const validMaxPrice =
+    parsedMaxPrice != null && !Number.isNaN(parsedMaxPrice) && parsedMaxPrice > 0
+      ? parsedMaxPrice
+      : null;
 
   let query = supabase
     .from('trips')
@@ -72,9 +81,7 @@ export default async function FeedPage({
     query = query.or(`price_crc.lte.${validMaxPrice},price_crc.is.null`);
   }
 
-  const activeCategory = CATEGORY_KEYS.includes(category as never)
-    ? category
-    : undefined;
+  const activeCategory = CATEGORY_KEYS.includes(category as never) ? category : undefined;
 
   if (activeCategory) {
     query = query.eq('category', activeCategory);
@@ -98,15 +105,19 @@ export default async function FeedPage({
   // "Verified" means tours from a currently-approved agency — checked at
   // read time, not just at the moment the tour was published, since an
   // agency can be suspended after publishing (nothing currently
-  // un-publishes its existing tours when that happens). Two queries
-  // rather than an embedded-resource filter (`agencies!inner(...)` +
-  // `.eq('agencies.status', 'approved')`) — same reasoning as My Trips:
-  // simpler and doesn't depend on PostgREST embedded-filter syntax this
-  // codebase hasn't otherwise relied on.
+  // un-publishes its existing tours when that happens).
   if (showVerifiedOnly) {
-    const { data: approvedAgencies } = await supabase.from('agencies').select('id').eq('status', 'approved');
+    const { data: approvedAgencies } = await supabase
+      .from('agencies')
+      .select('id')
+      .eq('status', 'approved');
     const approvedIds = (approvedAgencies ?? []).map((a) => a.id);
-    query = query.eq('type', 'tour').in('agency_id', approvedIds.length > 0 ? approvedIds : ['00000000-0000-0000-0000-000000000000']);
+    query = query
+      .eq('type', 'tour')
+      .in(
+        'agency_id',
+        approvedIds.length > 0 ? approvedIds : ['00000000-0000-0000-0000-000000000000']
+      );
   }
 
   const { data: trips } = await query;
@@ -115,12 +126,17 @@ export default async function FeedPage({
   if (nearMeActive) {
     // The bounding box is a rectangle, not a circle — trim the corners
     // out with the real distance, then sort nearest-first (the default
-    // start_at sort doesn't make sense once "near me" is the whole point
-    // of this view).
+    // start_at sort stops making sense once "near me" is the point).
     tripRows = tripRows
       .filter((trip) => trip.lat != null && trip.lng != null)
-      .filter((trip) => haversineKm(userLat!, userLng!, trip.lat!, trip.lng!) <= NEAR_ME_RADIUS_KM)
-      .sort((a, b) => haversineKm(userLat!, userLng!, a.lat!, a.lng!) - haversineKm(userLat!, userLng!, b.lat!, b.lng!));
+      .filter(
+        (trip) => haversineKm(userLat!, userLng!, trip.lat!, trip.lng!) <= NEAR_ME_RADIUS_KM
+      )
+      .sort(
+        (a, b) =>
+          haversineKm(userLat!, userLng!, a.lat!, a.lng!) -
+          haversineKm(userLat!, userLng!, b.lat!, b.lng!)
+      );
   }
 
   const hasActiveFilters = !!(
@@ -147,79 +163,83 @@ export default async function FeedPage({
   }));
 
   return (
-    <main className="min-h-[100dvh] bg-neutral-50 py-12 dark:bg-neutral-950">
-      <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
-          {t('title')}
-        </h1>
-        <p className="mt-2 text-neutral-600 dark:text-neutral-400">
-          {t('subtitle')}
-        </p>
-
-        <div className="mt-6 flex flex-wrap gap-2">
-          <Link
-            href="/feed"
-            className={cn(
-              'rounded-full border px-3 py-1.5 text-sm transition-colors',
-              !activeCategory
-                ? 'border-forest-600 bg-forest-600 text-white'
-                : 'border-neutral-300 text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800'
-            )}
-          >
-            {t('allCategories')}
+    <PageBody>
+      {/*
+        The feed's one dawn action. Browsing itself isn't a button, so
+        the primary here is the thing you do when the feed doesn't have
+        what you came for: start your own. Without this the surface had
+        no dawn at all and two competing forest controls — the filter's
+        Apply and the list/map switch — neither of which is a primary.
+      */}
+      <CaseHeader
+        title={t('title')}
+        description={t('subtitle')}
+        action={
+          <Link href="/trips/new" className={buttonVariants({ variant: 'primary' })}>
+            <Plus size={16} weight="bold" />
+            {tNav('createTrip')}
           </Link>
-          {CATEGORY_KEYS.map((key) => (
+        }
+      />
+
+      <div className="flex flex-wrap gap-2">
+        <Link href="/feed" className={chipClasses({ active: !activeCategory })}>
+          {t('allCategories')}
+        </Link>
+
+        {CATEGORY_KEYS.map((key) => {
+          const Icon = CATEGORY_ICONS[key];
+          const isActive = activeCategory === key;
+          return (
             <Link
               key={key}
               href={{ pathname: '/feed', query: { category: key } }}
-              className={cn(
-                'rounded-full border px-3 py-1.5 text-sm transition-colors',
-                activeCategory === key
-                  ? 'border-forest-600 bg-forest-600 text-white'
-                  : 'border-neutral-300 text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800'
-              )}
+              className={chipClasses({ active: isActive })}
             >
+              <Icon size={15} weight={isActive ? 'fill' : 'regular'} />
               {tCategories(key)}
             </Link>
-          ))}
-          <Link
-            href={{
-              pathname: '/feed',
-              query: {
-                ...(activeCategory ? { category: activeCategory } : {}),
-                ...(showVerifiedOnly ? {} : { verified: '1' }),
-              },
-            }}
-            className={cn(
-              'rounded-full border px-3 py-1.5 text-sm transition-colors',
-              showVerifiedOnly
-                ? 'border-forest-600 bg-forest-600 text-white'
-                : 'border-neutral-300 text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800'
-            )}
-          >
-            {t('verifiedTab')}
-          </Link>
-          <NearMeButton active={nearMeActive} category={activeCategory} />
-        </div>
+          );
+        })}
 
-        <FeedFilters
-          category={activeCategory}
-          verified={showVerifiedOnly}
-          lat={lat}
-          lng={lng}
-          maxPrice={maxPrice}
-          dateFrom={dateFrom}
-          dateTo={dateTo}
-        />
+        {/* A credential, not a category — but the seal carries that, not
+            color. This chip used to go dawn when active, which put a
+            second dawn element on a surface whose dawn belongs to the
+            primary action. */}
+        <Link
+          href={{
+            pathname: '/feed',
+            query: {
+              ...(activeCategory ? { category: activeCategory } : {}),
+              ...(showVerifiedOnly ? {} : { verified: '1' }),
+            },
+          }}
+          className={chipClasses({ active: showVerifiedOnly })}
+        >
+          <SealCheck size={15} weight={showVerifiedOnly ? 'fill' : 'regular'} />
+          {t('verifiedTab')}
+        </Link>
 
-        <FeedView
-          trips={tripCards}
-          emptyTitle={hasActiveFilters ? t('noResultsTitle') : t('emptyTitle')}
-          emptyBody={hasActiveFilters ? t('noResultsBody') : t('emptyBody')}
-          emptyCtaHref={hasActiveFilters ? '/feed' : '/trips/new'}
-          emptyCtaLabel={hasActiveFilters ? t('clearFilter') : t('emptyCta')}
-        />
+        <NearMeButton active={nearMeActive} category={activeCategory} />
       </div>
-    </main>
+
+      <FeedFilters
+        category={activeCategory}
+        verified={showVerifiedOnly}
+        lat={lat}
+        lng={lng}
+        maxPrice={maxPrice}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+      />
+
+      <FeedView
+        trips={tripCards}
+        emptyTitle={hasActiveFilters ? t('noResultsTitle') : t('emptyTitle')}
+        emptyBody={hasActiveFilters ? t('noResultsBody') : t('emptyBody')}
+        emptyCtaHref={hasActiveFilters ? '/feed' : '/trips/new'}
+        emptyCtaLabel={hasActiveFilters ? t('clearFilter') : t('emptyCta')}
+      />
+    </PageBody>
   );
 }

@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Plus, Trash } from '@phosphor-icons/react';
+import { Plus, Trash, Wallet } from '@phosphor-icons/react';
+import { PanelHeading } from '@/components/ui/panel-heading';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/field';
 
 export interface ExpenseData {
   id: string;
@@ -105,42 +106,40 @@ export function ExpensesList({
   };
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
-      <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-        {t('expensesTitle')}
-      </h2>
-      <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">{t('expensesHelper')}</p>
+    <div className="min-w-0">
+      <PanelHeading icon={Wallet}>{t('expensesTitle')}</PanelHeading>
+      <p className="mt-1 text-xs text-sand-600 dark:text-sand-400">{t('expensesHelper')}</p>
 
       {expenses.length > 0 && (
-        <div className="mt-4 rounded-lg bg-neutral-50 p-3 text-sm dark:bg-neutral-950">
-          <p className="font-medium text-neutral-900 dark:text-neutral-100">
+        <div className="mt-4 rounded-md bg-sand-50 p-3 text-sm dark:bg-[color:var(--page)]">
+          <p className="font-medium text-sand-900 dark:text-sand-100">
             {t('expensesTotal', { amount: currency.format(total) })}
           </p>
-          <p className="mt-1 text-neutral-600 dark:text-neutral-400">
+          <p className="mt-1 text-sand-600 dark:text-sand-400">
             {t('expensesShare', { amount: currency.format(share), count: memberCount })}
           </p>
         </div>
       )}
 
       {expenses.length === 0 ? (
-        <p className="mt-4 text-sm text-neutral-500 dark:text-neutral-400">{t('expensesEmpty')}</p>
+        <p className="mt-4 text-sm text-sand-500 dark:text-sand-400">{t('expensesEmpty')}</p>
       ) : (
         <ul className="mt-4 flex flex-col gap-2">
           {expenses.map((expense) => (
             <li
               key={expense.id}
-              className="flex items-center justify-between gap-2 rounded-lg border border-neutral-200 p-2 text-sm dark:border-neutral-800"
+              className="flex items-center justify-between gap-2 rounded-md border border-sand-200 p-2 text-sm dark:border-sand-800"
             >
               <div className="min-w-0">
-                <p className="truncate font-medium text-neutral-900 dark:text-neutral-100">
+                <p className="truncate font-medium text-sand-900 dark:text-sand-100">
                   {expense.description}
                 </p>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                <p className="text-xs text-sand-500 dark:text-sand-400">
                   {t('expensePaidBy', { name: nameById.get(expense.paidBy) ?? '—' })}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
-                <span className="font-medium text-neutral-900 dark:text-neutral-100">
+                <span className="font-medium text-sand-900 dark:text-sand-100">
                   {currency.format(expense.amountCrc)}
                 </span>
                 {(expense.paidBy === currentUserId || isHostTeam) && (

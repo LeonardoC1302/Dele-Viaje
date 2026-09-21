@@ -105,9 +105,9 @@ export default async function PublicProfilePage({
   }));
 
   return (
-    <main className="min-h-[100dvh] bg-neutral-50 py-12 dark:bg-neutral-950">
-      <div className="mx-auto max-w-[900px] px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col items-start gap-4 rounded-xl border border-neutral-200 bg-white p-8 sm:flex-row sm:items-center sm:justify-between dark:border-neutral-800 dark:bg-neutral-900">
+    <main>
+      <div className="mx-auto w-full max-w-[900px] px-4 py-8 sm:px-7 sm:py-10">
+        <div className="flex flex-col items-start gap-4 rounded-md border border-sand-200 bg-[color:var(--raised)] p-8 sm:flex-row sm:items-center sm:justify-between dark:border-sand-800">
           <div className="flex items-center gap-4">
             <Avatar
               src={profile.avatar_url ?? undefined}
@@ -116,15 +116,15 @@ export default async function PublicProfilePage({
               size={64}
             />
             <div>
-              <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-50">
+              <h1 className="text-xl font-bold text-sand-900 dark:text-sand-50">
                 {profile.display_name ?? '—'}
               </h1>
               {profile.bio && (
-                <p className="mt-1 max-w-md text-sm text-neutral-600 dark:text-neutral-400">
+                <p className="mt-1 max-w-md text-sm text-sand-600 dark:text-sand-400">
                   {profile.bio}
                 </p>
               )}
-              <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
+              <p className="mt-2 text-sm text-sand-500 dark:text-sand-400">
                 {t('followerCount', { count: followerCountResult.count ?? 0 })} ·{' '}
                 {t('followingCount', { count: followingCountResult.count ?? 0 })}
               </p>
@@ -141,12 +141,12 @@ export default async function PublicProfilePage({
           <BadgeManager profileId={id} allBadges={allBadges} grantedCodes={grantedCodes} />
         )}
 
-        <h2 className="mt-10 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+        <h2 className="mt-10 text-lg font-semibold text-sand-900 dark:text-sand-100">
           {t('tripsTitle')}
         </h2>
 
         {tripCards.length === 0 ? (
-          <p className="mt-4 text-sm text-neutral-500 dark:text-neutral-400">
+          <p className="mt-4 text-sm text-sand-500 dark:text-sand-400">
             {t('noTrips')}
           </p>
         ) : (

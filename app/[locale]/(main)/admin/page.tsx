@@ -3,6 +3,7 @@ import { Flag, Buildings, Users } from '@phosphor-icons/react/dist/ssr';
 import { Link } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { AdminNav } from '@/components/admin/admin-nav';
+import { CaseHeader, PageBody } from '@/components/cordillera/folder';
 
 export default async function AdminHomePage() {
   const t = await getTranslations('admin');
@@ -52,26 +53,24 @@ export default async function AdminHomePage() {
   ] as const;
 
   return (
-    <main className="min-h-[100dvh] bg-neutral-50 py-12 dark:bg-neutral-950">
-      <div className="mx-auto max-w-[900px] px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
-          {t('dashboardTitle')}
-        </h1>
+    <main>
+      <div className="mx-auto w-full max-w-[900px] px-4 py-8 sm:px-7 sm:py-10">
+        <CaseHeader title={t('dashboardTitle')} />
 
-        <div className="mt-6">
-          <AdminNav active="dashboard" />
-        </div>
+        <AdminNav active="dashboard" />
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
           {cards.map((card) => (
             <Link
               key={card.href}
               href={card.href}
-              className="rounded-xl border border-neutral-200 bg-white p-6 transition-colors hover:border-forest-300 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-forest-700"
+              className="rounded-md border border-sand-200 bg-[color:var(--raised)] p-6 transition-colors hover:border-dawn-300 dark:border-sand-800 dark:hover:border-dawn-700"
             >
-              <card.icon size={24} weight="regular" strokeWidth={1.5} className="text-forest-600 dark:text-forest-400" />
-              <p className="mt-3 text-sm font-semibold text-neutral-900 dark:text-neutral-100">{card.title}</p>
-              <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">{card.countLabel}</p>
+              <div className="flex h-11 w-11 items-center justify-center rounded-md bg-dawn-50 dark:bg-dawn-900/40">
+                <card.icon size={22} weight="regular" strokeWidth={1.5} className="text-dawn-600 dark:text-dawn-300" />
+              </div>
+              <p className="mt-4 font-display text-sm font-bold text-sand-900 dark:text-sand-100">{card.title}</p>
+              <p className="mt-1 text-xs text-sand-500 dark:text-sand-400">{card.countLabel}</p>
             </Link>
           ))}
         </div>
@@ -83,7 +82,7 @@ export default async function AdminHomePage() {
 function NotAllowed({ message }: { message: string }) {
   return (
     <main className="flex min-h-[60vh] items-center justify-center">
-      <p className="text-sm text-neutral-500 dark:text-neutral-400">{message}</p>
+      <p className="text-sm text-sand-500 dark:text-sand-400">{message}</p>
     </main>
   );
 }

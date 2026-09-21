@@ -4,6 +4,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { cordilleraMapStyle } from '@/lib/map-style';
+import { useColorScheme } from '@/lib/use-color-scheme';
 import {
   MagnifyingGlass,
   MapPinLine,
@@ -15,7 +17,7 @@ import {
   Flag,
 } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/field';
 import { cn } from '@/lib/utils';
 
 // See components/trips/trip-map.tsx for why this is needed under Turbopack.
@@ -36,7 +38,7 @@ export interface TripWaypointInput {
 }
 
 const KIND_COLOR: Record<TripWaypointKind, string> = {
-  meeting_point: 'bg-sky-600',
+  meeting_point: 'bg-dawn-500',
   stop: 'bg-forest-600',
 };
 
@@ -61,6 +63,7 @@ export function TripMapEditor({
 }: TripMapEditorProps) {
   const t = useTranslations('trips');
   const containerRef = useRef<HTMLDivElement>(null);
+  const scheme = useColorScheme();
   const mapRef = useRef<maplibregl.Map | null>(null);
   const mapReadyRef = useRef(false);
   const meetingMarkerRef = useRef<maplibregl.Marker | null>(null);
@@ -164,7 +167,7 @@ export function TripMapEditor({
     const kind = stateRef.current.waypoints[index]?.kind ?? 'stop';
     const el = document.createElement('div');
     el.className = cn(
-      'flex h-7 w-7 items-center justify-center rounded-full border-2 border-white text-xs font-bold text-white shadow-md cursor-grab',
+      'flex h-7 w-7 items-center justify-center rounded-full border-2 border-white text-xs font-bold text-white cursor-grab',
       KIND_COLOR[kind]
     );
     el.textContent = String(index + 1);
@@ -186,7 +189,7 @@ export function TripMapEditor({
 
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: 'https://tiles.openfreemap.org/styles/liberty',
+      style: cordilleraMapStyle(scheme),
       center:
         meetingPointLat != null && meetingPointLng != null
           ? [meetingPointLng, meetingPointLat]
@@ -257,7 +260,7 @@ export function TripMapEditor({
       waypointMarkers.clear();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- map is initialized once; all state changes flow through the markers/route effect below instead.
-  }, []);
+  }, [scheme]);
 
   // Keep marker numbers, presence, and the route line in sync with props
   // (covers: reordering, removing, and coordinates arriving via search).
@@ -280,7 +283,7 @@ export function TripMapEditor({
         const el = existing.getElement();
         el.textContent = String(index + 1);
         el.className = cn(
-          'flex h-7 w-7 items-center justify-center rounded-full border-2 border-white text-xs font-bold text-white shadow-md cursor-grab',
+          'flex h-7 w-7 items-center justify-center rounded-full border-2 border-white text-xs font-bold text-white cursor-grab',
           KIND_COLOR[wp.kind]
         );
       } else {
@@ -376,7 +379,7 @@ export function TripMapEditor({
     <div className="flex flex-col gap-3">
       <div>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <label className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+          <label className="text-sm font-medium text-sand-900 dark:text-sand-100">
             {t('mapLocationLabel')}
           </label>
           <div className="flex shrink-0 gap-2">
@@ -403,11 +406,11 @@ export function TripMapEditor({
             </Button>
           </div>
         </div>
-        <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
+        <p className="mt-1 text-xs text-sand-600 dark:text-sand-400">
           {t('mapLocationHelper')}
         </p>
         {meetingNotFound && (
-          <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
+          <p className="mt-1 text-xs text-dawn-700 dark:text-dawn-400">
             {t('mapLocationNotFound')}
           </p>
         )}
@@ -415,12 +418,12 @@ export function TripMapEditor({
 
       <div
         ref={containerRef}
-        className="h-[320px] w-full overflow-hidden rounded-lg border border-neutral-300 dark:border-neutral-700"
+        className="h-[320px] w-full overflow-hidden rounded-md border border-sand-300 dark:border-sand-700"
       />
 
       <div className="flex flex-col gap-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <label className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+          <label className="text-sm font-medium text-sand-900 dark:text-sand-100">
             {t('waypointsLabel')}
           </label>
           <div className="flex shrink-0 gap-2">
@@ -446,7 +449,7 @@ export function TripMapEditor({
             </Button>
           </div>
         </div>
-        <p className="text-xs text-neutral-600 dark:text-neutral-400">{t('waypointsHelper')}</p>
+        <p className="text-xs text-sand-600 dark:text-sand-400">{t('waypointsHelper')}</p>
 
         {waypoints.length > 0 && (
           <ul className="flex flex-col gap-3">
@@ -456,7 +459,7 @@ export function TripMapEditor({
                 <li
                   key={wp.id}
                   className={cn(
-                    'flex flex-col gap-3 rounded-lg border border-neutral-200 p-3 dark:border-neutral-800',
+                    'flex flex-col gap-3 rounded-md border border-sand-200 p-3 dark:border-sand-800',
                     isArmed && 'border-forest-500 bg-forest-50/50 dark:bg-forest-950/30'
                   )}
                 >
@@ -477,7 +480,7 @@ export function TripMapEditor({
                         className={cn(
                           'inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium transition-colors',
                           wp.kind === 'meeting_point'
-                            ? 'bg-sky-50 text-sky-700 hover:bg-sky-100 dark:bg-sky-950 dark:text-sky-300 dark:hover:bg-sky-900'
+                            ? 'bg-dawn-50 text-dawn-800 hover:bg-dawn-100 dark:bg-dawn-900/40 dark:text-dawn-200 dark:hover:bg-dawn-900/60'
                             : 'bg-forest-50 text-forest-700 hover:bg-forest-100 dark:bg-forest-950 dark:text-forest-300 dark:hover:bg-forest-900'
                         )}
                       >

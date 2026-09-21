@@ -3,10 +3,10 @@ import { getTranslations } from 'next-intl/server';
 import { SealCheck, Gear } from '@phosphor-icons/react/dist/ssr';
 import { Link } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import { TripCard, type TripCardData } from '@/components/trips/trip-card';
 import { Stars } from '@/components/agencies/tour-reviews';
+import { cn } from '@/lib/utils';
 
 export default async function AgencyProfilePage({
   params,
@@ -78,22 +78,35 @@ export default async function AgencyProfilePage({
   }));
 
   return (
-    <main className="min-h-[100dvh] bg-neutral-50 py-12 dark:bg-neutral-950">
-      <div className="mx-auto max-w-[1000px] px-4 sm:px-6 lg:px-8">
-        <div className="rounded-xl border border-neutral-200 bg-white p-8 dark:border-neutral-800 dark:bg-neutral-900">
+    <main>
+      {/* Cordillera profile banner — the same ridgeline silhouette as the
+          home hero, scaled down, so an agency page still reads as part of
+          the same world instead of falling back to a plain white card. */}
+      <div className="relative overflow-hidden bg-forest-600 pb-16 pt-14 dark:bg-forest-800">
+        <svg
+          viewBox="0 0 1200 220"
+          preserveAspectRatio="xMidYMin slice"
+          className="absolute inset-x-0 bottom-0 h-full w-full opacity-25"
+          aria-hidden="true"
+        >
+          <polygon points="0,220 0,140 220,60 420,120 620,20 900,110 1200,50 1200,220" fill="#ffffff" opacity=".25" />
+          <polygon points="0,220 0,180 260,110 520,170 780,90 1050,160 1200,120 1200,220" fill="#ffffff" opacity=".4" />
+        </svg>
+
+        <div className="relative mx-auto max-w-[1000px] px-4 sm:px-6 lg:px-8">
           <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold text-neutral-900 md:text-3xl dark:text-neutral-50">
+            <div className="flex items-center gap-2.5">
+              <h1 className="font-display text-3xl font-extrabold text-white md:text-4xl">
                 {agency.business_name}
               </h1>
               {agency.status === 'approved' && (
-                <SealCheck size={24} weight="fill" className="text-forest-600 dark:text-forest-400" />
+                <SealCheck size={26} weight="fill" className="text-dawn-300" />
               )}
             </div>
             {isStaff && (
               <Link
                 href={`/agencies/${agency.id}/panel`}
-                className={buttonVariants({ size: 'sm', variant: 'outline' })}
+                className={cn(buttonVariants({ size: 'sm', variant: 'secondary' }), 'font-display shrink-0')}
               >
                 <Gear size={16} weight="regular" strokeWidth={1.5} />
                 {t('managePanel')}
@@ -101,12 +114,14 @@ export default async function AgencyProfilePage({
             )}
           </div>
 
-          <div className="mt-2 flex flex-wrap items-center gap-3">
+          <div className="mt-3 flex flex-wrap items-center gap-3">
             {agency.status === 'approved' && (
-              <Badge variant="secondary">{t('verifiedBadge')}</Badge>
+              <span className="inline-flex items-center rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-medium text-white">
+                {t('verifiedBadge')}
+              </span>
             )}
             {ratingCount > 0 && (
-              <div className="flex items-center gap-1.5 text-sm text-neutral-600 dark:text-neutral-400">
+              <div className="flex items-center gap-1.5 text-sm text-forest-50">
                 <Stars value={ratingAverage} size={16} />
                 <span>
                   {t('agencyRatingAverage', {
@@ -116,22 +131,26 @@ export default async function AgencyProfilePage({
                 </span>
               </div>
             )}
+            {agency.location_name && (
+              <span className="text-sm text-forest-50/90">{agency.location_name}</span>
+            )}
           </div>
-
-          {agency.location_name && (
-            <p className="mt-4 text-sm text-neutral-600 dark:text-neutral-400">{agency.location_name}</p>
-          )}
-          {agency.description && (
-            <p className="mt-4 whitespace-pre-wrap text-neutral-700 dark:text-neutral-300">
-              {agency.description}
-            </p>
-          )}
         </div>
+      </div>
 
-        <div className="mt-8">
-          <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">{t('toursTitle')}</h2>
+      <div className="mx-auto w-full max-w-[1000px] px-4 py-8 sm:px-7 sm:py-10">
+        {agency.description && (
+          <div className="-mt-8 rounded-md border border-sand-200 bg-[color:var(--raised)] p-6 dark:border-sand-800">
+            <p className="whitespace-pre-wrap text-sand-700 dark:text-sand-300">{agency.description}</p>
+          </div>
+        )}
+
+        <div className="mt-10 pb-12">
+          <h2 className="font-display text-xl font-bold text-sand-900 dark:text-sand-100">
+            {t('toursTitle')}
+          </h2>
           {tours.length === 0 ? (
-            <p className="mt-4 text-sm text-neutral-500 dark:text-neutral-400">{t('publicToursEmpty')}</p>
+            <p className="mt-4 text-sm text-sand-500 dark:text-sand-400">{t('publicToursEmpty')}</p>
           ) : (
             <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {tours.map((tour) => (

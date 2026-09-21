@@ -14,8 +14,7 @@ export function IosInstallHint() {
     const isIos = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
     const isStandalone =
       window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as unknown as { standalone?: boolean }).standalone ===
-        true;
+      (window.navigator as unknown as { standalone?: boolean }).standalone === true;
     const dismissed = window.localStorage.getItem(DISMISS_KEY) === '1';
 
     if (isIos && !isStandalone && !dismissed) {
@@ -36,21 +35,17 @@ export function IosInstallHint() {
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-x-4 bottom-4 z-50 flex items-center gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-700 shadow-lg dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300">
-      <ShareFat
-        size={20}
-        weight="regular"
-        strokeWidth={1.5}
-        className="shrink-0 text-forest-600 dark:text-forest-400"
-      />
-      <p className="flex-1">{t('installHint')}</p>
+    // Sits above the mobile rail (bottom-24), never over it.
+    <div className="fixed inset-x-4 bottom-24 z-50 flex items-center gap-3 rounded-md border border-sand-200 bg-[color:var(--raised)] px-4 py-3 text-sm text-sand-700 shadow-pop dark:border-sand-800 dark:text-sand-300">
+      <ShareFat size={20} className="shrink-0 text-dawn-600 dark:text-dawn-400" />
+      <p className="flex-1 leading-snug">{t('installHint')}</p>
       <button
         type="button"
         onClick={dismiss}
         aria-label={t('dismiss')}
-        className="shrink-0 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200"
+        className="shrink-0 rounded-full p-1 text-sand-400 transition-colors hover:bg-sand-100 hover:text-sand-700 dark:hover:bg-sand-800 dark:hover:text-sand-200"
       >
-        <X size={18} weight="regular" strokeWidth={1.5} />
+        <X size={16} weight="bold" />
       </button>
     </div>
   );

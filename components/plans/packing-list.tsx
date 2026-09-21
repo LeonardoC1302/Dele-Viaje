@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Plus, Trash } from '@phosphor-icons/react';
+import { Plus, Trash, Backpack } from '@phosphor-icons/react';
+import { PanelHeading } from '@/components/ui/panel-heading';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/field';
 import { Select } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
@@ -93,37 +94,35 @@ export function PackingList({ tripId, currentUserId, isHostTeam, initialItems, m
   };
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
-      <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-        {t('packingTitle')}
-      </h2>
-      <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">{t('packingHelper')}</p>
+    <div className="min-w-0">
+      <PanelHeading icon={Backpack}>{t('packingTitle')}</PanelHeading>
+      <p className="mt-1 text-xs text-sand-600 dark:text-sand-400">{t('packingHelper')}</p>
 
       {items.length === 0 ? (
-        <p className="mt-4 text-sm text-neutral-500 dark:text-neutral-400">{t('packingEmpty')}</p>
+        <p className="mt-4 text-sm text-sand-500 dark:text-sand-400">{t('packingEmpty')}</p>
       ) : (
         <ul className="mt-4 flex flex-col gap-2">
           {items.map((item) => (
             <li
               key={item.id}
-              className="flex items-center gap-3 rounded-lg border border-neutral-200 p-2 dark:border-neutral-800"
+              className="flex items-center gap-3 rounded-md border border-sand-200 p-2 dark:border-sand-800"
             >
               <input
                 type="checkbox"
                 checked={item.done}
                 onChange={() => toggleDone(item)}
-                className="h-4 w-4 shrink-0 rounded border-neutral-300 text-forest-600 focus:ring-forest-600"
+                className="h-4 w-4 shrink-0 rounded border-sand-300 text-forest-600 focus:ring-forest-600"
               />
               <span
                 className={cn(
-                  'flex-1 text-sm text-neutral-800 dark:text-neutral-200',
-                  item.done && 'text-neutral-400 line-through dark:text-neutral-600'
+                  'flex-1 text-sm text-sand-800 dark:text-sand-200',
+                  item.done && 'text-sand-400 line-through dark:text-sand-600'
                 )}
               >
                 {item.name}
               </span>
               {item.assignedTo && (
-                <span className="shrink-0 text-xs text-neutral-500 dark:text-neutral-400">
+                <span className="shrink-0 text-xs text-sand-500 dark:text-sand-400">
                   {nameById.get(item.assignedTo) ?? '—'}
                 </span>
               )}

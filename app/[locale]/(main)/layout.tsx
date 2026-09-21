@@ -1,29 +1,35 @@
-import { getTranslations } from 'next-intl/server';
-import { Link } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { buttonVariants } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { FolderRail } from '@/components/app-shell/folder-rail';
 import {
   NotificationBell,
   type NotificationData,
   type NotificationActor,
 } from '@/components/notifications/notification-bell';
-import { MobileNav } from '@/components/layout/mobile-nav';
 
+/**
+ * The authenticated shell. See `.impeccable/surfaces/
+ * app-locale-main-layout-tsx.md` for the direction contract this
+ * implements.
+ *
+ * The rail is fixed, so the content column is inset by the rail's width
+ * on desktop and by the mobile bar's height at the bottom on phones.
+ * Every child surface uses `PageBody` for its gutter rather than
+ * setting its own, which is what keeps the content column aligned from
+ * page to page.
+ */
 export default async function MainLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const t = await getTranslations('mainNav');
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   let notifications: NotificationData[] = [];
-  let actors: Record<string, NotificationActor> = {};
-  let tripTitles: Record<string, string> = {};
+  const actors: Record<string, NotificationActor> = {};
+  const tripTitles: Record<string, string> = {};
   let isAdmin = false;
   let myAgencyId: string | null = null;
 
@@ -60,8 +66,12 @@ export default async function MainLayout({
       createdAt: r.created_at,
     }));
 
-    const actorIds = [...new Set(notifications.map((n) => n.actorId).filter(Boolean))] as string[];
-    const tripIds = [...new Set(notifications.map((n) => n.tripId).filter(Boolean))] as string[];
+    const actorIds = [
+      ...new Set(notifications.map((n) => n.actorId).filter(Boolean)),
+    ] as string[];
+    const tripIds = [
+      ...new Set(notifications.map((n) => n.tripId).filter(Boolean)),
+    ] as string[];
 
     if (actorIds.length > 0) {
       const { data: actorRows } = await supabase.rpc('profiles_public').in('id', actorIds);
@@ -82,83 +92,25 @@ export default async function MainLayout({
   }
 
   return (
-    <div className="min-h-[100dvh]">
-      <header className="sticky top-0 z-50 border-b border-neutral-200/80 bg-neutral-50/80 backdrop-blur-md dark:border-neutral-800/80 dark:bg-neutral-950/80">
-        <div className="mx-auto flex h-[72px] max-w-[1400px] items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link
-            href="/"
-            className="text-lg font-bold tracking-tight text-neutral-900 dark:text-neutral-100"
-          >
-            Dele Viaje
-          </Link>
+    <div className="min-h-[100dvh] bg-[color:var(--page)]">
+      <FolderRail
+        isAuthenticated={!!user}
+        isAdmin={isAdmin}
+        myAgencyId={myAgencyId}
+        bell={
+          user ? (
+            <NotificationBell
+              currentUserId={user.id}
+              initialNotifications={notifications}
+              initialActors={actors}
+              initialTripTitles={tripTitles}
+            />
+          ) : null
+        }
+      />
 
-          <div className="flex items-center gap-2">
-            <nav className="hidden items-center gap-4 lg:flex">
-              <Link
-                href="/feed"
-                className="text-sm font-medium text-neutral-600 transition-colors hover:text-forest-600 dark:text-neutral-300 dark:hover:text-forest-400"
-              >
-                {t('feed')}
-              </Link>
-              {user && (
-                <Link
-                  href="/my-trips"
-                  className="text-sm font-medium text-neutral-600 transition-colors hover:text-forest-600 dark:text-neutral-300 dark:hover:text-forest-400"
-                >
-                  {t('myTrips')}
-                </Link>
-              )}
-              {user && (
-                <Link
-                  href={myAgencyId ? `/agencies/${myAgencyId}/panel` : '/agencies/new'}
-                  className="text-sm font-medium text-neutral-600 transition-colors hover:text-forest-600 dark:text-neutral-300 dark:hover:text-forest-400"
-                >
-                  {myAgencyId ? t('myAgency') : t('becomeAgency')}
-                </Link>
-              )}
-              <Link
-                href="/trips/new"
-                className={buttonVariants({ size: 'sm', variant: 'primary' })}
-              >
-                {t('createTrip')}
-              </Link>
-              {isAdmin && (
-                <Link
-                  href="/admin"
-                  className="text-sm font-medium text-neutral-600 transition-colors hover:text-forest-600 dark:text-neutral-300 dark:hover:text-forest-400"
-                >
-                  {t('admin')}
-                </Link>
-              )}
-              {user && (
-                <form action="/api/auth/signout" method="POST">
-                  <button
-                    type="submit"
-                    className={cn(
-                      buttonVariants({ size: 'sm', variant: 'ghost' })
-                    )}
-                  >
-                    {t('signOut')}
-                  </button>
-                </form>
-              )}
-            </nav>
-
-            {user && (
-              <NotificationBell
-                currentUserId={user.id}
-                initialNotifications={notifications}
-                initialActors={actors}
-                initialTripTitles={tripTitles}
-              />
-            )}
-
-            <MobileNav isAuthenticated={!!user} isAdmin={isAdmin} myAgencyId={myAgencyId} />
-          </div>
-        </div>
-      </header>
-
-      {children}
+      {/* pb-24 clears the fixed mobile bar; lg:pl-[228px] clears the rail. */}
+      <main className="pb-24 lg:pb-0 lg:pl-[228px]">{children}</main>
     </div>
   );
 }

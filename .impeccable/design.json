@@ -1,0 +1,198 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-21T00:00:00.000Z",
+  "title": "Design System: Dele Viaje",
+  "extensions": {
+    "colorMeta": {
+      "cloud-forest": {
+        "role": "primary",
+        "displayName": "Cloud Forest",
+        "canonical": "#1B4332",
+        "tonalRamp": ["#010402", "#020705", "#040f0a", "#081C15", "#1B4332", "#2D6A4F", "#4fb096", "#81c9b3", "#b3dcd1", "#d9ede8", "#f0f7f4"]
+      },
+      "dawn": {
+        "role": "secondary",
+        "displayName": "Dawn",
+        "canonical": "#E8823C",
+        "tonalRamp": ["#2f1709", "#532910", "#7d3e18", "#a8531f", "#cf6a28", "#E8823C", "#ed8f47", "#f2a35e", "#f6c99a", "#fbe4cd", "#fdf3ea"]
+      },
+      "lowland-page": {
+        "role": "neutral",
+        "displayName": "Lowland Page (Sand)",
+        "canonical": "#FBF8F2",
+        "tonalRamp": ["#100d0a", "#1a1611", "#2e2720", "#4c4132", "#6b5d47", "#8e7e64", "#b9a88c", "#d9cdb8", "#eae2d3", "#f5f0e6", "#fbf8f2"]
+      },
+      "manila-face": {
+        "role": "neutral",
+        "displayName": "Manila Face",
+        "canonical": "#FFFDF7",
+        "tonalRamp": ["#100d0a", "#1a1611", "#2e2720", "#4c4132", "#8e7e64", "#d9cdb8", "#eae2d3", "#f5f0e6", "#fbf8f2", "#FFFDF7"]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#1A1611",
+        "tonalRamp": ["#100d0a", "#1a1611", "#2e2720", "#4c4132", "#6b5d47", "#8e7e64", "#b9a88c", "#d9cdb8", "#eae2d3", "#f5f0e6"]
+      },
+      "alarm": {
+        "role": "tertiary",
+        "displayName": "Alarm",
+        "canonical": "#B91C1C",
+        "tonalRamp": ["#450a0a", "#7f1d1d", "#991b1b", "#b91c1c", "#dc2626", "#ef4444", "#f87171", "#fca5a5", "#fecaca", "#fee2e2"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "The home hero headline only; climbs 2.75rem to 5rem by breakpoint on one element." },
+      "headline": { "displayName": "Headline", "purpose": "Case labels and section titles inside the product." },
+      "title": { "displayName": "Title", "purpose": "Card titles and the rail wordmark, in the display face." },
+      "body": { "displayName": "Body", "purpose": "Descriptions and copy, capped at 64-65ch." },
+      "label": { "displayName": "Micro-Label", "purpose": "The signature style: uppercase, wide-tracked, faint. Panel headings, field labels, status stamps, card tabs. It IS the heading, never a kicker above one." }
+    },
+    "shadows": [
+      { "name": "pop", "value": "0 1px 2px 0 rgb(26 22 17 / 0.06), 0 8px 24px -8px rgb(26 22 17 / 0.18)", "purpose": "Transient overlays anchored to a trigger: popovers, the iOS install hint." },
+      { "name": "lift", "value": "0 2px 4px 0 rgb(26 22 17 / 0.06), 0 16px 40px -12px rgb(26 22 17 / 0.24)", "purpose": "Modal dialogs only. The sole element that leaves the page plane entirely." }
+    ],
+    "motion": [
+      { "name": "leaf", "value": "fade-in 180ms ease-out both", "purpose": "Switching a folder tab. Opacity only; the face, case label and stamp hold still." },
+      { "name": "fade-rise", "value": "fade-rise 0.35s cubic-bezier(0.16, 1, 0.3, 1) both", "purpose": "Entrance for content that genuinely arrives; 6px rise plus fade." },
+      { "name": "shimmer", "value": "shimmer 1.8s linear infinite", "purpose": "Skeleton loading, tinted to the sand ramp rather than gray." },
+      { "name": "color-transition", "value": "0.15s ease", "purpose": "Default for hover and focus state changes. Color only, never transform." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "content-max", "value": "1240px" },
+      { "name": "rail", "value": "228px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Dawn fill. Exactly one per surface: the thing the user came to do.",
+      "html": "<button class=\"ds-btn-primary\">Create trip</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 16px; border: none; border-radius: 9999px; background: #e8823c; color: #100d0a; font-family: 'Schibsted Grotesk', ui-sans-serif, system-ui, sans-serif; font-size: 14px; font-weight: 600; white-space: nowrap; cursor: pointer; transition: background-color 0.15s ease; } .ds-btn-primary:hover { background: #ed8f47; } .ds-btn-primary:focus-visible { outline: 2px solid #e8823c; outline-offset: 2px; } .ds-btn-primary:active { background: #cf6a28; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Cloud forest fill. The default variant and the one most buttons use; structural and repeatable.",
+      "html": "<button class=\"ds-btn-secondary\">View itinerary</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 16px; border: none; border-radius: 9999px; background: #1b4332; color: #ffffff; font-family: 'Schibsted Grotesk', ui-sans-serif, system-ui, sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: background-color 0.15s ease; } .ds-btn-secondary:hover { background: #2d6a4f; } .ds-btn-secondary:focus-visible { outline: 2px solid #1b4332; outline-offset: 2px; }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Control-edge hairline on transparent. Everything that is neither the one primary nor a structural action.",
+      "html": "<button class=\"ds-btn-outline\">Cancel</button>",
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 16px; border: 1px solid #d9cdb8; border-radius: 9999px; background: transparent; color: #2e2720; font-family: 'Schibsted Grotesk', ui-sans-serif, system-ui, sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: background-color 0.15s ease, border-color 0.15s ease; } .ds-btn-outline:hover { border-color: #b9a88c; background: #f5f0e6; } .ds-btn-outline:focus-visible { outline: 2px solid #1b4332; outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "A pressed well: a step down the sand ramp from the face it sits on, labelled with the system micro-label.",
+      "html": "<div class=\"ds-field\"><label class=\"ds-field-label\" for=\"ds-field-1\">Destination<span class=\"ds-field-req\"> *</span></label><input id=\"ds-field-1\" class=\"ds-field-input\" type=\"text\" placeholder=\"Cerro Chirripo\" /><p class=\"ds-field-help\">Where the group meets.</p></div>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 8px; max-width: 340px; } .ds-field-label { font-family: 'Schibsted Grotesk', ui-sans-serif, system-ui, sans-serif; font-size: 11px; font-weight: 600; line-height: 1; letter-spacing: 0.14em; text-transform: uppercase; color: #6b5d47; } .ds-field-req { color: #cf6a28; } .ds-field-input { width: 100%; height: 40px; padding: 8px 12px; border: 1px solid #d9cdb8; border-radius: 6px; background: #f5f0e6; color: #1a1611; font-family: 'Work Sans', ui-sans-serif, system-ui, sans-serif; font-size: 14px; transition: border-color 0.15s ease, box-shadow 0.15s ease; } .ds-field-input::placeholder { color: #b9a88c; } .ds-field-input:focus-visible { outline: none; border-color: #2d6a4f; box-shadow: 0 0 0 2px rgba(27, 67, 50, 0.3); } .ds-field-help { margin: 0; font-family: 'Work Sans', ui-sans-serif, system-ui, sans-serif; font-size: 12px; line-height: 1.6; color: #8e7e64; }"
+    },
+    {
+      "name": "Filter Chip",
+      "kind": "chip",
+      "refersTo": "chip-selected",
+      "description": "One shared definition for category links, the Verified toggle and Near-me. Selected goes forest, because a selected filter is not an action.",
+      "html": "<div class=\"ds-chip-row\"><button class=\"ds-chip ds-chip-on\">Hiking</button><button class=\"ds-chip\">Beach</button><button class=\"ds-chip\">Waterfalls</button></div>",
+      "css": ".ds-chip-row { display: flex; gap: 8px; flex-wrap: wrap; } .ds-chip { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border: 1px solid #d9cdb8; border-radius: 9999px; background: #fffdf7; color: #4c4132; font-family: 'Schibsted Grotesk', ui-sans-serif, system-ui, sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: background-color 0.15s ease, border-color 0.15s ease; } .ds-chip:hover { border-color: #b9a88c; background: #f5f0e6; } .ds-chip:focus-visible { outline: 2px solid #1b4332; outline-offset: 2px; } .ds-chip-on { border-color: #1b4332; background: #1b4332; color: #ffffff; } .ds-chip-on:hover { border-color: #1b4332; background: #1b4332; }"
+    },
+    {
+      "name": "Status Stamp",
+      "kind": "chip",
+      "refersTo": "status-stamp",
+      "description": "A record's state, stamped in outline rather than filled, so the one filled dawn thing on the surface stays unambiguously the primary action.",
+      "html": "<div class=\"ds-stamp-row\"><span class=\"ds-stamp ds-stamp-go\">Confirmed</span><span class=\"ds-stamp ds-stamp-hold\">Pending pay</span><span class=\"ds-stamp ds-stamp-inert\">Draft</span></div>",
+      "css": ".ds-stamp-row { display: flex; gap: 8px; flex-wrap: wrap; } .ds-stamp { display: inline-flex; align-items: center; padding: 4px 8px; border: 1px solid currentColor; border-radius: 0; font-family: 'Schibsted Grotesk', ui-sans-serif, system-ui, sans-serif; font-size: 11px; font-weight: 600; line-height: 1; letter-spacing: 0.14em; text-transform: uppercase; } .ds-stamp-go { color: #1b4332; } .ds-stamp-hold { color: #a8531f; } .ds-stamp-inert { color: #6b5d47; }"
+    },
+    {
+      "name": "Folder Tabs and Face",
+      "kind": "custom",
+      "refersTo": "folder-tab-active",
+      "description": "The signature seam: the active tab shares the face's ground, pulls down one pixel and paints its bottom border in the face's colour, erasing the face's top border so the two become one sheet.",
+      "html": "<div class=\"ds-folder\"><nav class=\"ds-tabs\"><a class=\"ds-tab ds-tab-on\" href=\"#\">Itinerary</a><a class=\"ds-tab\" href=\"#\">Packing</a><a class=\"ds-tab\" href=\"#\">Expenses</a></nav><div class=\"ds-face\"><h2 class=\"ds-leaf-label\">Day one</h2><p class=\"ds-face-body\">Depart San Isidro 04:00. Ranger station check-in before the climb.</p></div></div>",
+      "css": ".ds-folder { background: #fbf8f2; padding: 20px; } .ds-tabs { display: flex; align-items: flex-end; gap: 4px; padding-left: 4px; overflow-x: auto; scrollbar-width: none; } .ds-tabs::-webkit-scrollbar { display: none; } .ds-tab { margin-bottom: -1px; display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border: 1px solid transparent; border-radius: 6px 6px 0 0; background: #f5f0e6; color: #6b5d47; font-family: 'Schibsted Grotesk', ui-sans-serif, system-ui, sans-serif; font-size: 14px; font-weight: 600; text-decoration: none; white-space: nowrap; transition: background-color 0.15s ease, color 0.15s ease; } .ds-tab:hover { background: #fbf8f2; color: #2e2720; } .ds-tab-on { position: relative; z-index: 10; border-color: #eae2d3; border-bottom-color: #fffdf7; background: #fffdf7; color: #1a1611; } .ds-face { position: relative; border: 1px solid #eae2d3; border-radius: 0 6px 6px 6px; background: #fffdf7; padding: 20px; } .ds-leaf-label { margin: 0 0 16px; padding-bottom: 10px; border-bottom: 1px solid #eae2d3; font-family: 'Schibsted Grotesk', ui-sans-serif, system-ui, sans-serif; font-size: 11px; font-weight: 600; line-height: 1; letter-spacing: 0.14em; text-transform: uppercase; color: #8e7e64; } .ds-face-body { margin: 0; font-family: 'Work Sans', ui-sans-serif, system-ui, sans-serif; font-size: 16px; line-height: 1.625; color: #4c4132; }"
+    },
+    {
+      "name": "Trip Card",
+      "kind": "card",
+      "refersTo": "folder-face",
+      "description": "The dossier language at its smallest scale: a category-coloured tab cut into the top edge, the card body as the sheet below it.",
+      "html": "<a class=\"ds-card\" href=\"#\"><span class=\"ds-card-tab\"><svg width=\"13\" height=\"13\" viewBox=\"0 0 256 256\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M128 24a32 32 0 1 0 32 32 32 32 0 0 0-32-32Zm86 191-45-96 7-4a8 8 0 0 0-8-14l-63 36-25-19a8 8 0 0 0-10 12l32 24-33 56a8 8 0 0 0 14 8l30-51 27 21 10 38a8 8 0 0 0 15-4l-11-43a8 8 0 0 0-3-5l-23-17 33-19 39 84a8 8 0 0 0 14-7Z\"/></svg>Hiking</span><div class=\"ds-card-body\"><h3 class=\"ds-card-title\">Cerro Chirripo sunrise climb</h3><p class=\"ds-card-meta\">Sat 14 Mar, 04:00 &middot; San Gerardo de Rivas</p><div class=\"ds-card-foot\"><span class=\"ds-card-spots\">4 spots left</span><span class=\"ds-card-price\">CRC 38,000</span></div></div></a>",
+      "css": ".ds-card { display: flex; flex-direction: column; max-width: 320px; text-decoration: none; } .ds-card-tab { align-self: flex-start; margin-left: 12px; display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 6px 6px 0 0; background: #081c15; color: #ffffff; font-family: 'Schibsted Grotesk', ui-sans-serif, system-ui, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; } .ds-card-body { border: 1px solid #eae2d3; border-radius: 0 6px 6px 6px; background: #fffdf7; padding: 16px; transition: border-color 0.15s ease; } .ds-card:hover .ds-card-body { border-color: #b9a88c; } .ds-card-title { margin: 0; font-family: 'Schibsted Grotesk', ui-sans-serif, system-ui, sans-serif; font-size: 17px; font-weight: 700; line-height: 1.375; letter-spacing: -0.02em; color: #1a1611; } .ds-card-meta { margin: 12px 0 0; font-family: 'Work Sans', ui-sans-serif, system-ui, sans-serif; font-size: 14px; color: #6b5d47; font-variant-numeric: tabular-nums; } .ds-card-foot { margin-top: 16px; padding-top: 12px; border-top: 1px solid #eae2d3; display: flex; align-items: center; justify-content: space-between; } .ds-card-spots { font-family: 'Work Sans', ui-sans-serif, system-ui, sans-serif; font-size: 14px; font-weight: 500; color: #1b4332; } .ds-card-price { font-family: 'Schibsted Grotesk', ui-sans-serif, system-ui, sans-serif; font-size: 14px; font-weight: 700; color: #1a1611; font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Folder Rail",
+      "kind": "nav",
+      "refersTo": "rail",
+      "description": "The rail the folders hang in: cloud-forest-night ground, one dawn create action, a dawn left edge on the active item, signed off with a ridgeline.",
+      "html": "<nav class=\"ds-rail\"><a class=\"ds-rail-brand\" href=\"#\"><svg viewBox=\"0 0 24 24\" width=\"22\" height=\"22\" aria-hidden=\"true\"><path d=\"M2 20 L9 7 L13.5 14 L16.5 9 L22 20 Z\" fill=\"#e8823c\"/><circle cx=\"18\" cy=\"5.5\" r=\"2.5\" fill=\"#f2a35e\"/></svg>Dele Viaje</a><div class=\"ds-rail-cta-wrap\"><a class=\"ds-rail-cta\" href=\"#\">+ Create trip</a></div><ul class=\"ds-rail-list\"><li><a class=\"ds-rail-item ds-rail-on\" href=\"#\">Feed</a></li><li><a class=\"ds-rail-item\" href=\"#\">My trips</a></li><li><a class=\"ds-rail-item\" href=\"#\">My agency</a></li></ul><div class=\"ds-rail-ridge\"><svg viewBox=\"0 0 1200 220\" preserveAspectRatio=\"xMidYMin slice\" width=\"100%\" height=\"64\" aria-hidden=\"true\"><polygon points=\"0,220 0,165 180,120 400,155 640,105 880,150 1200,115 1200,220\" fill=\"rgba(255,255,255,0.07)\"/><polygon points=\"0,220 0,196 240,162 480,190 760,150 1020,185 1200,168 1200,220\" fill=\"rgba(255,255,255,0.13)\"/></svg></div></nav>",
+      "css": ".ds-rail { width: 228px; display: flex; flex-direction: column; background: #081c15; font-family: 'Schibsted Grotesk', ui-sans-serif, system-ui, sans-serif; } .ds-rail-brand { display: flex; align-items: center; gap: 10px; padding: 24px 20px; color: #ffffff; font-size: 17px; font-weight: 800; letter-spacing: -0.02em; text-decoration: none; transition: opacity 0.15s ease; } .ds-rail-brand:hover { opacity: 0.8; } .ds-rail-cta-wrap { padding: 0 16px 20px; } .ds-rail-cta { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 16px; border-radius: 9999px; background: #e8823c; color: #100d0a; font-size: 14px; font-weight: 600; text-decoration: none; transition: background-color 0.15s ease; } .ds-rail-cta:hover { background: #ed8f47; } .ds-rail-list { list-style: none; margin: 0; padding: 0 12px; display: flex; flex-direction: column; gap: 2px; } .ds-rail-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-left: 2px solid transparent; border-radius: 6px; color: rgba(217, 237, 232, 0.7); font-size: 14px; font-weight: 600; text-decoration: none; transition: background-color 0.15s ease, color 0.15s ease; } .ds-rail-item:hover { background: rgba(27, 67, 50, 0.5); color: #ffffff; } .ds-rail-item:focus-visible { outline: 2px solid #e8823c; outline-offset: 2px; } .ds-rail-on { border-left-color: #e8823c; background: #1b4332; color: #ffffff; } .ds-rail-ridge { margin-top: 24px; pointer-events: none; }"
+    },
+    {
+      "name": "Panel Heading",
+      "kind": "custom",
+      "refersTo": "status-stamp",
+      "description": "A micro-label over a hairline: the system's repeating structural unit, and the reason an expenses panel and an admin queue read as the same product.",
+      "html": "<div class=\"ds-panel\"><div class=\"ds-panel-head\"><h2 class=\"ds-panel-label\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 256 256\" fill=\"#cf6a28\" aria-hidden=\"true\"><path d=\"M128 24a104 104 0 1 0 104 104A104 104 0 0 0 128 24Zm12 168h-24v-24h24Zm0-40h-24V64h24Z\"/></svg>Shared expenses</h2><a class=\"ds-panel-action\" href=\"#\">Add</a></div><p class=\"ds-panel-body\">Nothing logged yet.</p></div>",
+      "css": ".ds-panel { background: #fffdf7; border: 1px solid #eae2d3; border-radius: 6px; padding: 20px; max-width: 380px; } .ds-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 10px; margin-bottom: 16px; border-bottom: 1px solid #eae2d3; } .ds-panel-label { display: flex; align-items: center; gap: 8px; margin: 0; font-family: 'Schibsted Grotesk', ui-sans-serif, system-ui, sans-serif; font-size: 11px; font-weight: 600; line-height: 1; letter-spacing: 0.14em; text-transform: uppercase; color: #8e7e64; } .ds-panel-action { color: #1b4332; font-family: 'Work Sans', ui-sans-serif, system-ui, sans-serif; font-size: 14px; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; transition: text-decoration-thickness 0.15s ease, color 0.15s ease; } .ds-panel-action:hover { color: #2d6a4f; text-decoration-thickness: 2px; } .ds-panel-body { margin: 0; font-family: 'Work Sans', ui-sans-serif, system-ui, sans-serif; font-size: 16px; line-height: 1.625; color: #6b5d47; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Expedition Dossier",
+    "overview": "Dele Viaje is a case file for a mountain, not a dashboard. Every signed-in surface is a folder: a case label with a status stamp at the top, tabs cut into the folder's edge, and a manila-tinted face you read the contents on. The organizing metaphor underneath the palette is altitude - a Costa Rican cordillera stacks readable bands as you climb, and the system uses exactly three of them: sun-bleached lowland paper, the dark band of cloud forest, and the thin line of dawn that hits the ridge first.\n\nThe density is working-document density, not marketing density. Type is set tight and structural; the uppercase wide-tracked micro-label over a hairline is the repeating unit that makes an expenses panel, a waitlist roster and an admin queue read as the same product. The one drawing the product owns is the ridgeline, in three genuinely different profiles, appearing at the foot of the hero, along page headers, behind empty states, and signing off the rail.\n\nThe confirmed anti-reference is the generic trip-app grid: uniform rounded white boxes on cool gray, each with a soft drop shadow. This system rejects all three parts of that. The page is warm paper, never a cool white; the geometry is crisp field-guide geometry with panels at 6px; and depth comes from moving along the sand ramp rather than from casting a shadow.",
+    "keyCharacteristics": [
+      "Warm paper ground in both light and dark - dark mode is nightfall on the same mountain, not an inversion",
+      "Crisp geometry: panels at 6px, radii top out at 14px, pill reserved for buttons, chips and avatars",
+      "Depth by tint, not shadow; the two-entry shadow scale is for things that genuinely leave the page plane",
+      "Exactly one dawn-colored element per surface",
+      "The folder seam: an active tab that erases the face's top border and becomes one sheet with it",
+      "Micro-label over a hairline as the universal panel heading",
+      "180ms opacity-only leafing when a tab changes; the face holds still"
+    ],
+    "rules": [
+      { "name": "The Warm Paper Rule", "body": "Sand is the only surface and text family. A cool white, a neutral gray, or a stock Tailwind gray/slate/zinc anywhere in the UI is a bug, not a variation. Audit test: sample any background or body-text color on any surface; it must carry a warm cast.", "section": "colors" },
+      { "name": "The One Dawn Rule", "body": "Dawn marks exactly one primary action per surface. Two dawn elements on a screen means one of them is wrong. Two corollaries the finish review enforced: a selected filter chip is not an action, so it goes cloud forest; and a headline emphasis in dawn is one word, never a whole clause, so the call to action stays the larger dawn mass on the page.", "section": "colors" },
+      { "name": "The One-Ramp Categories Rule", "body": "Category colors - all eight - are steps on the forest or dawn ramp, never new hues. A feed reads as varied because its tabs differ in depth and warmth, not because it has become a rainbow.", "section": "colors" },
+      { "name": "The Micro-Label-Is-The-Heading Rule", "body": "The uppercase wide-tracked label is never decoration sitting above something else - it IS the heading, set over its own hairline (Leaf, PanelHeading). That is its only structural use.", "section": "typography" },
+      { "name": "The No-Eyebrow Rule", "body": "No kicker, eyebrow or tracked-caps label sits above a title anywhere. The eyebrow prop was removed from CaseHeader and AuthPanel so it cannot return. Two exemptions, both carrying data rather than restating the page: the trip card's cut category tab, and the micro-label heading above. Footer column labels are list-group labels and are also fine.", "section": "typography" },
+      { "name": "The Tabular Digits Rule", "body": "Anything where digits stack in a column - prices, counts, times - takes .tnum. Proportional digits make a column of numbers look ragged.", "section": "typography" },
+      { "name": "The Tint-Not-Shadow Rule", "body": "If an element is still part of the page, it separates by tint. If it can be dismissed, it may cast. A shadowed pill on warm paper is the generic-SaaS tell this system exists to remove.", "section": "elevation" },
+      { "name": "The Focus Ring Rule", "body": "One ring definition, dawn, 2px at 2px offset, so focus looks identical on every control. Inputs additionally shift their border to cloud forest and carry a 2px translucent forest ring.", "section": "elevation" },
+      { "name": "The Seam Rule", "body": "The active tab shares the face's exact background, pulls itself down one pixel (-mb-px), and paints its bottom border in the face's own color so it lands on and erases the face's top border. The tab and the face become one continuous sheet. Inactive tabs keep their bottom border and sit a step darker on the sand ramp, reading as sheets behind the front one. FolderTabs without a FolderFace under it is a row of floating rectangles.", "section": "components" },
+      { "name": "The Leafing Rule", "body": "Switching a folder tab is a 180ms opacity-only cross-fade (animate-leaf). The face, the case label and the status stamp hold still; the tab strip is the only thing that moves. Turning a page inside a folder must not look like a new page arriving, which is exactly what a rise reads as. Entrance animation elsewhere is fade-rise (350ms, 6px). Reduced motion is handled globally.", "section": "components" },
+      { "name": "The Case Label Rule", "body": "CaseHeader's action slot takes exactly one control. Where a surface genuinely has a second action, it belongs inside the face near what it acts on, not up beside the primary - the dawn accent only works while it is scarce.", "section": "components" }
+    ],
+    "dos": [
+      "Do put every surface and every piece of text on the sand family. Warm paper is the only ground.",
+      "Do separate surfaces by moving along the sand ramp: page to manila face up, input well down.",
+      "Do give each surface exactly one dawn element, and let it be the action the user came to perform.",
+      "Do use the micro-label over a hairline as the heading for every panel, form region and data group.",
+      "Do keep panels at 6px and reserve the pill for buttons, chips and avatars.",
+      "Do pair every FolderTabs with a FolderFace so the seam exists.",
+      "Do draw new decorative geometry as a Ridgeline profile rather than inventing a second motif, and ship graphics as inline SVG.",
+      "Do set stacked digits with .tnum.",
+      "Do keep category colors on the forest and dawn ramps."
+    ],
+    "donts": [
+      "Don't introduce a cool white, a neutral gray, or a stock gray/slate/zinc utility anywhere.",
+      "Don't put a resting shadow on a panel, card, button or chip. pop and lift are for overlays only.",
+      "Don't place a kicker or eyebrow above a title. The prop was removed so it cannot return.",
+      "Don't put two dawn elements on one surface; a selected filter chip is forest, and a headline emphasis is one word, not a clause.",
+      "Don't use the control edge (hairline-strong) on a panel, or the panel hairline on a control. They are two intentional, different things.",
+      "Don't let a tab strip wrap to a second row; it scrolls.",
+      "Don't animate a leaf with translation, or move the face, case label or stamp when a tab changes.",
+      "Don't extend the alarm red beyond destructive and error states into a fourth color family.",
+      "Don't reach for a radius above 14px; the earlier 18-24px soft-card system was deliberately replaced."
+    ]
+  }
+}

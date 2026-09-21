@@ -19,11 +19,12 @@
   },
   "nav": {
     "howItWorks": "Cómo funciona",
+    "trips": "Viajes",
     "forAgencies": "Para agencias",
-    "waitlist": "Lista de espera",
     "signIn": "Iniciar sesión"
   },
   "hero": {
+    "eyebrow": "Costa Rica · bilingüe",
     "headlineLine1": "Encuentra o crea un viaje,",
     "headlineLine2": "con la gente que quieras.",
     "subtext": "Únete a aventuras sociales, reserva tours verificados o planea un viaje privado con amigos por Costa Rica.",
@@ -47,17 +48,13 @@
   },
   "agenciesCta": {
     "title": "¿Ofreces tours en Costa Rica?",
-    "body": "Estamos incorporando un grupo fundador de operadores locales antes del lanzamiento, con reservas directas y sin comisión intermediaria.",
+    "body": "Únete a los operadores locales que ya publican tours en Dele Viaje — reservas directas, sin comisión intermediaria, pago por SINPE Móvil.",
     "cta": "Aplicar como agencia"
   },
-  "waitlist": {
-    "title": "Sé de los primeros en el camino",
-    "body": "Estamos construyendo Dele Viaje en este momento. Únete a la lista de espera y te avisaremos en cuanto abra.",
-    "emailLabel": "Correo electrónico",
-    "emailPlaceholder": "tu@ejemplo.com",
-    "submit": "Unirme a la lista",
-    "success": "Ya estás en la lista. Revisa tu correo el día del lanzamiento.",
-    "errorInvalidEmail": "Ingresa un correo electrónico válido."
+  "tripShowcase": {
+    "title": "Próximamente",
+    "subtitle": "Viajes reales, abiertos ahora mismo — planes sociales y tours verificados.",
+    "viewAll": "Ver todos los viajes"
   },
   "footer": {
     "tagline": "Viajes por Costa Rica, planeados con gente de confianza.",
@@ -109,7 +106,8 @@
     },
     "checkEmail": {
       "title": "Revisa tu correo",
-      "body": "Te enviamos un enlace de confirmación para terminar de crear tu cuenta. Ábrelo para continuar en Dele Viaje."
+      "body": "Te enviamos un enlace de confirmación para terminar de crear tu cuenta. Ábrelo para continuar en Dele Viaje.",
+      "hint": "El enlace vence en 24 horas. Revisá tu carpeta de spam si no llega en unos minutos."
     },
     "onboarding": {
       "title": "Cuéntanos sobre ti",
@@ -132,7 +130,8 @@
     "admin": "Admin",
     "signOut": "Cerrar sesión",
     "openMenu": "Abrir menú",
-    "closeMenu": "Cerrar menú"
+    "closeMenu": "Cerrar menú",
+    "signIn": "Iniciar sesión"
   },
   "feed": {
     "title": "Próximos viajes",
@@ -159,7 +158,10 @@
     "filterDateFrom": "Desde",
     "filterDateTo": "Hasta",
     "filterApply": "Aplicar",
-    "filterClear": "Limpiar filtros"
+    "filterClear": "Limpiar filtros",
+    "dateLabel": "Fecha",
+    "locationLabel": "Lugar",
+    "resultsCount": "{count, plural, one {# viaje} other {# viajes}}"
   },
   "trips": {
     "visibilityLabel": "Tipo de viaje",
@@ -199,6 +201,10 @@
     "waypointKindMeetingPoint": "Punto de encuentro",
     "waypointKindStop": "Parada",
     "waypointKindToggleHint": "Toca para cambiar entre punto de encuentro y parada",
+    "sectionDetails": "Detalles",
+    "sectionLocation": "Ubicación",
+    "sectionExtras": "Extras",
+    "sectionSchedule": "Fechas y cupo",
     "titleLabel": "Título",
     "titlePlaceholder": "Ej. Caminata al Cerro Chirripó este sábado",
     "descriptionLabel": "Descripción",
@@ -252,7 +258,19 @@
     "joinError": "No se pudo completar la acción. Intenta de nuevo.",
     "attendeesTitle": "¿Quién va? ({count})",
     "noAttendeesYet": "Todavía nadie se ha unido. ¡Sé el primero!",
-    "openChat": "Abrir chat"
+    "openChat": "Abrir chat",
+    "detailByPlain": "Organizado por {name}",
+    "stampOpen": "Abierto",
+    "stampPast": "Finalizado",
+    "tab_overview": "Resumen",
+    "tab_itinerary": "Itinerario",
+    "tab_packing": "Equipaje",
+    "tab_expenses": "Gastos",
+    "tab_polls": "Encuestas",
+    "tab_documents": "Documentos",
+    "tab_qa": "Preguntas",
+    "tab_reviews": "Reseñas",
+    "tab_people": "Gente"
   },
   "chat": {
     "title": "Chat del viaje",
@@ -496,12 +514,15 @@
     "subtitle": "Todo de lo que formas parte — viajes que organizaste y planes a los que te uniste.",
     "emptyTitle": "Todavía no formas parte de ningún viaje",
     "emptyBody": "Crea uno, o únete a un plan privado con un enlace de invitación.",
+    "emptyCta": "Explorar viajes",
     "organizingTitle": "Organizando",
     "joinedTitle": "Unido"
   },
   "agencies": {
     "applyTitle": "Publica tu agencia",
     "applySubtitle": "Aplica para publicar tours en Dele Viaje. Un admin revisa cada solicitud antes de aprobarla.",
+    "sectionBusiness": "Negocio",
+    "sectionPayments": "Pagos",
     "businessNameLabel": "Nombre del negocio",
     "businessNamePlaceholder": "Ej. Pura Vida Adventures",
     "legalNameLabel": "Razón social (opcional)",
@@ -537,6 +558,7 @@
     "tourEditSubtitle": "Los cambios se ven de inmediato si el tour ya está publicado.",
     "tourSaveChanges": "Guardar cambios",
     "tourEdit": "Editar tour",
+    "sectionPricing": "Precio",
     "tourPriceLabel": "Precio (₡)",
     "tourPriceHelper": "Por persona, en colones.",
     "tourMinParticipantsLabel": "Mínimo de participantes (opcional)",
@@ -634,6 +656,13 @@
     "tourAdditionalDateRemove": "Eliminar fecha",
     "tourAdditionalDateAdd": "Agregar otra fecha",
     "otherDatesTitle": "Otras fechas",
-    "otherDatesFull": "Lleno"
+    "otherDatesFull": "Lleno",
+    "panelTab_tours": "Tours",
+    "panelTab_templates": "Plantillas",
+    "panelTab_staff": "Equipo",
+    "status_approved_stamp": "Verificada",
+    "status_pending_stamp": "Pendiente",
+    "status_suspended_stamp": "Suspendida",
+    "status_rejected_stamp": "Rechazada"
   }
 }

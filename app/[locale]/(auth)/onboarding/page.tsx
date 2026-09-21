@@ -27,9 +27,5 @@ export default async function OnboardingPage({
     redirect({ href: '/', locale });
   }
 
-  return (
-    <main className="flex min-h-[100dvh] items-center justify-center bg-neutral-50 px-4 py-16 dark:bg-neutral-950">
-      <OnboardingForm />
-    </main>
-  );
+  return <OnboardingForm />;
 }

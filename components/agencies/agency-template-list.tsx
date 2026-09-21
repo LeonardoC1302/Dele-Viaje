@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Plus, PencilSimple, FileArrowUp, Trash } from '@phosphor-icons/react';
+import { Plus, PencilSimple, FileArrowUp, Trash, Copy } from '@phosphor-icons/react';
+import { PanelHeading } from '@/components/ui/panel-heading';
 import { Link, useRouter } from '@/i18n/navigation';
 import { Button, buttonVariants } from '@/components/ui/button';
 import {
@@ -77,9 +78,9 @@ export function AgencyTemplateList({
   const t = useTranslations('agencies');
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
+    <div className="min-w-0">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">{t('templatesTitle')}</h2>
+        <PanelHeading icon={Copy}>{t('templatesTitle')}</PanelHeading>
         <Link
           href={`/agencies/${agencyId}/templates/new`}
           className={buttonVariants({ size: 'xs', variant: 'secondary' })}
@@ -88,18 +89,18 @@ export function AgencyTemplateList({
           {t('templateCreate')}
         </Link>
       </div>
-      <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">{t('templatesHelper')}</p>
+      <p className="mt-1 text-xs text-sand-500 dark:text-sand-400">{t('templatesHelper')}</p>
 
       {initialTemplates.length === 0 ? (
-        <p className="mt-4 text-sm text-neutral-500 dark:text-neutral-400">{t('templatesEmpty')}</p>
+        <p className="mt-4 text-sm text-sand-500 dark:text-sand-400">{t('templatesEmpty')}</p>
       ) : (
         <ul className="mt-4 flex flex-col gap-2">
           {initialTemplates.map((template) => (
             <li
               key={template.id}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-neutral-200 p-3 text-sm dark:border-neutral-800"
+              className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-sand-200 p-3 text-sm dark:border-sand-800"
             >
-              <span className="min-w-0 flex-1 truncate font-medium text-neutral-900 dark:text-neutral-100">
+              <span className="min-w-0 flex-1 truncate font-medium text-sand-900 dark:text-sand-100">
                 {template.name}
               </span>
               <div className="flex shrink-0 items-center gap-2">
@@ -114,7 +115,7 @@ export function AgencyTemplateList({
                   href={`/agencies/${agencyId}/templates/${template.id}/edit`}
                   aria-label={t('templateEdit')}
                   title={t('templateEdit')}
-                  className="flex h-7 w-7 items-center justify-center rounded text-neutral-500 transition-colors hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800"
+                  className="flex h-7 w-7 items-center justify-center rounded text-sand-500 transition-colors hover:bg-sand-100 dark:text-sand-400 dark:hover:bg-sand-800"
                 >
                   <PencilSimple size={14} weight="regular" strokeWidth={1.5} />
                 </Link>

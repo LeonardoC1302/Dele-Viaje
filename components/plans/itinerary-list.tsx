@@ -2,12 +2,13 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Plus, Trash, Clock } from '@phosphor-icons/react';
+import { Plus, Trash, Clock, Compass } from '@phosphor-icons/react';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/field';
+import { Textarea } from '@/components/ui/field';
 import { TimePicker } from '@/components/ui/time-picker';
+import { PanelHeading } from '@/components/ui/panel-heading';
 import { cn } from '@/lib/utils';
 import { ITINERARY_ICON_KEYS, ItineraryIcon, type ItineraryIconKey } from '@/components/plans/itinerary-icons';
 
@@ -29,16 +30,32 @@ interface ItineraryListProps {
   initialBlocks: ItineraryBlockData[];
 }
 
+/**
+ * The stop marker — a node on the day's spine.
+ *
+ * This used to be a 80px-wide block glued to the left edge of a bordered
+ * card, which made a day read as a stack of thumbnails rather than as a
+ * route. As a round node on a connecting line it does the job the
+ * content actually has: showing the order of the stops.
+ */
 function ItineraryThumb({ block }: { block: ItineraryBlockData }) {
   if (block.photoUrl) {
     return (
       // eslint-disable-next-line @next/next/no-img-element -- arbitrary external photo URLs can't be pre-registered in next.config.ts remotePatterns.
-      <img src={block.photoUrl} alt="" className="w-20 shrink-0 self-stretch object-cover" />
+      <img
+        src={block.photoUrl}
+        alt=""
+        className="relative z-10 h-9 w-9 shrink-0 rounded-full object-cover ring-2 ring-[color:var(--raised)]"
+      />
     );
   }
   return (
-    <div className="flex w-20 shrink-0 items-center justify-center self-stretch bg-forest-50 dark:bg-forest-600/20">
-      <ItineraryIcon iconKey={block.icon} size={24} className="text-forest-600 dark:text-forest-400" />
+    <div className="relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-forest-50 ring-2 ring-[color:var(--raised)] dark:bg-forest-600/25">
+      <ItineraryIcon
+        iconKey={block.icon}
+        size={17}
+        className="text-forest-600 dark:text-forest-400"
+      />
     </div>
   );
 }
@@ -122,14 +139,12 @@ export function ItineraryList({ tripId, currentUserId, canAdd, canDelete, initia
   };
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
-      <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-        {t('itineraryTitle')}
-      </h2>
-      <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">{t('itineraryHelper')}</p>
+    <div className="min-w-0">
+      <PanelHeading icon={Compass}>{t('itineraryTitle')}</PanelHeading>
+      <p className="mt-1 text-xs text-sand-600 dark:text-sand-400">{t('itineraryHelper')}</p>
 
       {sortedDays.length === 0 ? (
-        <p className="mt-4 text-sm text-neutral-500 dark:text-neutral-400">{t('itineraryEmpty')}</p>
+        <p className="mt-4 text-sm text-sand-500 dark:text-sand-400">{t('itineraryEmpty')}</p>
       ) : (
         <>
           {sortedDays.length > 1 && (
@@ -138,7 +153,7 @@ export function ItineraryList({ tripId, currentUserId, canAdd, canDelete, initia
                 <a
                   key={dayIndex}
                   href={`#itinerary-day-${dayIndex}`}
-                  className="rounded-full border border-neutral-300 px-2.5 py-1 text-xs font-medium text-neutral-600 transition-colors hover:border-forest-600 hover:text-forest-600 dark:border-neutral-700 dark:text-neutral-400 dark:hover:border-forest-400 dark:hover:text-forest-400"
+                  className="rounded-full border border-sand-300 px-2.5 py-1 text-xs font-medium text-sand-600 transition-colors hover:border-forest-600 hover:text-forest-600 dark:border-sand-700 dark:text-sand-400 dark:hover:border-forest-400 dark:hover:text-forest-400"
                 >
                   {t('itineraryDay', { day: dayIndex + 1 })}
                 </a>
@@ -148,48 +163,62 @@ export function ItineraryList({ tripId, currentUserId, canAdd, canDelete, initia
           <div className="mt-4 flex flex-col gap-5">
           {sortedDays.map((dayIndex) => (
             <div key={dayIndex} id={`itinerary-day-${dayIndex}`} className="scroll-mt-24">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-forest-600 dark:text-forest-400">
+              <h3 className="micro-label text-forest-700 dark:text-forest-400">
                 {t('itineraryDay', { day: dayIndex + 1 })}
               </h3>
-              <ul className="relative mt-2 flex flex-col gap-2 before:absolute before:bottom-2 before:left-[39px] before:top-2 before:w-px before:bg-neutral-200 before:content-[''] dark:before:bg-neutral-800">
-                {dayGroups.get(dayIndex)!.map((block) => (
-                  <li
-                    key={block.id}
-                    className="relative flex gap-3 overflow-hidden rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900"
-                  >
+
+              {/* A day is a route, so its stops hang off one spine. The
+                  connector is drawn per item and omitted on the last,
+                  which is what makes the line stop at the final node
+                  instead of trailing into empty space. */}
+              <ol className="mt-3">
+                {dayGroups.get(dayIndex)!.map((block, i, stops) => (
+                  <li key={block.id} className="relative flex gap-3.5 pb-5 last:pb-0">
+                    {i < stops.length - 1 && (
+                      <span
+                        aria-hidden="true"
+                        className="absolute bottom-0 left-[1.0625rem] top-9 w-px bg-sand-200 dark:bg-sand-800"
+                      />
+                    )}
+
                     <ItineraryThumb block={block} />
-                    <div className="min-w-0 flex-1 py-2 pr-3">
+
+                    <div className="min-w-0 flex-1 pt-0.5">
                       <div className="flex items-start justify-between gap-2">
-                        <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                          {block.label}
-                        </p>
+                        <div className="min-w-0">
+                          {block.startTime && (
+                            <p className="tnum micro-label mb-1 flex items-center gap-1 text-dawn-700 dark:text-dawn-400">
+                              <Clock size={11} weight="fill" />
+                              {block.startTime.slice(0, 5)}
+                            </p>
+                          )}
+                          <p className="font-display font-semibold leading-snug text-sand-900 dark:text-sand-50">
+                            {block.label}
+                          </p>
+                        </div>
+
                         {canDelete && (
                           <Button
                             size="xs"
                             variant="ghost"
                             onClick={() => removeBlock(block.id)}
                             aria-label={t('itineraryRemove')}
-                            className="shrink-0 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
+                            className="shrink-0 text-sand-400 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950 dark:hover:text-red-400"
                           >
-                            <Trash size={14} weight="regular" strokeWidth={1.5} />
+                            <Trash size={14} />
                           </Button>
                         )}
                       </div>
-                      {block.startTime && (
-                        <p className="mt-0.5 flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
-                          <Clock size={12} weight="regular" strokeWidth={1.5} />
-                          {block.startTime.slice(0, 5)}
-                        </p>
-                      )}
+
                       {block.description && (
-                        <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
+                        <p className="mt-1.5 text-sm leading-relaxed text-sand-600 dark:text-sand-400">
                           {block.description}
                         </p>
                       )}
                     </div>
                   </li>
                 ))}
-              </ul>
+              </ol>
             </div>
           ))}
           </div>
@@ -204,15 +233,19 @@ export function ItineraryList({ tripId, currentUserId, canAdd, canDelete, initia
       )}
 
       {canAdd && formOpen && (
-        <div className="mt-5 flex flex-col gap-3 border-t border-neutral-200 pt-4 dark:border-neutral-800">
-          <div className="flex flex-wrap gap-2">
+        <div className="mt-5 flex flex-col gap-3 border-t border-sand-200 pt-4 dark:border-sand-800">
+          {/* `items-end` keeps every control's baseline aligned even
+              when one field's label wraps to two lines. The explicit
+              h-9 overrides that used to be here fought Select's h-10
+              and were half of why the time control sat low. */}
+          <div className="flex flex-wrap items-end gap-3">
             <Input
               type="number"
               label={t('itineraryDayLabel')}
               value={day}
               onChange={(e) => setDay(e.target.value)}
               min={1}
-              className="h-9 w-20"
+              className="tnum w-20"
             />
             <TimePicker label={t('itineraryTimeLabel')} value={time} onChange={setTime} />
             <Input
@@ -221,7 +254,7 @@ export function ItineraryList({ tripId, currentUserId, canAdd, canDelete, initia
               value={label}
               onChange={(e) => setLabel(e.target.value)}
               maxLength={160}
-              className="h-9 min-w-[160px] flex-1"
+              wrapperClassName="min-w-[180px] flex-1"
             />
           </div>
           <Textarea
@@ -239,10 +272,12 @@ export function ItineraryList({ tripId, currentUserId, canAdd, canDelete, initia
             className="h-9"
           />
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+            {/* Same micro-label every other field in this form uses —
+                it was the only one still on text-sm. */}
+            <span className="micro-label text-sand-600 dark:text-sand-400">
               {t('itineraryIconLabel')}
-            </label>
-            <p className="-mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+            </span>
+            <p className="-mt-1 text-xs text-sand-500 dark:text-sand-400">
               {photoUrl.trim() ? t('itineraryIconHiddenByPhoto') : t('itineraryIconHelper')}
             </p>
             <div className="flex flex-wrap gap-2">
@@ -257,10 +292,10 @@ export function ItineraryList({ tripId, currentUserId, canAdd, canDelete, initia
                     aria-label={t(`itineraryIcon_${key}` as const)}
                     title={t(`itineraryIcon_${key}` as const)}
                     className={cn(
-                      'flex h-9 w-9 items-center justify-center rounded-lg border transition-colors disabled:cursor-not-allowed disabled:opacity-40',
+                      'flex h-9 w-9 items-center justify-center rounded-md border transition-colors disabled:cursor-not-allowed disabled:opacity-40',
                       selected
                         ? 'border-forest-600 bg-forest-50 text-forest-600 dark:bg-forest-600/20 dark:text-forest-400'
-                        : 'border-neutral-300 text-neutral-500 hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800'
+                        : 'border-sand-300 text-sand-500 hover:bg-sand-100 dark:border-sand-700 dark:text-sand-400 dark:hover:bg-sand-800'
                     )}
                   >
                     <ItineraryIcon iconKey={key} size={16} />
@@ -277,7 +312,7 @@ export function ItineraryList({ tripId, currentUserId, canAdd, canDelete, initia
             <button
               type="button"
               onClick={() => setFormOpen(false)}
-              className="text-sm font-medium text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+              className="text-sm font-medium text-sand-500 hover:text-sand-900 dark:text-sand-400 dark:hover:text-sand-100"
             >
               {t('itineraryCancel')}
             </button>

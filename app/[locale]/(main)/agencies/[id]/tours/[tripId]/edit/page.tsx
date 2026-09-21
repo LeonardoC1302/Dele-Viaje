@@ -81,7 +81,7 @@ export default async function EditTourPage({
   };
 
   return (
-    <main className="flex min-h-[100dvh] items-center justify-center bg-neutral-50 px-4 py-16 dark:bg-neutral-950">
+    <main className="mx-auto w-full max-w-[760px] px-4 py-8 sm:px-7 sm:py-10">
       <TourForm agencyId={id} mode="edit" tripId={tripId} initialValues={initialValues} />
     </main>
   );

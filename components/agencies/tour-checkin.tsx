@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { CheckCircle, Circle, Receipt } from '@phosphor-icons/react';
+import { CheckCircle, Circle, Receipt, ClipboardText } from '@phosphor-icons/react';
+import { PanelHeading } from '@/components/ui/panel-heading';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -103,17 +104,17 @@ export function TourCheckin({
   const attendedCount = attendees.filter((a) => a.attendance === 'attended').length;
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
+    <div className="min-w-0">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">{t('checkinTitle')}</h2>
-        <span className="text-xs text-neutral-500 dark:text-neutral-400">
+        <PanelHeading icon={ClipboardText}>{t('checkinTitle')}</PanelHeading>
+        <span className="text-xs text-sand-500 dark:text-sand-400">
           {t('checkinCount', { attended: attendedCount, total: attendees.length })}
         </span>
       </div>
       {error && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       {attendees.length === 0 ? (
-        <p className="mt-4 text-sm text-neutral-500 dark:text-neutral-400">{t('checkinEmpty')}</p>
+        <p className="mt-4 text-sm text-sand-500 dark:text-sand-400">{t('checkinEmpty')}</p>
       ) : (
         <ul className="mt-4 flex flex-col gap-2">
           {attendees.map((attendee) => {
@@ -121,9 +122,9 @@ export function TourCheckin({
             return (
               <li
                 key={attendee.attendeeId}
-                className="flex flex-wrap items-center gap-2 rounded-lg border border-neutral-200 p-2 dark:border-neutral-800"
+                className="flex flex-wrap items-center gap-2 rounded-md border border-sand-200 p-2 dark:border-sand-800"
               >
-                <span className="min-w-0 flex-1 truncate text-sm text-neutral-800 dark:text-neutral-200">
+                <span className="min-w-0 flex-1 truncate text-sm text-sand-800 dark:text-sand-200">
                   {attendee.displayName ?? '—'}
                 </span>
 

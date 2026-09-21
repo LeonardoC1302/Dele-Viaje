@@ -1,9 +1,15 @@
 import { notFound } from 'next/navigation';
 import { getTranslations, getLocale } from 'next-intl/server';
-import { CalendarBlank, MapPin, UsersThree, ChatCircleText, PencilSimple } from '@phosphor-icons/react/dist/ssr';
+import {
+  CalendarBlank,
+  MapPin,
+  UsersThree,
+  ChatCircleText,
+  PencilSimple,
+  ArrowLeft,
+} from '@phosphor-icons/react/dist/ssr';
 import { Link } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { Badge } from '@/components/ui/badge';
 import { MarkdownContent } from '@/components/ui/markdown-content';
 import { buttonVariants } from '@/components/ui/button';
 import { JoinTripButton, type AttendeeStatus } from '@/components/trips/join-trip-button';
@@ -26,13 +32,25 @@ import { TourReviews, type ReviewData } from '@/components/agencies/tour-reviews
 import { TourPayment } from '@/components/agencies/tour-payment';
 import { TourExclusiveContent } from '@/components/agencies/tour-exclusive-content';
 import { WaitlistPanel, type WaitlistRowData } from '@/components/trips/waitlist-panel';
+import {
+  Dossier,
+  CaseHeader,
+  StatusStamp,
+  FolderTabs,
+  FolderFace,
+  PageBody,
+  type FolderTab,
+} from '@/components/cordillera/folder';
 
 export default async function TripDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }) {
   const { id } = await params;
+  const { tab: requestedTab } = await searchParams;
   const supabase = await createClient();
   const t = await getTranslations('trips');
   const tCategories = await getTranslations('categories');
@@ -75,7 +93,6 @@ export default async function TripDetailPage({
     .eq('trip_id', trip.id)
     .eq('status', 'confirmed')
     .order('joined_at', { ascending: true });
-
   const customFieldsQuery = supabase
     .from('trip_custom_fields')
     .select('label, value')
@@ -109,6 +126,7 @@ export default async function TripDetailPage({
     linksQuery,
     itineraryQuery,
   ]);
+
   const owner = ownerResult.data as { display_name: string | null } | null;
   const waypoints = waypointsResult.data ?? [];
   const customFields = customFieldsResult.data ?? [];
@@ -130,9 +148,7 @@ export default async function TripDetailPage({
     icon: b.icon,
   }));
   const myAttendance = attendeeResult.data as { status: string } | null;
-  const confirmedIds = (confirmedRowsResult.data ?? []).map(
-    (row) => row.profile_id as string
-  );
+  const confirmedIds = (confirmedRowsResult.data ?? []).map((row) => row.profile_id as string);
 
   const { data: attendeeProfilesData } =
     confirmedIds.length > 0
@@ -173,13 +189,14 @@ export default async function TripDetailPage({
     paymentStatus: row.payment_status,
     paymentEvidencePath: row.payment_evidence_path,
   }));
-  const myConfirmedRow = user ? confirmedRows.find((row) => row.profile_id === user.id) : undefined;
+  const myConfirmedRow = user
+    ? confirmedRows.find((row) => row.profile_id === user.id)
+    : undefined;
 
   // RLS-filtered: a non-host-team user only ever gets back their own
   // waitlisted row here (see "attendees: read own or organizer or
   // admin", migration 0004), so this doubles as both the host team's
-  // full roster and a regular attendee's "am I on it" check without any
-  // branching here.
+  // full roster and a regular attendee's "am I on it" check.
   let waitlistRows: WaitlistRowData[] = [];
   let myWaitlistPosition: number | null = null;
   if (trip.visibility !== 'private') {
@@ -192,9 +209,14 @@ export default async function TripDetailPage({
 
     const waitlistProfileIds = (waitlistData ?? []).map((row) => row.profile_id);
     const { data: waitlistProfilesData } =
-      waitlistProfileIds.length > 0 ? await supabase.rpc('profiles_public').in('id', waitlistProfileIds) : { data: [] };
+      waitlistProfileIds.length > 0
+        ? await supabase.rpc('profiles_public').in('id', waitlistProfileIds)
+        : { data: [] };
     const waitlistProfileById = new Map(
-      ((waitlistProfilesData ?? []) as { id: string; display_name: string | null }[]).map((p) => [p.id, p.display_name])
+      ((waitlistProfilesData ?? []) as { id: string; display_name: string | null }[]).map((p) => [
+        p.id,
+        p.display_name,
+      ])
     );
     waitlistRows = (waitlistData ?? []).map((row) => ({
       id: row.id,
@@ -202,7 +224,9 @@ export default async function TripDetailPage({
     }));
 
     if (myAttendance?.status === 'waitlisted') {
-      const { data: position } = await supabase.rpc('get_my_waitlist_position', { p_trip_id: trip.id });
+      const { data: position } = await supabase.rpc('get_my_waitlist_position', {
+        p_trip_id: trip.id,
+      });
       myWaitlistPosition = position ?? null;
     }
   }
@@ -215,12 +239,13 @@ export default async function TripDetailPage({
     minute: '2-digit',
   });
 
-  const spotsLeft =
-    trip.capacity != null ? trip.capacity - trip.confirmed_count : null;
+  const spotsLeft = trip.capacity != null ? trip.capacity - trip.confirmed_count : null;
   const isFull = spotsLeft != null && spotsLeft <= 0;
   const hasStarted = new Date(trip.start_at) <= new Date();
   const isOwner = user?.id === trip.owner_id;
   const canOpenChat = isOwner || attendeeStatus !== null;
+  const isPrivate = trip.visibility === 'private';
+  const isTour = trip.type === 'tour';
 
   let isHostTeam = isOwner;
   if (!isHostTeam && user && trip.agency_id) {
@@ -235,7 +260,7 @@ export default async function TripDetailPage({
   }
 
   let tourQuestions: TourQuestionData[] = [];
-  if (trip.type === 'tour') {
+  if (isTour) {
     const { data: questionRows } = await supabase
       .from('tour_questions')
       .select('id, asked_by, question, answer, answered_at, created_at')
@@ -246,7 +271,10 @@ export default async function TripDetailPage({
     const { data: askerProfiles } =
       askerIds.length > 0 ? await supabase.rpc('profiles_public').in('id', askerIds) : { data: [] };
     const askerNameById = new Map(
-      ((askerProfiles ?? []) as { id: string; display_name: string | null }[]).map((p) => [p.id, p.display_name])
+      ((askerProfiles ?? []) as { id: string; display_name: string | null }[]).map((p) => [
+        p.id,
+        p.display_name,
+      ])
     );
 
     tourQuestions = (questionRows ?? []).map((q) => ({
@@ -260,12 +288,8 @@ export default async function TripDetailPage({
     }));
   }
 
-  let otherDates: {
-    id: string;
-    startAt: string;
-    spotsLeft: number | null;
-  }[] = [];
-  if (trip.type === 'tour' && trip.tour_group_id) {
+  let otherDates: { id: string; startAt: string; spotsLeft: number | null }[] = [];
+  if (isTour && trip.tour_group_id) {
     const { data: siblingRows } = await supabase
       .from('trips')
       .select('id, start_at, capacity, confirmed_count')
@@ -282,7 +306,7 @@ export default async function TripDetailPage({
   }
 
   let exclusiveContent: string | null = null;
-  if (trip.type === 'tour' && user) {
+  if (isTour && user) {
     const { data: exclusiveRow } = await supabase
       .from('tour_exclusive_content')
       .select('content')
@@ -294,7 +318,7 @@ export default async function TripDetailPage({
   let reviews: ReviewData[] = [];
   let canReview = false;
   let sinpePhone: string | null = null;
-  if (trip.type === 'tour') {
+  if (isTour) {
     if (trip.agency_id) {
       const { data: agencyRow } = await supabase
         .from('agencies')
@@ -312,9 +336,14 @@ export default async function TripDetailPage({
 
     const reviewerIds = [...new Set((reviewRows ?? []).map((r) => r.reviewer_id))];
     const { data: reviewerProfiles } =
-      reviewerIds.length > 0 ? await supabase.rpc('profiles_public').in('id', reviewerIds) : { data: [] };
+      reviewerIds.length > 0
+        ? await supabase.rpc('profiles_public').in('id', reviewerIds)
+        : { data: [] };
     const reviewerNameById = new Map(
-      ((reviewerProfiles ?? []) as { id: string; display_name: string | null }[]).map((p) => [p.id, p.display_name])
+      ((reviewerProfiles ?? []) as { id: string; display_name: string | null }[]).map((p) => [
+        p.id,
+        p.display_name,
+      ])
     );
 
     reviews = (reviewRows ?? []).map((r) => ({
@@ -340,43 +369,54 @@ export default async function TripDetailPage({
     }
   }
 
-  if (trip.visibility === 'private') {
-    const [invitesResult, packingResult, expensesResult, pollsResult, votesResult, documentsResult] = await Promise.all([
-      isOwner
-        ? supabase
-            .from('plan_invites')
-            .select('id, token, expires_at, max_uses, uses, revoked_at, created_at')
-            .eq('trip_id', trip.id)
-            .order('created_at', { ascending: false })
-        : Promise.resolve({ data: [] }),
-      supabase
-        .from('packing_items')
-        .select('id, name, done, assigned_to, sort, created_at')
-        .eq('trip_id', trip.id)
-        .order('sort', { ascending: true })
-        .order('created_at', { ascending: true }),
-      supabase
-        .from('expenses')
-        .select('id, paid_by, amount_crc, description, created_at')
-        .eq('trip_id', trip.id)
-        .order('created_at', { ascending: false }),
-      supabase
-        .from('polls')
-        .select('id, question, options, created_by, closes_at, created_at')
-        .eq('trip_id', trip.id)
-        .is('deleted_at', null)
-        .order('created_at', { ascending: false }),
-      supabase.from('poll_votes').select('poll_id, profile_id, option_key'),
-      user
-        ? supabase
-            .from('trip_documents')
-            .select('id, file_name, storage_path, file_size, created_at')
-            .eq('trip_id', trip.id)
-            .order('created_at', { ascending: false })
-        : Promise.resolve({ data: [] }),
-    ]);
+  /* ---------------------------------------------------------------
+     Private-plan workspace data. Only fetched for a private plan, so
+     a public trip never pays for six extra round trips.
+     --------------------------------------------------------------- */
+  let invites: PlanInvite[] = [];
+  let packingItems: PackingItemData[] = [];
+  let expenses: ExpenseData[] = [];
+  let polls: PollData[] = [];
+  let documents: TripDocumentData[] = [];
 
-    const invites: PlanInvite[] = (invitesResult.data ?? []).map((inv) => ({
+  if (isPrivate) {
+    const [invitesResult, packingResult, expensesResult, pollsResult, votesResult, documentsResult] =
+      await Promise.all([
+        isOwner
+          ? supabase
+              .from('plan_invites')
+              .select('id, token, expires_at, max_uses, uses, revoked_at, created_at')
+              .eq('trip_id', trip.id)
+              .order('created_at', { ascending: false })
+          : Promise.resolve({ data: [] }),
+        supabase
+          .from('packing_items')
+          .select('id, name, done, assigned_to, sort, created_at')
+          .eq('trip_id', trip.id)
+          .order('sort', { ascending: true })
+          .order('created_at', { ascending: true }),
+        supabase
+          .from('expenses')
+          .select('id, paid_by, amount_crc, description, created_at')
+          .eq('trip_id', trip.id)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('polls')
+          .select('id, question, options, created_by, closes_at, created_at')
+          .eq('trip_id', trip.id)
+          .is('deleted_at', null)
+          .order('created_at', { ascending: false }),
+        supabase.from('poll_votes').select('poll_id, profile_id, option_key'),
+        user
+          ? supabase
+              .from('trip_documents')
+              .select('id, file_name, storage_path, file_size, created_at')
+              .eq('trip_id', trip.id)
+              .order('created_at', { ascending: false })
+          : Promise.resolve({ data: [] }),
+      ]);
+
+    invites = (invitesResult.data ?? []).map((inv) => ({
       id: inv.id,
       token: inv.token,
       expiresAt: inv.expires_at,
@@ -385,14 +425,14 @@ export default async function TripDetailPage({
       revokedAt: inv.revoked_at,
     }));
 
-    const packingItems: PackingItemData[] = (packingResult.data ?? []).map((item) => ({
+    packingItems = (packingResult.data ?? []).map((item) => ({
       id: item.id,
       name: item.name,
       done: item.done,
       assignedTo: item.assigned_to,
     }));
 
-    const expenses: ExpenseData[] = (expensesResult.data ?? []).map((e) => ({
+    expenses = (expensesResult.data ?? []).map((e) => ({
       id: e.id,
       paidBy: e.paid_by,
       amountCrc: e.amount_crc,
@@ -401,7 +441,7 @@ export default async function TripDetailPage({
     }));
 
     const votes = votesResult.data ?? [];
-    const polls: PollData[] = (pollsResult.data ?? []).map((poll) => {
+    polls = (pollsResult.data ?? []).map((poll) => {
       const pollVotes = votes.filter((v) => v.poll_id === poll.id);
       const votesByOption: Record<string, number> = {};
       for (const v of pollVotes) {
@@ -419,339 +459,327 @@ export default async function TripDetailPage({
       };
     });
 
-    const members = attendees.map((a) => ({ id: a.id, displayName: a.displayName }));
-
-    const documents: TripDocumentData[] = (documentsResult.data ?? []).map((d) => ({
+    documents = (documentsResult.data ?? []).map((d) => ({
       id: d.id,
       fileName: d.file_name,
       storagePath: d.storage_path,
       fileSize: d.file_size,
       createdAt: d.created_at,
     }));
-
-    return (
-      <main className="min-h-[100dvh] bg-neutral-50 py-12 dark:bg-neutral-950">
-        <div className="mx-auto max-w-[720px] px-4 sm:px-6 lg:px-8">
-          <Link
-            href="/feed"
-            className="text-sm font-medium text-forest-600 hover:underline dark:text-forest-400"
-          >
-            &larr; {t('detailBack')}
-          </Link>
-
-          <div className="relative mt-6 rounded-xl border border-neutral-200 bg-white p-8 dark:border-neutral-800 dark:bg-neutral-900">
-            <Badge variant="secondary">{t('privatePlanBadge')}</Badge>
-
-            <div className="mt-4 flex items-center justify-between gap-4">
-              <h1 className="text-2xl font-bold text-neutral-900 md:text-3xl dark:text-neutral-50">
-                {trip.title}
-              </h1>
-              {isOwner && (
-                <div className="flex shrink-0 items-center gap-4">
-                  <Link
-                    href={`/trips/${trip.id}/edit`}
-                    className="flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-forest-600 dark:text-neutral-400 dark:hover:text-forest-400"
-                  >
-                    <PencilSimple size={16} weight="regular" strokeWidth={1.5} />
-                    {t('editTrip')}
-                  </Link>
-                  <DeleteTripButton tripId={trip.id} />
-                </div>
-              )}
-            </div>
-
-            <div className="mt-4 flex flex-col gap-3 border-y border-neutral-200 py-6 dark:border-neutral-800">
-              <p className="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
-                <CalendarBlank size={18} weight="regular" strokeWidth={1.5} />
-                {dateFormatter.format(new Date(trip.start_at))}
-              </p>
-              <p className="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
-                <MapPin size={18} weight="regular" strokeWidth={1.5} />
-                {trip.location_name}
-              </p>
-            </div>
-
-            <MarkdownContent content={trip.description} className="mt-6" />
-
-            <CustomFieldsDisplay fields={customFields} />
-
-            {trip.lat != null && trip.lng != null && (
-              <div className="mt-6">
-                <TripRouteMap
-                  meetingPoint={{ label: trip.location_name, lat: trip.lat, lng: trip.lng }}
-                  waypoints={waypoints}
-                />
-              </div>
-            )}
-
-            {links.length > 0 && (
-              <div className="mt-6 flex flex-col gap-2">
-                {links.map((link) => (
-                  <LinkPreviewCard key={link.id} link={link} />
-                ))}
-              </div>
-            )}
-
-            <div className="mt-8">
-              <Link
-                href={`/trips/${trip.id}/chat`}
-                className={buttonVariants({ size: 'md', variant: 'outline' })}
-              >
-                <ChatCircleText size={18} weight="regular" strokeWidth={1.5} />
-                {t('openChat')}
-              </Link>
-            </div>
-
-            <AttendeeList attendees={attendees} currentUserId={user?.id} />
-          </div>
-
-          <div className="mt-6 flex flex-col gap-6">
-            {isOwner && <InviteManager tripId={trip.id} initialInvites={invites} />}
-            {user && (
-              <>
-                <PlanMembers
-                  tripId={trip.id}
-                  currentUserId={user.id}
-                  ownerId={trip.owner_id}
-                  isOwner={isOwner}
-                  members={attendees}
-                />
-                <PackingList
-                  tripId={trip.id}
-                  currentUserId={user.id}
-                  isHostTeam={isOwner}
-                  initialItems={packingItems}
-                  members={members}
-                />
-                <ExpensesList
-                  tripId={trip.id}
-                  currentUserId={user.id}
-                  isHostTeam={isOwner}
-                  initialExpenses={expenses}
-                  members={members}
-                />
-                <PollsList
-                  tripId={trip.id}
-                  currentUserId={user.id}
-                  isHostTeam={isOwner}
-                  initialPolls={polls}
-                />
-                <ItineraryList
-                  tripId={trip.id}
-                  currentUserId={user.id}
-                  canAdd
-                  canDelete={isOwner}
-                  initialBlocks={itineraryBlocks}
-                />
-                <TripDocuments tripId={trip.id} isHostTeam={isOwner} initialDocuments={documents} />
-              </>
-            )}
-          </div>
-        </div>
-      </main>
-    );
   }
 
+  const members = attendees.map((a) => ({ id: a.id, displayName: a.displayName }));
+
+  /* ---------------------------------------------------------------
+     Tabs. Which sections a folder has depends on what kind of trip it
+     is and who is looking — a private plan carries the full workspace,
+     a tour carries Q&A and reviews, and a plain social trip carries
+     neither. The active tab is a URL parameter rather than client
+     state so a section is linkable, survives a reload, and renders on
+     the server.
+     --------------------------------------------------------------- */
+  const tabKeys: string[] = ['overview'];
+  if (itineraryBlocks.length > 0 || isHostTeam || isPrivate) tabKeys.push('itinerary');
+  if (isPrivate && user) tabKeys.push('packing', 'expenses', 'polls', 'documents');
+  if (isTour) tabKeys.push('qa', 'reviews');
+  tabKeys.push('people');
+
+  const activeTab = requestedTab && tabKeys.includes(requestedTab) ? requestedTab : 'overview';
+
+  const tabs: FolderTab[] = tabKeys.map((key) => ({
+    href: key === 'overview' ? `/trips/${trip.id}` : `/trips/${trip.id}?tab=${key}`,
+    label: t(`tab_${key}` as never),
+    active: key === activeTab,
+  }));
+
+  const editHref = isTour
+    ? `/agencies/${trip.agency_id}/tours/${trip.id}/edit`
+    : `/trips/${trip.id}/edit`;
+
+  const stamp = isPrivate ? (
+    <StatusStamp tone="inert">{t('privatePlanBadge')}</StatusStamp>
+  ) : isFull ? (
+    <StatusStamp tone="hold">{tFeed('full')}</StatusStamp>
+  ) : hasStarted ? (
+    <StatusStamp tone="inert">{t('stampPast')}</StatusStamp>
+  ) : (
+    <StatusStamp tone="go">{t('stampOpen')}</StatusStamp>
+  );
+
   return (
-    <main className="min-h-[100dvh] bg-neutral-50 py-12 dark:bg-neutral-950">
-      <div className="mx-auto max-w-[720px] px-4 sm:px-6 lg:px-8">
-        <Link
-          href="/feed"
-          className="text-sm font-medium text-forest-600 hover:underline dark:text-forest-400"
-        >
-          &larr; {t('detailBack')}
-        </Link>
+    <PageBody className="max-w-[1000px]">
+      <Link
+        href={isPrivate ? '/my-trips' : '/feed'}
+        className="micro-label mb-6 inline-flex items-center gap-1.5 transition-colors hover:text-sand-800 dark:hover:text-sand-200"
+      >
+        <ArrowLeft size={13} weight="bold" />
+        {t('detailBack')}
+      </Link>
 
-        <div className="relative mt-6 rounded-xl border border-neutral-200 bg-white p-8 pb-16 dark:border-neutral-800 dark:bg-neutral-900">
-          <Badge variant="default">{tCategories(trip.category)}</Badge>
-
-          <h1 className="mt-4 text-2xl font-bold text-neutral-900 md:text-3xl dark:text-neutral-50">
-            {trip.title}
-          </h1>
-
-          <div className="mt-2 flex items-center justify-between gap-4">
-            {owner?.display_name && (
-              <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                {t.rich('detailBy', {
-                  name: owner.display_name,
-                  link: (chunks) => (
-                    <Link
-                      href={`/users/${trip.owner_id}`}
-                      className="font-medium text-neutral-700 hover:underline dark:text-neutral-300"
-                    >
-                      {chunks}
-                    </Link>
-                  ),
-                })}
-              </p>
-            )}
-            {isHostTeam ? (
-              <div className="flex shrink-0 items-center gap-4">
+      <Dossier>
+        <CaseHeader
+          title={trip.title}
+          stamp={stamp}
+          /**
+           * The surface's one primary action. For a visitor that's
+           * joining — the entire reason they opened this page — so it
+           * sits here in dawn, alone. The host team sees edit/delete
+           * instead, because they cannot join their own trip.
+           * `ReportButton` used to occupy this slot, which put a
+           * moderation affordance where the call to action belongs.
+           */
+          action={
+            isHostTeam ? (
+              <div className="flex items-center gap-2">
                 <Link
-                  href={
-                    trip.type === 'tour'
-                      ? `/agencies/${trip.agency_id}/tours/${trip.id}/edit`
-                      : `/trips/${trip.id}/edit`
-                  }
-                  className="flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-forest-600 dark:text-neutral-400 dark:hover:text-forest-400"
+                  href={editHref}
+                  className={buttonVariants({ variant: 'outline', size: 'sm' })}
                 >
-                  <PencilSimple size={16} weight="regular" strokeWidth={1.5} />
+                  <PencilSimple size={15} />
                   {t('editTrip')}
                 </Link>
                 <DeleteTripButton
                   tripId={trip.id}
-                  redirectTo={trip.type === 'tour' ? `/agencies/${trip.agency_id}/panel` : '/my-trips'}
+                  redirectTo={isTour ? `/agencies/${trip.agency_id}/panel` : '/my-trips'}
                 />
               </div>
             ) : (
-              user && <ReportButton targetType="trip" targetId={trip.id} />
-            )}
-          </div>
-
-          <div className="mt-6 flex flex-col gap-3 border-y border-neutral-200 py-6 dark:border-neutral-800">
-            <p className="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
-              <CalendarBlank size={18} weight="regular" strokeWidth={1.5} />
-              {dateFormatter.format(new Date(trip.start_at))}
-            </p>
-            <p className="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
-              <MapPin size={18} weight="regular" strokeWidth={1.5} />
-              {trip.location_name}
-            </p>
-            <p className="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
-              <UsersThree size={18} weight="regular" strokeWidth={1.5} />
-              {trip.capacity == null
-                ? tFeed('openCapacity')
-                : isFull
-                  ? tFeed('full')
-                  : tFeed('spotsLeft', { count: spotsLeft })}
-            </p>
-            {trip.type === 'tour' && trip.price_crc != null && (
-              <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                {new Intl.NumberFormat(locale, { style: 'currency', currency: 'CRC', maximumFractionDigits: 0 }).format(
-                  trip.price_crc
-                )}
-                <span className="ml-1 font-normal text-neutral-500 dark:text-neutral-400">
-                  {t('perPerson')}
+              !isPrivate && (
+                <JoinTripButton
+                  tripId={trip.id}
+                  initialStatus={attendeeStatus}
+                  isAuthenticated={!!user}
+                  isOwner={isHostTeam}
+                  isFull={isFull}
+                  hasStarted={hasStarted}
+                  waitlistPosition={myWaitlistPosition}
+                />
+              )
+            )
+          }
+          meta={
+            <>
+              <span className="flex items-center gap-1.5">
+                <CalendarBlank size={15} className="shrink-0 text-sand-400" />
+                {dateFormatter.format(new Date(trip.start_at))}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <MapPin size={15} className="shrink-0 text-sand-400" />
+                {trip.location_name}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <UsersThree size={15} className="shrink-0 text-sand-400" />
+                {trip.capacity == null
+                  ? tFeed('openCapacity')
+                  : isFull
+                    ? tFeed('full')
+                    : tFeed('spotsLeft', { count: spotsLeft })}
+              </span>
+              {isTour && trip.price_crc != null && (
+                <span className="tnum font-display font-bold text-sand-900 dark:text-sand-50">
+                  {new Intl.NumberFormat(locale, {
+                    style: 'currency',
+                    currency: 'CRC',
+                    maximumFractionDigits: 0,
+                  }).format(trip.price_crc)}
+                  <span className="ml-1 font-sans font-normal text-sand-500">
+                    {t('perPerson')}
+                  </span>
                 </span>
-              </p>
-            )}
-          </div>
+              )}
+              {owner?.display_name && !isTour && (
+                <Link href={`/users/${trip.owner_id}`} className="link">
+                  {t('detailByPlain', { name: owner.display_name })}
+                </Link>
+              )}
+            </>
+          }
+        />
 
-          {otherDates.length > 0 && (
-            <div className="mt-6">
-              <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-                {t('otherDatesTitle')}
-              </p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {otherDates.map((date) => {
-                  const dateIsFull = date.spotsLeft != null && date.spotsLeft <= 0;
-                  return (
+        <FolderTabs tabs={tabs} />
+
+        <FolderFace seam>
+          {/* `key` restarts the entrance animation on every tab change,
+              which is the "leafing" read: the face holds, the contents
+              turn. */}
+          <div key={activeTab} className="animate-leaf">
+            {activeTab === 'overview' && (
+              <div className="flex flex-col gap-7">
+                {otherDates.length > 0 && (
+                  <section>
+                    <h2 className="micro-label mb-3">{t('otherDatesTitle')}</h2>
+                    <div className="flex flex-wrap gap-2">
+                      {otherDates.map((date) => {
+                        const dateIsFull = date.spotsLeft != null && date.spotsLeft <= 0;
+                        return (
+                          <Link
+                            key={date.id}
+                            href={`/trips/${date.id}`}
+                            className="tnum rounded-full border border-sand-300 px-3.5 py-2 text-sm font-medium text-sand-700 transition-colors hover:border-forest-600 hover:text-forest-700 dark:border-sand-600 dark:text-sand-300 dark:hover:border-forest-400 dark:hover:text-forest-300"
+                          >
+                            {new Intl.DateTimeFormat(locale, {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
+                            }).format(new Date(date.startAt))}
+                            {dateIsFull && (
+                              <span className="ml-1.5 text-xs text-sand-400">
+                                ({t('otherDatesFull')})
+                              </span>
+                            )}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </section>
+                )}
+
+                <MarkdownContent content={trip.description} />
+
+                <CustomFieldsDisplay fields={customFields} />
+
+                {trip.lat != null && trip.lng != null && (
+                  <TripRouteMap
+                    meetingPoint={{
+                      label: trip.location_name,
+                      lat: trip.lat,
+                      lng: trip.lng,
+                    }}
+                    waypoints={waypoints}
+                  />
+                )}
+
+                {links.length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    {links.map((link) => (
+                      <LinkPreviewCard key={link.id} link={link} />
+                    ))}
+                  </div>
+                )}
+
+                {isTour && !isHostTeam && attendeeStatus === 'confirmed' && myConfirmedRow && (
+                  <TourPayment
+                    attendeeId={myConfirmedRow.id}
+                    sinpePhone={sinpePhone}
+                    paymentStatus={myConfirmedRow.payment_status}
+                  />
+                )}
+
+                {isTour && exclusiveContent && <TourExclusiveContent content={exclusiveContent} />}
+
+                {/* Secondary actions only — the primary (join) lives in
+                    the case header. Reporting sits here, next to the
+                    content it would be reporting, rather than in the
+                    header slot that belongs to the call to action. */}
+                <div className="flex flex-wrap items-center gap-3 border-t border-sand-200 pt-6 dark:border-sand-800">
+                  {(canOpenChat || isPrivate) && (
                     <Link
-                      key={date.id}
-                      href={`/trips/${date.id}`}
-                      className="rounded-full border border-neutral-300 px-3 py-1.5 text-sm text-neutral-700 transition-colors hover:border-forest-600 hover:text-forest-600 dark:border-neutral-700 dark:text-neutral-300 dark:hover:border-forest-400 dark:hover:text-forest-400"
+                      href={`/trips/${trip.id}/chat`}
+                      className={buttonVariants({ variant: 'outline' })}
                     >
-                      {new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric' }).format(
-                        new Date(date.startAt)
-                      )}
-                      {dateIsFull && (
-                        <span className="ml-1.5 text-xs text-neutral-400 dark:text-neutral-500">
-                          ({t('otherDatesFull')})
-                        </span>
-                      )}
+                      <ChatCircleText size={17} />
+                      {t('openChat')}
                     </Link>
-                  );
-                })}
+                  )}
+                  {user && !isHostTeam && (
+                    <div className="ml-auto">
+                      <ReportButton targetType="trip" targetId={trip.id} />
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          <MarkdownContent content={trip.description} className="mt-6" />
-
-          <CustomFieldsDisplay fields={customFields} />
-
-          {trip.lat != null && trip.lng != null && (
-            <div className="mt-6">
-              <TripRouteMap
-                meetingPoint={{ label: trip.location_name, lat: trip.lat, lng: trip.lng }}
-                waypoints={waypoints}
-              />
-            </div>
-          )}
-
-          {links.length > 0 && (
-            <div className="mt-6 flex flex-col gap-2">
-              {links.map((link) => (
-                <LinkPreviewCard key={link.id} link={link} />
-              ))}
-            </div>
-          )}
-
-          {(itineraryBlocks.length > 0 || isHostTeam) && (
-            <div className="mt-6">
+            {activeTab === 'itinerary' && (
               <ItineraryList
                 tripId={trip.id}
                 currentUserId={user?.id ?? ''}
-                canAdd={isHostTeam}
-                canDelete={isHostTeam}
+                canAdd={isPrivate ? !!user : isHostTeam}
+                canDelete={isPrivate ? isOwner : isHostTeam}
                 initialBlocks={itineraryBlocks}
               />
-            </div>
-          )}
-
-          <div className="mt-8 flex flex-col items-start gap-3">
-            <JoinTripButton
-              tripId={trip.id}
-              initialStatus={attendeeStatus}
-              isAuthenticated={!!user}
-              isOwner={isHostTeam}
-              isFull={isFull}
-              hasStarted={hasStarted}
-              waitlistPosition={myWaitlistPosition}
-            />
-            {canOpenChat && (
-              <Link
-                href={`/trips/${trip.id}/chat`}
-                className={buttonVariants({ size: 'md', variant: 'outline' })}
-              >
-                <ChatCircleText size={18} weight="regular" strokeWidth={1.5} />
-                {t('openChat')}
-              </Link>
             )}
-          </div>
 
-          <AttendeeList attendees={attendees} currentUserId={user?.id} />
-        </div>
-
-        {isHostTeam && <div className="mt-6"><WaitlistPanel rows={waitlistRows} /></div>}
-
-        {trip.type === 'tour' && (
-          <div className="mt-6 flex flex-col gap-6">
-            {isHostTeam && <TourCheckin tripId={trip.id} initialAttendees={checkinRows} />}
-            {!isHostTeam && attendeeStatus === 'confirmed' && myConfirmedRow && (
-              <TourPayment
-                attendeeId={myConfirmedRow.id}
-                sinpePhone={sinpePhone}
-                paymentStatus={myConfirmedRow.payment_status}
+            {activeTab === 'packing' && user && (
+              <PackingList
+                tripId={trip.id}
+                currentUserId={user.id}
+                isHostTeam={isOwner}
+                initialItems={packingItems}
+                members={members}
               />
             )}
-            {exclusiveContent && <TourExclusiveContent content={exclusiveContent} />}
-            <TourReviews
-              tripId={trip.id}
-              currentUserId={user?.id}
-              isHostTeam={isHostTeam}
-              canReview={canReview}
-              initialReviews={reviews}
-            />
-            <TourQA
-              tripId={trip.id}
-              currentUserId={user?.id}
-              isHostTeam={isHostTeam}
-              initialQuestions={tourQuestions}
-            />
+
+            {activeTab === 'expenses' && user && (
+              <ExpensesList
+                tripId={trip.id}
+                currentUserId={user.id}
+                isHostTeam={isOwner}
+                initialExpenses={expenses}
+                members={members}
+              />
+            )}
+
+            {activeTab === 'polls' && user && (
+              <PollsList
+                tripId={trip.id}
+                currentUserId={user.id}
+                isHostTeam={isOwner}
+                initialPolls={polls}
+              />
+            )}
+
+            {activeTab === 'documents' && user && (
+              <TripDocuments
+                tripId={trip.id}
+                isHostTeam={isOwner}
+                initialDocuments={documents}
+              />
+            )}
+
+            {activeTab === 'qa' && (
+              <TourQA
+                tripId={trip.id}
+                currentUserId={user?.id}
+                isHostTeam={isHostTeam}
+                initialQuestions={tourQuestions}
+              />
+            )}
+
+            {activeTab === 'reviews' && (
+              <TourReviews
+                tripId={trip.id}
+                currentUserId={user?.id}
+                isHostTeam={isHostTeam}
+                canReview={canReview}
+                initialReviews={reviews}
+              />
+            )}
+
+            {activeTab === 'people' && (
+              <div className="flex flex-col gap-8">
+                {isPrivate && user && (
+                  <PlanMembers
+                    tripId={trip.id}
+                    currentUserId={user.id}
+                    ownerId={trip.owner_id}
+                    isOwner={isOwner}
+                    members={attendees}
+                  />
+                )}
+                {!isPrivate && <AttendeeList attendees={attendees} currentUserId={user?.id} />}
+                {isHostTeam && !isPrivate && <WaitlistPanel rows={waitlistRows} />}
+                {isTour && isHostTeam && (
+                  <TourCheckin tripId={trip.id} initialAttendees={checkinRows} />
+                )}
+                {isPrivate && isOwner && (
+                  <InviteManager tripId={trip.id} initialInvites={invites} />
+                )}
+              </div>
+            )}
           </div>
-        )}
-      </div>
-    </main>
+        </FolderFace>
+      </Dossier>
+    </PageBody>
   );
 }

@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { ListBullets, MapTrifold, Compass } from '@phosphor-icons/react';
+import { ListBullets, MapTrifold } from '@phosphor-icons/react';
 import { Link } from '@/i18n/navigation';
 import { TripCard, type TripCardData } from '@/components/trips/trip-card';
 import { TripMap } from '@/components/trips/trip-map';
+import { EmptyState } from '@/components/cordillera/empty-state';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -29,26 +30,16 @@ export function FeedView({
 
   if (trips.length === 0) {
     return (
-      <div className="mt-16 flex flex-col items-center rounded-xl border border-dashed border-neutral-300 py-16 text-center dark:border-neutral-700">
-        <Compass
-          size={40}
-          weight="regular"
-          strokeWidth={1.5}
-          className="text-neutral-400 dark:text-neutral-600"
-        />
-        <h2 className="mt-4 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-          {emptyTitle}
-        </h2>
-        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-          {emptyBody}
-        </p>
-        <Link
-          href={emptyCtaHref}
-          className={cn(buttonVariants({ size: 'md', variant: 'primary' }), 'mt-6')}
-        >
-          {emptyCtaLabel}
-        </Link>
-      </div>
+      <EmptyState
+        className="mt-8"
+        title={emptyTitle}
+        body={emptyBody}
+        action={
+          <Link href={emptyCtaHref} className={buttonVariants({ variant: 'primary' })}>
+            {emptyCtaLabel}
+          </Link>
+        }
+      />
     );
   }
 
@@ -58,47 +49,51 @@ export function FeedView({
 
   return (
     <div className="mt-8">
-      <div className="mb-4 inline-flex rounded-full border border-neutral-300 p-1 dark:border-neutral-700">
-        <button
-          type="button"
-          onClick={() => setView('list')}
-          className={cn(
-            'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors',
-            view === 'list'
-              ? 'bg-forest-600 text-white'
-              : 'text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800'
-          )}
-        >
-          <ListBullets size={16} weight="regular" strokeWidth={1.5} />
-          {t('viewList')}
-        </button>
-        <button
-          type="button"
-          onClick={() => setView('map')}
-          className={cn(
-            'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors',
-            view === 'map'
-              ? 'bg-forest-600 text-white'
-              : 'text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800'
-          )}
-        >
-          <MapTrifold size={16} weight="regular" strokeWidth={1.5} />
-          {t('viewMap')}
-        </button>
+      <div className="mb-5 flex items-center justify-between gap-4">
+        <p className="micro-label">{t('resultsCount', { count: trips.length })}</p>
+
+        {/* A segmented control, squared to match the folder geometry —
+            the pill radius belongs to buttons and chips, and this is a
+            view switch, not either. */}
+        <div className="inline-flex overflow-hidden rounded-md border border-sand-300 dark:border-sand-700">
+          {(
+            [
+              { key: 'list', label: t('viewList'), Icon: ListBullets },
+              { key: 'map', label: t('viewMap'), Icon: MapTrifold },
+            ] as const
+          ).map(({ key, label, Icon }, i) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setView(key)}
+              aria-pressed={view === key}
+              className={cn(
+                'flex items-center gap-1.5 px-3 py-1.5 font-display text-sm font-semibold transition-colors',
+                i > 0 && 'border-l border-sand-300 dark:border-sand-700',
+                view === key
+                  ? 'bg-forest-600 text-white'
+                  : 'text-sand-600 hover:bg-sand-100 dark:text-sand-400 dark:hover:bg-sand-800'
+              )}
+            >
+              <Icon size={15} weight={view === key ? 'fill' : 'regular'} />
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {view === 'list' ? (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {trips.map((trip) => (
             <TripCard key={trip.id} trip={trip} />
           ))}
         </div>
       ) : pins.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-neutral-300 py-12 text-center text-sm text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
-          {t('noMapPins')}
-        </p>
+        <EmptyState title={t('noMapPins')} />
       ) : (
-        <TripMap pins={pins} />
+        <div className="overflow-hidden rounded-md border border-sand-200 dark:border-sand-800">
+          <TripMap pins={pins} />
+        </div>
       )}
     </div>
   );

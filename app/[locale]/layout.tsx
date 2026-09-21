@@ -1,22 +1,27 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { hasLocale } from 'next-intl';
-import { NextIntlClientProvider } from 'next-intl';
+import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Schibsted_Grotesk, Work_Sans } from 'next/font/google';
 import { routing } from '@/i18n/routing';
 import { ServiceWorkerRegister } from '@/components/pwa/service-worker-register';
 import { IosInstallHint } from '@/components/pwa/ios-install-hint';
 import '../globals.css';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+/**
+ * Two faces, no more. Schibsted Grotesk is the product's voice
+ * (headings, buttons, nav, the micro-label); Work Sans is the content's
+ * (body copy, descriptions, form values). Both are loaded here so every
+ * route gets them — there is no landing-only type in this system.
+ */
+const schibsted = Schibsted_Grotesk({
+  variable: '--font-schibsted',
   subsets: ['latin'],
   display: 'swap',
 });
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+const workSans = Work_Sans({
+  variable: '--font-work-sans',
   subsets: ['latin'],
   display: 'swap',
 });
@@ -36,15 +41,7 @@ export async function generateMetadata({
   return {
     title: t('title'),
     description: t('description'),
-    keywords: [
-      'trips',
-      'travel',
-      'Costa Rica',
-      'hiking',
-      'social',
-      'experiences',
-      'tours',
-    ],
+    keywords: ['trips', 'travel', 'Costa Rica', 'hiking', 'social', 'experiences', 'tours'],
     authors: [{ name: 'Dele Viaje' }],
     creator: 'Dele Viaje',
     openGraph: {
@@ -60,9 +57,7 @@ export async function generateMetadata({
       statusBarStyle: 'default',
       title: 'Dele Viaje',
     },
-    formatDetection: {
-      telephone: false,
-    },
+    formatDetection: { telephone: false },
   };
 }
 
@@ -70,8 +65,8 @@ export const viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
-  viewportFit: 'cover',
-  colorScheme: 'light dark',
+  viewportFit: 'cover' as const,
+  colorScheme: 'light dark' as const,
 };
 
 export default async function LocaleLayout({
@@ -93,14 +88,14 @@ export default async function LocaleLayout({
     <html
       lang={locale}
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable}`}
+      className={`${schibsted.variable} ${workSans.variable}`}
     >
       <head>
-        {/* Manifest, favicon, and apple-icon are auto-injected by Next.js
-            from app/manifest.ts, app/icon.tsx, and app/apple-icon.tsx. */}
+        {/* Manifest, favicon and apple-icon are injected by Next from
+            app/manifest.ts, app/icon.tsx and app/apple-icon.tsx. */}
         <meta name="theme-color" content="#1B4332" />
       </head>
-      <body className="font-sans antialiased">
+      <body className="antialiased">
         <NextIntlClientProvider>
           {children}
           <ServiceWorkerRegister />

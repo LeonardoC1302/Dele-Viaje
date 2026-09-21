@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { Plus, Trash } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/field';
 
 export interface TripLinkInput {
   id: string;
@@ -34,7 +34,7 @@ export function LinksEditor({ links, onChange }: LinksEditorProps) {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <label className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+        <label className="text-sm font-medium text-sand-900 dark:text-sand-100">
           {t('linksLabel')}
         </label>
         <Button type="button" size="xs" variant="secondary" onClick={addLink}>
@@ -42,7 +42,7 @@ export function LinksEditor({ links, onChange }: LinksEditorProps) {
           {t('linksAdd')}
         </Button>
       </div>
-      <p className="text-xs text-neutral-600 dark:text-neutral-400">{t('linksHelper')}</p>
+      <p className="text-xs text-sand-600 dark:text-sand-400">{t('linksHelper')}</p>
 
       {links.length > 0 && (
         <ul className="flex flex-col gap-2">

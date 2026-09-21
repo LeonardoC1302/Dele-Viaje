@@ -3,8 +3,9 @@
 import { useState, useSyncExternalStore } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Copy, Check, Link as LinkIcon, EnvelopeSimple } from '@phosphor-icons/react';
+import { PanelHeading } from '@/components/ui/panel-heading';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/field';
 
 export interface PlanInvite {
   id: string;
@@ -128,14 +129,12 @@ export function InviteManager({ tripId, initialInvites }: { tripId: string; init
   const inactiveInvites = invites.filter((inv) => inv.revokedAt || new Date(inv.expiresAt) <= new Date());
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
-      <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-        {t('inviteManagerTitle')}
-      </h2>
-      <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">{t('inviteManagerHelper')}</p>
+    <div className="min-w-0">
+      <PanelHeading icon={EnvelopeSimple}>{t('inviteManagerTitle')}</PanelHeading>
+      <p className="mt-1 text-xs text-sand-600 dark:text-sand-400">{t('inviteManagerHelper')}</p>
       {error && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
 
-      <div className="mt-4 flex flex-wrap items-end gap-2 border-b border-neutral-200 pb-4 dark:border-neutral-800">
+      <div className="mt-4 flex flex-wrap items-end gap-2 border-b border-sand-200 pb-4 dark:border-sand-800">
         <Input
           type="email"
           label={t('inviteDirectLabel')}
@@ -158,7 +157,7 @@ export function InviteManager({ tripId, initialInvites }: { tripId: string; init
       )}
 
       <div className="mt-5 flex items-center justify-between">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-sand-500 dark:text-sand-400">
           {t('inviteLinksSubheading')}
         </h3>
         <Button size="xs" variant="secondary" isLoading={creating} onClick={createInvite}>
@@ -168,19 +167,19 @@ export function InviteManager({ tripId, initialInvites }: { tripId: string; init
       </div>
 
       {activeInvites.length === 0 ? (
-        <p className="mt-4 text-sm text-neutral-500 dark:text-neutral-400">{t('inviteNoneActive')}</p>
+        <p className="mt-4 text-sm text-sand-500 dark:text-sand-400">{t('inviteNoneActive')}</p>
       ) : (
         <ul className="mt-4 flex flex-col gap-2">
           {activeInvites.map((invite) => (
             <li
               key={invite.id}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-neutral-200 p-2 text-sm dark:border-neutral-800"
+              className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-sand-200 p-2 text-sm dark:border-sand-800"
             >
               <div className="min-w-0">
-                <p className="truncate font-mono text-xs text-neutral-700 dark:text-neutral-300">
+                <p className="truncate font-mono text-xs text-sand-700 dark:text-sand-300">
                   {inviteUrl(invite.token)}
                 </p>
-                <p className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
+                <p className="mt-0.5 text-xs text-sand-500 dark:text-sand-400">
                   {t('inviteExpiresOn', { date: dateFormatter.format(new Date(invite.expiresAt)) })}
                   {' · '}
                   {invite.maxUses
@@ -213,7 +212,7 @@ export function InviteManager({ tripId, initialInvites }: { tripId: string; init
       )}
 
       {inactiveInvites.length > 0 && (
-        <p className="mt-3 text-xs text-neutral-400 dark:text-neutral-600">
+        <p className="mt-3 text-xs text-sand-400 dark:text-sand-600">
           {t('inviteInactiveCount', { count: inactiveInvites.length })}
         </p>
       )}

@@ -2,6 +2,7 @@
 
 import { X } from '@phosphor-icons/react';
 import { Select } from '@/components/ui/select';
+import { FieldShell } from '@/components/ui/field';
 import { cn } from '@/lib/utils';
 
 const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
@@ -14,10 +15,20 @@ export interface TimePickerProps {
   className?: string;
 }
 
-// A pair of app-styled Selects instead of the native <input type="time">,
-// whose browser-drawn chrome (spinner arrows, AM/PM segments, locale-
-// dependent layout) doesn't take Tailwind classes and looks out of place
-// next to every other custom-built control in this app.
+/**
+ * A pair of app-styled Selects instead of the native `<input type="time">`,
+ * whose browser-drawn chrome (spinner arrows, AM/PM segments, locale-
+ * dependent layout) doesn't take Tailwind classes and looks out of place
+ * next to every other custom-built control in this app.
+ *
+ * The label goes through `FieldShell`, the same wrapper `Input` and
+ * `Textarea` use, rather than being hand-written here. That is the fix
+ * for a real misalignment: this component used to draw its own
+ * `text-sm font-medium` label while the fields beside it used the
+ * micro-label, which is ~9px shorter — so in any row mixing the two,
+ * the time control sat visibly lower than everything else. Sharing the
+ * shell means they cannot drift apart again.
+ */
 export function TimePicker({ label, value, onChange, className }: TimePickerProps) {
   const [hour, minute] = value ? value.split(':') : ['', ''];
 
@@ -25,39 +36,36 @@ export function TimePicker({ label, value, onChange, className }: TimePickerProp
   const setMinute = (m: string) => onChange(`${hour || '00'}:${m}`);
 
   return (
-    <div className={cn('flex flex-col gap-2', className)}>
-      {label && (
-        <label className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-          {label}
-        </label>
-      )}
-      <div className="flex items-center gap-1">
+    <FieldShell label={label} className={cn(className)}>
+      <div className="flex items-center gap-1.5">
         <Select
           value={hour}
           onValueChange={setHour}
           placeholder="--"
           options={HOURS.map((h) => ({ value: h, label: h }))}
-          className="w-[72px]"
+          className="tnum w-[68px]"
         />
-        <span className="text-neutral-400 dark:text-neutral-600">:</span>
+        <span aria-hidden="true" className="text-sand-400 dark:text-sand-600">
+          :
+        </span>
         <Select
           value={minute}
           onValueChange={setMinute}
           placeholder="--"
           options={MINUTES.map((m) => ({ value: m, label: m }))}
-          className="w-[72px]"
+          className="tnum w-[68px]"
         />
         {value && (
           <button
             type="button"
             onClick={() => onChange('')}
             aria-label="Clear"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-400"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sand-400 transition-colors hover:bg-sand-100 hover:text-sand-700 dark:text-sand-500 dark:hover:bg-sand-800 dark:hover:text-sand-300"
           >
             <X size={14} weight="bold" />
           </button>
         )}
       </div>
-    </div>
+    </FieldShell>
   );
 }

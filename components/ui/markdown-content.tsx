@@ -9,7 +9,7 @@ export function MarkdownContent({ content, className }: { content: string; class
   return (
     <div
       className={cn(
-        'prose prose-neutral max-w-none text-neutral-700 dark:prose-invert dark:text-neutral-300',
+        'prose prose-neutral max-w-none text-sand-700 dark:prose-invert dark:text-sand-300',
         'prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0 prose-headings:mt-4 prose-headings:mb-2',
         'prose-a:text-forest-600 dark:prose-a:text-forest-400',
         className

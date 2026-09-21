@@ -3,6 +3,8 @@
 import { useEffect, useRef } from 'react';
 import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { cordilleraMapStyle } from '@/lib/map-style';
+import { useColorScheme } from '@/lib/use-color-scheme';
 
 // See components/trips/trip-map.tsx for why this is needed under Turbopack.
 maplibregl.config.WORKER_URL =
@@ -21,7 +23,7 @@ interface TripRouteMapProps {
 }
 
 const KIND_COLOR: Record<'meeting_point' | 'stop', string> = {
-  meeting_point: 'bg-sky-600',
+  meeting_point: 'bg-dawn-500',
   stop: 'bg-forest-600',
 };
 
@@ -30,6 +32,7 @@ const KIND_COLOR: Record<'meeting_point' | 'stop', string> = {
 // see trip-map-editor.tsx for that).
 export function TripRouteMap({ meetingPoint, waypoints }: TripRouteMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const scheme = useColorScheme();
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -37,7 +40,7 @@ export function TripRouteMap({ meetingPoint, waypoints }: TripRouteMapProps) {
     const stops = [meetingPoint, ...waypoints];
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: 'https://tiles.openfreemap.org/styles/liberty',
+      style: cordilleraMapStyle(scheme),
       center: [meetingPoint.lng, meetingPoint.lat],
       zoom: 11,
       interactive: true,
@@ -91,7 +94,7 @@ export function TripRouteMap({ meetingPoint, waypoints }: TripRouteMapProps) {
 
       waypoints.forEach((wp, index) => {
         const el = document.createElement('div');
-        el.className = `flex h-7 w-7 items-center justify-center rounded-full border-2 border-white ${KIND_COLOR[wp.kind ?? 'stop']} text-xs font-bold text-white shadow-md`;
+        el.className = `flex h-7 w-7 items-center justify-center rounded-full border-2 border-white ${KIND_COLOR[wp.kind ?? 'stop']} text-xs font-bold text-white`;
         el.textContent = String(index + 1);
 
         new maplibregl.Marker({ element: el })
@@ -107,12 +110,12 @@ export function TripRouteMap({ meetingPoint, waypoints }: TripRouteMapProps) {
     });
 
     return () => map.remove();
-  }, [meetingPoint, waypoints]);
+  }, [meetingPoint, waypoints, scheme]);
 
   return (
     <div
       ref={containerRef}
-      className="h-[320px] w-full overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-800"
+      className="h-[320px] w-full overflow-hidden rounded-md border border-sand-200 dark:border-sand-800"
     />
   );
 }

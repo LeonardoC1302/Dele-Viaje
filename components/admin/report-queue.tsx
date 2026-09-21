@@ -6,7 +6,7 @@ import { Link } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
+import { Textarea } from '@/components/ui/field';
 
 export interface ReportTicketData {
   id: string;
@@ -101,7 +101,7 @@ export function ReportQueue({ tickets: initialTickets }: { tickets: ReportTicket
 
   if (tickets.length === 0) {
     return (
-      <p className="rounded-xl border border-neutral-200 bg-white p-8 text-center text-sm text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
+      <p className="rounded-md border border-sand-200 bg-[color:var(--raised)] p-8 text-center text-sm text-sand-500 dark:border-sand-800 dark:text-sand-400">
         {t('reportsEmpty')}
       </p>
     );
@@ -113,36 +113,36 @@ export function ReportQueue({ tickets: initialTickets }: { tickets: ReportTicket
       {tickets.map((ticket) => (
         <div
           key={ticket.id}
-          className="rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900"
+          className="rounded-md border border-sand-200 bg-[color:var(--raised)] p-5 dark:border-sand-800"
         >
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Badge variant={STATUS_VARIANT[ticket.status]}>
                 {t(`status${ticket.status.charAt(0).toUpperCase()}${ticket.status.slice(1)}`)}
               </Badge>
-              <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+              <span className="text-sm font-medium text-sand-900 dark:text-sand-100">
                 {ticket.reason}
               </span>
             </div>
-            <span className="text-xs text-neutral-500 dark:text-neutral-400">
+            <span className="text-xs text-sand-500 dark:text-sand-400">
               {dateFormatter.format(new Date(ticket.createdAt))}
             </span>
           </div>
 
-          <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+          <p className="mt-1 text-xs text-sand-500 dark:text-sand-400">
             {t('reportedBy', { name: ticket.reporterName ?? '—' })}
           </p>
 
           {ticket.description && (
-            <p className="mt-3 whitespace-pre-wrap text-sm text-neutral-700 dark:text-neutral-300">
+            <p className="mt-3 whitespace-pre-wrap text-sm text-sand-700 dark:text-sand-300">
               {ticket.description}
             </p>
           )}
 
-          <div className="mt-3 rounded-lg bg-neutral-50 p-3 text-sm dark:bg-neutral-950">
+          <div className="mt-3 rounded-md bg-sand-50 p-3 text-sm dark:bg-[color:var(--page)]">
             {ticket.targetType === 'trip' && (
               <div className="flex items-center justify-between gap-2">
-                <span className="text-neutral-700 dark:text-neutral-300">
+                <span className="text-sand-700 dark:text-sand-300">
                   {t('targetTrip')}: {ticket.targetTrip?.title ?? ticket.targetId}
                 </span>
                 <Link
@@ -156,7 +156,7 @@ export function ReportQueue({ tickets: initialTickets }: { tickets: ReportTicket
 
             {ticket.targetType === 'user' && ticket.targetUser && (
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <span className="text-neutral-700 dark:text-neutral-300">
+                <span className="text-sand-700 dark:text-sand-300">
                   {t('targetUser')}: {ticket.targetUser.displayName ?? ticket.targetId} (
                   {ticket.targetUser.status})
                 </span>
@@ -197,7 +197,7 @@ export function ReportQueue({ tickets: initialTickets }: { tickets: ReportTicket
 
             {ticket.targetType === 'message' && ticket.targetMessage && (
               <div className="flex flex-col gap-2">
-                <span className="text-neutral-700 dark:text-neutral-300">
+                <span className="text-sand-700 dark:text-sand-300">
                   {t('targetMessage')}:{' '}
                   {ticket.targetMessage.deletedAt ? (
                     <em>—</em>

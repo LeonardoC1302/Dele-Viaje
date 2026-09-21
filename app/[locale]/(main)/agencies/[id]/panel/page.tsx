@@ -8,13 +8,25 @@ import { AgencyStatusBanner, type AgencyStatus } from '@/components/agencies/age
 import { AgencyTourList, type AgencyTourData } from '@/components/agencies/agency-tour-list';
 import { AgencyTemplateList, type AgencyTemplateData } from '@/components/agencies/agency-template-list';
 import { AgencyStaffManager, type AgencyMemberData } from '@/components/agencies/agency-staff-manager';
+import {
+  Dossier,
+  CaseHeader,
+  StatusStamp,
+  FolderTabs,
+  FolderFace,
+  PageBody,
+  type FolderTab,
+} from '@/components/cordillera/folder';
 
 export default async function AgencyPanelPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string; locale: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }) {
   const { id, locale } = await params;
+  const { tab: requestedTab } = await searchParams;
   const supabase = await createClient();
   const t = await getTranslations('agencies');
   const {
@@ -97,31 +109,71 @@ export default async function AgencyPanelPage({
     role: m.role as AgencyMemberData['role'],
   }));
 
-  return (
-    <main className="min-h-[100dvh] bg-neutral-50 py-12 dark:bg-neutral-950">
-      <div className="mx-auto max-w-[800px] px-4 sm:px-6 lg:px-8">
-        <div className="flex items-start justify-between gap-4">
-          <h1 className="text-2xl font-bold text-neutral-900 md:text-3xl dark:text-neutral-50">
-            {agency.business_name}
-          </h1>
-          {isAdminRole && (
-            <Link href={`/agencies/${id}/edit`} className={buttonVariants({ size: 'sm', variant: 'outline' })}>
-              <Gear size={16} weight="regular" strokeWidth={1.5} />
-              {t('editProfile')}
-            </Link>
-          )}
-        </div>
-        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{t('panelSubtitle')}</p>
+  // The agency is a folder too: its tours, templates and staff are
+  // sections of one object, not three unrelated pages.
+  const tabKeys = ['tours', 'templates'];
+  if (isAdminRole) tabKeys.push('staff');
+  const activeTab = requestedTab && tabKeys.includes(requestedTab) ? requestedTab : 'tours';
 
-        <div className="mt-6 flex flex-col gap-6">
+  const tabs: FolderTab[] = tabKeys.map((key) => ({
+    href: key === 'tours' ? `/agencies/${id}/panel` : `/agencies/${id}/panel?tab=${key}`,
+    label: t(`panelTab_${key}` as never),
+    active: key === activeTab,
+  }));
+
+  const statusTone =
+    agency.status === 'approved' ? 'go' : agency.status === 'pending' ? 'hold' : 'void';
+
+  return (
+    <PageBody className="max-w-[1000px]">
+      <Dossier>
+        <CaseHeader
+          title={agency.business_name}
+          description={t('panelSubtitle')}
+          stamp={
+            <StatusStamp tone={statusTone}>
+              {t(`status_${agency.status}_stamp` as never)}
+            </StatusStamp>
+          }
+          action={
+            isAdminRole && (
+              <Link
+                href={`/agencies/${id}/edit`}
+                className={buttonVariants({ size: 'sm', variant: 'outline' })}
+              >
+                <Gear size={15} />
+                {t('editProfile')}
+              </Link>
+            )
+          }
+        />
+
+        {/* The status banner sits above the tabs, not inside one: a
+            suspended agency needs to see why on every section. */}
+        <div className="mb-5 empty:mb-0">
           <AgencyStatusBanner status={agency.status as AgencyStatus} />
-          <AgencyTourList agencyId={id} canPublish={isAdminRole} initialTours={tours} />
-          <AgencyTemplateList agencyId={id} initialTemplates={templates} />
-          {isAdminRole && (
-            <AgencyStaffManager agencyId={id} currentProfileId={user.id} initialMembers={members} />
-          )}
         </div>
-      </div>
-    </main>
+
+        <FolderTabs tabs={tabs} />
+
+        <FolderFace seam>
+          <div key={activeTab} className="animate-leaf">
+            {activeTab === 'tours' && (
+              <AgencyTourList agencyId={id} canPublish={isAdminRole} initialTours={tours} />
+            )}
+            {activeTab === 'templates' && (
+              <AgencyTemplateList agencyId={id} initialTemplates={templates} />
+            )}
+            {activeTab === 'staff' && isAdminRole && (
+              <AgencyStaffManager
+                agencyId={id}
+                currentProfileId={user.id}
+                initialMembers={members}
+              />
+            )}
+          </div>
+        </FolderFace>
+      </Dossier>
+    </PageBody>
   );
 }

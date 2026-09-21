@@ -19,11 +19,12 @@
   },
   "nav": {
     "howItWorks": "How it works",
+    "trips": "Trips",
     "forAgencies": "For agencies",
-    "waitlist": "Waitlist",
     "signIn": "Sign in"
   },
   "hero": {
+    "eyebrow": "Costa Rica · bilingual",
     "headlineLine1": "Find or create a trip,",
     "headlineLine2": "with people you want.",
     "subtext": "Join social adventures, book verified tours, or plan a private trip with friends across Costa Rica.",
@@ -47,17 +48,13 @@
   },
   "agenciesCta": {
     "title": "Run tours in Costa Rica?",
-    "body": "We are onboarding a founding group of local operators before launch, with direct bookings and no middleman markup.",
+    "body": "Join the local operators already publishing tours on Dele Viaje — direct bookings, no middleman markup, paid through SINPE Móvil.",
     "cta": "Apply as an Agency"
   },
-  "waitlist": {
-    "title": "Be first on the trail",
-    "body": "We are building Dele Viaje right now. Join the waitlist and we will email you the moment it opens.",
-    "emailLabel": "Email address",
-    "emailPlaceholder": "you@example.com",
-    "submit": "Join Waitlist",
-    "success": "You are on the list. Watch your inbox for launch day.",
-    "errorInvalidEmail": "Enter a valid email address."
+  "tripShowcase": {
+    "title": "Happening soon",
+    "subtitle": "Real trips, open right now — social plans and verified tours alike.",
+    "viewAll": "View all trips"
   },
   "footer": {
     "tagline": "Trips across Costa Rica, planned with people you trust.",
@@ -109,7 +106,8 @@
     },
     "checkEmail": {
       "title": "Check your email",
-      "body": "We sent a confirmation link to finish creating your account. Open it to continue to Dele Viaje."
+      "body": "We sent a confirmation link to finish creating your account. Open it to continue to Dele Viaje.",
+      "hint": "The link expires after 24 hours. Check your spam folder if it has not arrived in a few minutes."
     },
     "onboarding": {
       "title": "Tell us about you",
@@ -132,7 +130,8 @@
     "admin": "Admin",
     "signOut": "Sign out",
     "openMenu": "Open menu",
-    "closeMenu": "Close menu"
+    "closeMenu": "Close menu",
+    "signIn": "Sign in"
   },
   "feed": {
     "title": "Upcoming trips",
@@ -159,7 +158,10 @@
     "filterDateFrom": "From",
     "filterDateTo": "To",
     "filterApply": "Apply",
-    "filterClear": "Clear filters"
+    "filterClear": "Clear filters",
+    "dateLabel": "Date",
+    "locationLabel": "Location",
+    "resultsCount": "{count, plural, one {# trip} other {# trips}}"
   },
   "trips": {
     "visibilityLabel": "Trip type",
@@ -199,6 +201,10 @@
     "waypointKindMeetingPoint": "Meeting point",
     "waypointKindStop": "Stop",
     "waypointKindToggleHint": "Tap to switch between meeting point and stop",
+    "sectionDetails": "Details",
+    "sectionLocation": "Location",
+    "sectionExtras": "Extras",
+    "sectionSchedule": "Dates & capacity",
     "titleLabel": "Title",
     "titlePlaceholder": "E.g. Cerro Chirripó hike this Saturday",
     "descriptionLabel": "Description",
@@ -252,7 +258,19 @@
     "joinError": "Could not complete the action. Try again.",
     "attendeesTitle": "Who's going ({count})",
     "noAttendeesYet": "No one has joined yet. Be the first!",
-    "openChat": "Open Chat"
+    "openChat": "Open Chat",
+    "detailByPlain": "Organized by {name}",
+    "stampOpen": "Open",
+    "stampPast": "Past",
+    "tab_overview": "Overview",
+    "tab_itinerary": "Itinerary",
+    "tab_packing": "Packing",
+    "tab_expenses": "Expenses",
+    "tab_polls": "Polls",
+    "tab_documents": "Documents",
+    "tab_qa": "Q&A",
+    "tab_reviews": "Reviews",
+    "tab_people": "People"
   },
   "chat": {
     "title": "Trip chat",
@@ -496,12 +514,15 @@
     "subtitle": "Everything you're part of — trips you've organized and plans you've joined.",
     "emptyTitle": "You're not part of any trips yet",
     "emptyBody": "Create one, or join a private plan via an invite link.",
+    "emptyCta": "Explore trips",
     "organizingTitle": "Organizing",
     "joinedTitle": "Joined"
   },
   "agencies": {
     "applyTitle": "List your agency",
     "applySubtitle": "Apply to publish tours on Dele Viaje. An admin reviews every application before it goes live.",
+    "sectionBusiness": "Business",
+    "sectionPayments": "Payments",
     "businessNameLabel": "Business name",
     "businessNamePlaceholder": "E.g. Pura Vida Adventures",
     "legalNameLabel": "Legal name (optional)",
@@ -537,6 +558,7 @@
     "tourEditSubtitle": "Changes are visible immediately if the tour is already published.",
     "tourSaveChanges": "Save changes",
     "tourEdit": "Edit tour",
+    "sectionPricing": "Pricing",
     "tourPriceLabel": "Price (₡)",
     "tourPriceHelper": "Per person, in colones.",
     "tourMinParticipantsLabel": "Minimum participants (optional)",
@@ -634,6 +656,13 @@
     "tourAdditionalDateRemove": "Remove date",
     "tourAdditionalDateAdd": "Add another date",
     "otherDatesTitle": "Other dates",
-    "otherDatesFull": "Full"
+    "otherDatesFull": "Full",
+    "panelTab_tours": "Tours",
+    "panelTab_templates": "Templates",
+    "panelTab_staff": "Staff",
+    "status_approved_stamp": "Verified",
+    "status_pending_stamp": "Pending",
+    "status_suspended_stamp": "Suspended",
+    "status_rejected_stamp": "Rejected"
   }
 }

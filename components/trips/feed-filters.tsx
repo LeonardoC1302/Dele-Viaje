@@ -1,5 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
+import { controlClasses } from '@/components/ui/field';
+import { cn } from '@/lib/utils';
 
 interface FeedFiltersProps {
   category?: string;
@@ -11,12 +13,13 @@ interface FeedFiltersProps {
   dateTo?: string;
 }
 
-// Plain GET form, no client JS — matches the rest of the feed's filtering
-// (category/verified/near-me are all plain links), just with free-text
-// inputs instead of a fixed set of links. Hidden inputs carry the filters
-// that already have their own dedicated controls (category pills,
-// Verified tab, Near me) forward so submitting this form doesn't reset
-// them.
+/**
+ * Plain GET form, no client JS — matching the rest of the feed's
+ * filtering (category / verified / near-me are all plain links), just
+ * with free-text inputs instead of a fixed set of links. The hidden
+ * inputs carry the filters that have their own dedicated controls
+ * forward, so submitting this form doesn't silently reset them.
+ */
 export async function FeedFilters({
   category,
   verified,
@@ -33,15 +36,15 @@ export async function FeedFilters({
     <form
       method="get"
       action="/feed"
-      className="mt-4 flex flex-wrap items-end gap-3 rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900"
+      className="mt-4 flex flex-wrap items-end gap-x-4 gap-y-3 rounded-md border border-sand-200 bg-[color:var(--raised)] p-4 dark:border-sand-800"
     >
       {category && <input type="hidden" name="category" value={category} />}
       {verified && <input type="hidden" name="verified" value="1" />}
       {lat && <input type="hidden" name="lat" value={lat} />}
       {lng && <input type="hidden" name="lng" value={lng} />}
 
-      <label className="flex flex-col gap-1 text-xs font-medium text-neutral-700 dark:text-neutral-300">
-        {t('filterMaxPrice')}
+      <label className="flex flex-col gap-1.5">
+        <span className="micro-label">{t('filterMaxPrice')}</span>
         <input
           type="number"
           name="maxPrice"
@@ -49,33 +52,33 @@ export async function FeedFilters({
           step={1000}
           defaultValue={maxPrice}
           placeholder="₡"
-          className="h-9 w-28 rounded-lg border border-neutral-300 bg-white px-3 text-sm text-neutral-900 focus:border-forest-600 focus:outline-none dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+          className={cn(controlClasses, 'tnum h-9 w-32')}
         />
       </label>
 
-      <label className="flex flex-col gap-1 text-xs font-medium text-neutral-700 dark:text-neutral-300">
-        {t('filterDateFrom')}
+      <label className="flex flex-col gap-1.5">
+        <span className="micro-label">{t('filterDateFrom')}</span>
         <input
           type="date"
           name="dateFrom"
           defaultValue={dateFrom}
-          className="h-9 rounded-lg border border-neutral-300 bg-white px-3 text-sm text-neutral-900 focus:border-forest-600 focus:outline-none dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+          className={cn(controlClasses, 'tnum h-9 w-auto')}
         />
       </label>
 
-      <label className="flex flex-col gap-1 text-xs font-medium text-neutral-700 dark:text-neutral-300">
-        {t('filterDateTo')}
+      <label className="flex flex-col gap-1.5">
+        <span className="micro-label">{t('filterDateTo')}</span>
         <input
           type="date"
           name="dateTo"
           defaultValue={dateTo}
-          className="h-9 rounded-lg border border-neutral-300 bg-white px-3 text-sm text-neutral-900 focus:border-forest-600 focus:outline-none dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+          className={cn(controlClasses, 'tnum h-9 w-auto')}
         />
       </label>
 
       <button
         type="submit"
-        className="h-9 rounded-full bg-forest-600 px-4 text-sm font-medium text-white transition-colors hover:bg-forest-700"
+        className="h-9 rounded-full border border-sand-300 px-5 font-display text-sm font-semibold text-sand-800 transition-colors hover:border-sand-400 hover:bg-sand-100 dark:border-sand-600 dark:text-sand-100 dark:hover:bg-sand-800"
       >
         {t('filterApply')}
       </button>
@@ -91,7 +94,7 @@ export async function FeedFilters({
               ...(lng ? { lng } : {}),
             },
           }}
-          className="text-sm font-medium text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+          className="link h-9 self-end pb-2 text-sm"
         >
           {t('filterClear')}
         </Link>

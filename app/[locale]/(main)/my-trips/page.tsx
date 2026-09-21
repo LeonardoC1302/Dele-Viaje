@@ -1,7 +1,11 @@
 import { getTranslations } from 'next-intl/server';
-import { redirect } from '@/i18n/navigation';
+import { UsersThree, Compass } from '@phosphor-icons/react/dist/ssr';
+import { Link, redirect } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { TripCard, type TripCardData } from '@/components/trips/trip-card';
+import { CaseHeader, PageBody } from '@/components/cordillera/folder';
+import { buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 export default async function MyTripsPage({
   params,
@@ -78,25 +82,29 @@ export default async function MyTripsPage({
   const joinedCards: TripCardData[] = (joinedTrips ?? []).map(toCard);
 
   return (
-    <main className="min-h-[100dvh] bg-neutral-50 py-12 dark:bg-neutral-950">
-      <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
-          {t('title')}
-        </h1>
-        <p className="mt-2 text-neutral-600 dark:text-neutral-400">{t('subtitle')}</p>
+    <main>
+      <div className="mx-auto w-full max-w-[1400px] px-4 py-8 sm:px-7 sm:py-10">
+        <CaseHeader title={t('title')} description={t('subtitle')} />
 
         {ownedCards.length === 0 && joinedCards.length === 0 ? (
-          <div className="mt-16 flex flex-col items-center rounded-xl border border-dashed border-neutral-300 py-16 text-center dark:border-neutral-700">
-            <p className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+          <div className="mt-16 flex flex-col items-center rounded-md border border-dashed border-sand-300 py-16 text-center dark:border-sand-700">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-dawn-50 dark:bg-dawn-900/40">
+              <Compass size={28} weight="regular" className="text-dawn-600 dark:text-dawn-300" />
+            </div>
+            <p className="mt-4 text-lg font-semibold text-sand-900 dark:text-sand-100">
               {t('emptyTitle')}
             </p>
-            <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{t('emptyBody')}</p>
+            <p className="mt-1 max-w-sm text-sm text-sand-500 dark:text-sand-400">{t('emptyBody')}</p>
+            <Link href="/feed" className={cn(buttonVariants({ size: 'sm' }), 'font-display mt-5')}>
+              {t('emptyCta')}
+            </Link>
           </div>
         ) : (
           <>
             {ownedCards.length > 0 && (
               <section className="mt-8">
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                <h2 className="flex items-center gap-2 text-sm font-display font-bold uppercase tracking-wide text-dawn-700 dark:text-dawn-300">
+                  <UsersThree size={16} weight="bold" />
                   {t('organizingTitle')}
                 </h2>
                 <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -109,7 +117,8 @@ export default async function MyTripsPage({
 
             {joinedCards.length > 0 && (
               <section className="mt-10">
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                <h2 className="flex items-center gap-2 text-sm font-display font-bold uppercase tracking-wide text-dawn-700 dark:text-dawn-300">
+                  <Compass size={16} weight="bold" />
                   {t('joinedTitle')}
                 </h2>
                 <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">

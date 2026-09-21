@@ -1,22 +1,32 @@
 import { getTranslations } from 'next-intl/server';
 import { EnvelopeSimple } from '@phosphor-icons/react/dist/ssr';
+import { Link } from '@/i18n/navigation';
+import { AuthPanel } from '@/components/auth/auth-panel';
 
 export default async function CheckEmailPage() {
   const t = await getTranslations('auth.checkEmail');
+  const tLogin = await getTranslations('auth.login');
 
   return (
-    <main className="flex min-h-[100dvh] items-center justify-center bg-neutral-50 px-4 text-center dark:bg-neutral-950">
-      <div className="max-w-[400px]">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-forest-50 text-forest-600 dark:bg-forest-950 dark:text-forest-400">
-          <EnvelopeSimple size={28} weight="regular" strokeWidth={1.5} />
-        </div>
-        <h1 className="mt-6 text-2xl font-bold text-neutral-900 dark:text-neutral-50">
-          {t('title')}
-        </h1>
-        <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
-          {t('body')}
+    <AuthPanel
+      title={t('title')}
+      subtitle={t('body')}
+      footer={
+        <Link href="/login" className="link font-semibold">
+          {tLogin('title')}
+        </Link>
+      }
+    >
+      <div className="mt-6 flex items-center gap-3 rounded-md border border-sand-200 bg-[color:var(--sunken)] p-4 dark:border-sand-800">
+        <EnvelopeSimple
+          size={22}
+          className="shrink-0 text-dawn-600 dark:text-dawn-400"
+          aria-hidden="true"
+        />
+        <p className="text-sm leading-relaxed text-sand-600 dark:text-sand-400">
+          {t('hint')}
         </p>
       </div>
-    </main>
+    </AuthPanel>
   );
 }

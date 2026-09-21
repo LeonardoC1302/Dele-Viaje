@@ -3,10 +3,12 @@
 import { useState, type FormEvent } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter, Link } from '@/i18n/navigation';
-import { Input } from '@/components/ui/input';
+import { NotePencil, MapPin, Sliders, Ticket } from '@phosphor-icons/react';
+import { Input } from '@/components/ui/field';
 import { MarkdownEditor } from '@/components/ui/markdown-editor';
 import { Select } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { FormSection } from '@/components/ui/form-section';
 import {
   TripMapEditor,
   type TripWaypointInput,
@@ -121,108 +123,115 @@ export function TourTemplateForm({ agencyId, mode = 'create', templateId, initia
   return (
     <form
       onSubmit={handleSubmit}
-      className="w-full max-w-[560px] rounded-xl border border-neutral-200 bg-white p-8 dark:border-neutral-800 dark:bg-neutral-900"
+      className="w-full max-w-[560px] rounded-md border border-sand-200 bg-[color:var(--raised)] p-8 dark:border-sand-800"
     >
-      <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-50">
+      <h1 className="text-2xl font-extrabold text-sand-900 dark:text-sand-50">
         {mode === 'edit' ? t('templateEditTitle') : t('templateNewTitle')}
       </h1>
-      <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">{t('templateSubtitle')}</p>
+      <p className="mt-2 text-sm text-sand-600 dark:text-sand-400">{t('templateSubtitle')}</p>
 
-      <div className="mt-6 flex flex-col gap-5">
-        <Input
-          label={t('templateNameLabel')}
-          helperText={t('templateNameHelper')}
-          placeholder={t('templateNamePlaceholder')}
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-          minLength={3}
-          maxLength={120}
-        />
-
-        <Input
-          label={tTrips('titleLabel')}
-          placeholder={tTrips('titlePlaceholder')}
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-          minLength={3}
-          maxLength={120}
-        />
-
-        <MarkdownEditor
-          label={tTrips('descriptionLabel')}
-          placeholder={tTrips('descriptionPlaceholder')}
-          value={description}
-          onChange={setDescription}
-          required
-          maxLength={4000}
-        />
-
-        <Select
-          label={tTrips('categoryLabel')}
-          value={category}
-          onValueChange={setCategory}
-          options={categoryOptions}
-          required
-        />
-
-        <Input
-          label={tTrips('locationLabel')}
-          placeholder={tTrips('locationPlaceholder')}
-          value={locationName}
-          onChange={(e) => setLocationName(e.target.value)}
-          required
-          minLength={2}
-          maxLength={160}
-        />
-
-        <TripMapEditor
-          meetingPointName={locationName}
-          meetingPointLat={lat}
-          meetingPointLng={lng}
-          onMeetingPointChange={(newLat, newLng) => {
-            setLat(newLat);
-            setLng(newLng);
-          }}
-          waypoints={waypoints}
-          onWaypointsChange={setWaypoints}
-        />
-
-        <CustomFieldsEditor fields={customFields} onChange={setCustomFields} />
-
-        <LinksEditor links={links} onChange={setLinks} />
-
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+      <div className="mt-6 flex flex-col gap-6">
+        <FormSection icon={NotePencil} title={tTrips('sectionDetails')}>
           <Input
-            type="number"
-            label={tTrips('capacityLabel')}
-            value={capacity}
-            onChange={(e) => setCapacity(e.target.value)}
+            label={t('templateNameLabel')}
+            helperText={t('templateNameHelper')}
+            placeholder={t('templateNamePlaceholder')}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
             required
-            min={1}
-            max={500}
+            minLength={3}
+            maxLength={120}
           />
+
+          <Input
+            label={tTrips('titleLabel')}
+            placeholder={tTrips('titlePlaceholder')}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+            minLength={3}
+            maxLength={120}
+          />
+
+          <MarkdownEditor
+            label={tTrips('descriptionLabel')}
+            placeholder={tTrips('descriptionPlaceholder')}
+            value={description}
+            onChange={setDescription}
+            required
+            maxLength={4000}
+          />
+
+          <Select
+            label={tTrips('categoryLabel')}
+            value={category}
+            onValueChange={setCategory}
+            options={categoryOptions}
+            required
+          />
+        </FormSection>
+
+        <FormSection icon={MapPin} title={tTrips('sectionLocation')}>
+          <Input
+            label={tTrips('locationLabel')}
+            placeholder={tTrips('locationPlaceholder')}
+            value={locationName}
+            onChange={(e) => setLocationName(e.target.value)}
+            required
+            minLength={2}
+            maxLength={160}
+          />
+
+          <TripMapEditor
+            meetingPointName={locationName}
+            meetingPointLat={lat}
+            meetingPointLng={lng}
+            onMeetingPointChange={(newLat, newLng) => {
+              setLat(newLat);
+              setLng(newLng);
+            }}
+            waypoints={waypoints}
+            onWaypointsChange={setWaypoints}
+          />
+        </FormSection>
+
+        <FormSection icon={Sliders} title={tTrips('sectionExtras')}>
+          <CustomFieldsEditor fields={customFields} onChange={setCustomFields} />
+          <LinksEditor links={links} onChange={setLinks} />
+        </FormSection>
+
+        <FormSection icon={Ticket} title={t('sectionPricing')}>
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <Input
+              type="number"
+              label={tTrips('capacityLabel')}
+              value={capacity}
+              onChange={(e) => setCapacity(e.target.value)}
+              required
+              min={1}
+              max={500}
+            />
+            <Input
+              type="number"
+              label={t('tourMinParticipantsLabel')}
+              helperText={t('tourMinParticipantsHelper')}
+              value={minParticipants}
+              onChange={(e) => setMinParticipants(e.target.value)}
+              min={1}
+              max={500}
+            />
+          </div>
+
           <Input
             type="number"
-            label={t('tourMinParticipantsLabel')}
-            helperText={t('tourMinParticipantsHelper')}
-            value={minParticipants}
-            onChange={(e) => setMinParticipants(e.target.value)}
-            min={1}
-            max={500}
+            label={t('tourPriceLabel')}
+            helperText={t('tourPriceHelper')}
+            value={priceCrc}
+            onChange={(e) => setPriceCrc(e.target.value)}
+            required
+            min={1000}
           />
-        </div>
-
-        <Input
-          type="number"
-          label={t('tourPriceLabel')}
-          helperText={t('tourPriceHelper')}
-          value={priceCrc}
-          onChange={(e) => setPriceCrc(e.target.value)}
-          required
-          min={1000}
-        />
+        </FormSection>
 
         {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
@@ -232,7 +241,7 @@ export function TourTemplateForm({ agencyId, mode = 'create', templateId, initia
           </Button>
           <Link
             href={`/agencies/${agencyId}/panel`}
-            className="text-sm font-medium text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+            className="text-sm font-medium text-sand-600 hover:text-sand-900 dark:text-sand-400 dark:hover:text-sand-100"
           >
             {t('cancel')}
           </Link>

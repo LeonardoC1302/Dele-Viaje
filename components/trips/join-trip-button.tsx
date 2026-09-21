@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { SignOut } from '@phosphor-icons/react';
 import { useRouter, Link } from '@/i18n/navigation';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -78,18 +78,19 @@ export function JoinTripButton({
 
   if (isOwner) {
     return (
-      <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
+      <p className="text-sm font-medium text-sand-600 dark:text-sand-400">
         {t('youAreOrganizer')}
       </p>
     );
   }
 
   if (!isAuthenticated) {
+    // A signed-out visitor is the one most likely to act, so this is a
+    // real primary button, not a text link. It rendered as a plain
+    // sentence before, which left the trip page with no visible call to
+    // action at all for exactly the audience the page exists to convert.
     return (
-      <Link
-        href="/login"
-        className="text-sm font-medium text-forest-600 hover:underline dark:text-forest-400"
-      >
+      <Link href="/login" className={buttonVariants({ variant: 'primary' })}>
         {t('loginToJoin')}
       </Link>
     );
@@ -97,7 +98,7 @@ export function JoinTripButton({
 
   if (hasStarted && !status) {
     return (
-      <p className="text-sm text-neutral-500 dark:text-neutral-400">
+      <p className="text-sm text-sand-500 dark:text-sand-400">
         {t('tripStarted')}
       </p>
     );
@@ -111,7 +112,7 @@ export function JoinTripButton({
             className={
               status === 'confirmed'
                 ? 'text-sm font-medium text-forest-600 dark:text-forest-400'
-                : 'text-sm font-medium text-neutral-600 dark:text-neutral-400'
+                : 'text-sm font-medium text-sand-600 dark:text-sand-400'
             }
           >
             {status === 'confirmed'

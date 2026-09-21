@@ -1,4 +1,6 @@
 import { getTranslations } from 'next-intl/server';
+import { Clock } from '@phosphor-icons/react/dist/ssr';
+import { PanelHeading } from '@/components/ui/panel-heading';
 
 export interface WaitlistRowData {
   id: string;
@@ -17,17 +19,15 @@ export async function WaitlistPanel({ rows }: { rows: WaitlistRowData[] }) {
   if (rows.length === 0) return null;
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
-      <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-        {t('waitlistTitle', { count: rows.length })}
-      </h2>
+    <div className="min-w-0">
+      <PanelHeading icon={Clock}>{t('waitlistTitle', { count: rows.length })}</PanelHeading>
       <ul className="mt-3 flex flex-col gap-1.5">
         {rows.map((row, index) => (
           <li
             key={row.id}
-            className="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300"
+            className="flex items-center gap-2 text-sm text-sand-700 dark:text-sand-300"
           >
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-xs font-medium text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-sand-100 text-xs font-medium text-sand-500 dark:bg-sand-800 dark:text-sand-400">
               {index + 1}
             </span>
             {row.displayName ?? t('waitlistUnnamed')}

@@ -47,8 +47,8 @@ export default async function TripChatPage({
 
   if (!isParticipant) {
     return (
-      <main className="flex min-h-[100dvh] items-center justify-center bg-neutral-50 px-4 text-center dark:bg-neutral-950">
-        <p className="text-neutral-600 dark:text-neutral-400">
+      <main className="mx-auto w-full max-w-[760px] px-4 py-8 sm:px-7 sm:py-10 text-center">
+        <p className="text-sand-600 dark:text-sand-400">
           {t('notAllowed')}
         </p>
       </main>
@@ -99,8 +99,8 @@ export default async function TripChatPage({
   const canSend = isOrganizer || myAttendance?.status === 'confirmed';
 
   return (
-    <main className="min-h-[100dvh] bg-neutral-50 py-12 dark:bg-neutral-950">
-      <div className="mx-auto max-w-[720px] px-4 sm:px-6 lg:px-8">
+    <main>
+      <div className="mx-auto w-full max-w-[720px] px-4 py-8 sm:px-7 sm:py-10">
         <Link
           href={`/trips/${trip.id}`}
           className="text-sm font-medium text-forest-600 hover:underline dark:text-forest-400"
@@ -108,7 +108,7 @@ export default async function TripChatPage({
           &larr; {t('backToTrip')}
         </Link>
 
-        <h1 className="mt-4 text-xl font-bold text-neutral-900 dark:text-neutral-50">
+        <h1 className="mt-4 text-xl font-extrabold text-sand-900 dark:text-sand-50">
           {trip.title}
         </h1>
 

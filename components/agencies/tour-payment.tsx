@@ -2,7 +2,8 @@
 
 import { useState, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import { CheckCircle, UploadSimple } from '@phosphor-icons/react';
+import { CheckCircle, UploadSimple, CurrencyCircleDollar } from '@phosphor-icons/react';
+import { PanelHeading } from '@/components/ui/panel-heading';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 
@@ -68,7 +69,7 @@ export function TourPayment({ attendeeId, sinpePhone, paymentStatus: initialStat
 
   if (paymentStatus === 'paid') {
     return (
-      <div className="flex items-center gap-2 rounded-lg bg-forest-50 p-3 text-sm text-forest-700 dark:bg-forest-600/10 dark:text-forest-400">
+      <div className="flex items-center gap-2 rounded-md bg-forest-50 p-3 text-sm text-forest-700 dark:bg-forest-600/10 dark:text-forest-400">
         <CheckCircle size={18} weight="fill" />
         {t('paymentConfirmedNotice')}
       </div>
@@ -76,19 +77,19 @@ export function TourPayment({ attendeeId, sinpePhone, paymentStatus: initialStat
   }
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
-      <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">{t('paymentTitle')}</h2>
-      <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">{t('paymentHelper')}</p>
+    <div className="min-w-0">
+      <PanelHeading icon={CurrencyCircleDollar}>{t('paymentTitle')}</PanelHeading>
+      <p className="mt-1 text-xs text-sand-600 dark:text-sand-400">{t('paymentHelper')}</p>
 
-      <div className="mt-3 rounded-lg bg-neutral-50 p-3 dark:bg-neutral-950">
-        <p className="text-xs text-neutral-500 dark:text-neutral-400">{t('paymentSinpeLabel')}</p>
-        <p className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">{sinpePhone}</p>
+      <div className="mt-3 rounded-md bg-sand-50 p-3 dark:bg-[color:var(--page)]">
+        <p className="text-xs text-sand-500 dark:text-sand-400">{t('paymentSinpeLabel')}</p>
+        <p className="text-lg font-semibold text-sand-900 dark:text-sand-100">{sinpePhone}</p>
       </div>
 
       {error && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       {paymentStatus === 'pending' && (
-        <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">{t('paymentPendingNotice')}</p>
+        <p className="mt-3 text-sm text-sand-600 dark:text-sand-400">{t('paymentPendingNotice')}</p>
       )}
 
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />

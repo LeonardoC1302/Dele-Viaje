@@ -11,10 +11,10 @@ export function CustomFieldsDisplay({ fields }: { fields: TripCustomFieldData[] 
       {fields.map((field, i) => (
         <div
           key={i}
-          className="rounded-lg border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-950"
+          className="rounded-md border border-sand-200 bg-sand-50 p-3 dark:border-sand-800 dark:bg-[color:var(--page)]"
         >
-          <p className="text-xs text-neutral-500 dark:text-neutral-400">{field.label}</p>
-          <p className="mt-0.5 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+          <p className="text-xs text-sand-500 dark:text-sand-400">{field.label}</p>
+          <p className="mt-0.5 text-sm font-semibold text-sand-900 dark:text-sand-100">
             {field.value}
           </p>
         </div>

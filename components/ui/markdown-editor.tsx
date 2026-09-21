@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { TextB, TextItalic, ListBullets, ListNumbers, Link as LinkIcon } from '@phosphor-icons/react';
-import { Textarea } from '@/components/ui/textarea';
+import { Textarea } from '@/components/ui/field';
 import { MarkdownContent } from '@/components/ui/markdown-content';
 import { cn } from '@/lib/utils';
 
@@ -95,26 +95,26 @@ export function MarkdownEditor({
     });
 
   const toolbarButtonClass =
-    'flex h-7 w-7 items-center justify-center rounded text-neutral-600 transition-colors hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800';
+    'flex h-7 w-7 items-center justify-center rounded text-sand-600 transition-colors hover:bg-sand-100 dark:text-sand-400 dark:hover:bg-sand-800';
 
   const tabClass = (active: boolean) =>
     cn(
       'rounded px-2 py-1 text-xs font-medium transition-colors',
       active
         ? 'bg-forest-50 text-forest-700 dark:bg-forest-600/20 dark:text-forest-400'
-        : 'text-neutral-500 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800'
+        : 'text-sand-500 hover:bg-sand-100 dark:text-sand-400 dark:hover:bg-sand-800'
     );
 
   return (
     <div className="flex flex-col gap-2">
       {label && (
-        <label className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+        <label className="text-sm font-medium text-sand-900 dark:text-sand-100">
           {label}
           {required && <span className="text-red-600"> *</span>}
         </label>
       )}
-      <div className="rounded-lg border border-neutral-300 dark:border-neutral-700">
-        <div className="flex items-center justify-between gap-1 border-b border-neutral-200 p-1 dark:border-neutral-800">
+      <div className="rounded-md border border-sand-300 dark:border-sand-700">
+        <div className="flex items-center justify-between gap-1 border-b border-sand-200 p-1 dark:border-sand-800">
           {mode === 'write' ? (
             <div className="flex items-center gap-0.5">
               <button type="button" onClick={bold} aria-label="Bold" title="Bold" className={toolbarButtonClass}>
@@ -170,7 +170,7 @@ export function MarkdownEditor({
         ) : value.trim() ? (
           <MarkdownContent content={value} className="min-h-32 p-3" />
         ) : (
-          <p className="min-h-32 p-3 text-sm text-neutral-400 dark:text-neutral-600">
+          <p className="min-h-32 p-3 text-sm text-sand-400 dark:text-sand-600">
             {t('markdownPreviewEmpty')}
           </p>
         )}
