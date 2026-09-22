@@ -161,7 +161,11 @@
     "filterClear": "Limpiar filtros",
     "dateLabel": "Fecha",
     "locationLabel": "Lugar",
-    "resultsCount": "{count, plural, one {# viaje} other {# viajes}}"
+    "resultsCount": "{count, plural, one {# viaje} other {# viajes}}",
+    "searchPlaceholder": "Buscá por nombre o lugar",
+    "searchLabel": "Buscar viajes",
+    "searchSubmit": "Buscar",
+    "searchClear": "Limpiar"
   },
   "trips": {
     "visibilityLabel": "Tipo de viaje",
@@ -270,7 +274,17 @@
     "tab_documents": "Documentos",
     "tab_qa": "Preguntas",
     "tab_reviews": "Reseñas",
-    "tab_people": "Gente"
+    "tab_people": "Gente",
+    "cancelTrip": "Cancelar viaje",
+    "cancelTripTitle": "¿Cancelar este viaje?",
+    "cancelTripBody": "El viaje queda visible con tu razón y se le avisa a todos los que se apuntaron. Sus lugares se mantienen, no se borra nada. Si querés quitarlo por completo, usá Eliminar.",
+    "cancelReasonLabel": "¿Por qué se cancela?",
+    "cancelReasonPlaceholder": "ej. el sendero está cerrado después de la tormenta — lo reprogramamos",
+    "cancelTripConfirm": "Cancelar viaje",
+    "cancelError": "No se pudo cancelar el viaje. Intentá de nuevo.",
+    "cancelledTitle": "Este viaje fue cancelado",
+    "stampCancelled": "Cancelado",
+    "rateLimited": "Demasiados intentos. Esperá un momento y volvé a intentar."
   },
   "chat": {
     "title": "Chat del viaje",
@@ -302,7 +316,8 @@
     "waitlistPromoted": "Saliste de la lista de espera para \"{trip}\": ¡tu cupo está confirmado!",
     "newMessage": "{actor} envió un mensaje en \"{trip}\"",
     "newFollower": "{actor} empezó a seguirte",
-    "planDirectInvite": "{actor} te invitó a unirte a \"{trip}\""
+    "planDirectInvite": "{actor} te invitó a unirte a \"{trip}\"",
+    "tripCancelled": "{trip} fue cancelado"
   },
   "profile": {
     "follow": "Seguir",
@@ -664,5 +679,29 @@
     "status_pending_stamp": "Pendiente",
     "status_suspended_stamp": "Suspendida",
     "status_rejected_stamp": "Rechazada"
+  },
+  "advisories": {
+    "blockTitle": "Antes de ir",
+    "editorLabel": "Avisos",
+    "editorHelper": "Marcá lo que alguien debería saber antes de apuntarse — riesgos, permisos, qué llevar. Los avisos de riesgo también salen en la tarjeta del viaje.",
+    "notesLabel": "Detalles (opcional)",
+    "notePlaceholder": "Agregá el detalle específico, por ejemplo en qué parte del camino",
+    "severity_danger": "Riesgo para la seguridad",
+    "severity_caution": "Tenelo en cuenta",
+    "severity_info": "Bueno saberlo",
+    "cardLabel": "Avisos de seguridad",
+    "ackTitle": "Este viaje tiene avisos de seguridad",
+    "ackConfirm": "Leí los avisos de arriba",
+    "addDetail": "Agregar detalle",
+    "removeDetail": "Quitar detalle",
+    "selectedLabel": "{count, plural, one {# seleccionado} other {# seleccionados}}"
+  },
+  "tripActions": {
+    "addToCalendar": "Agregar al calendario",
+    "shareWhatsapp": "Compartir",
+    "copyLink": "Copiar enlace",
+    "copied": "Copiado",
+    "directions": "Cómo llegar",
+    "shareMessage": "{title} — {date}, {place}"
   }
 }

@@ -1,6 +1,11 @@
 import * as z from 'zod';
 import { CATEGORY_KEYS } from '@/lib/constants/categories';
-import { tripWaypointSchema, tripCustomFieldSchema, tripLinkSchema } from '@/lib/validators/trip';
+import {
+  tripWaypointSchema,
+  tripCustomFieldSchema,
+  tripLinkSchema,
+  tripAdvisorySchema,
+} from '@/lib/validators/trip';
 
 export const agencyApplySchema = z.object({
   businessName: z.string().trim().min(3).max(120),
@@ -43,6 +48,7 @@ export const createTourSchema = z
     waypoints: z.array(tripWaypointSchema).max(20).optional(),
     customFields: z.array(tripCustomFieldSchema).max(20).optional(),
     links: z.array(tripLinkSchema).max(10).optional(),
+    advisories: z.array(tripAdvisorySchema).max(18).optional(),
     startAt: z.iso.datetime({ offset: true }),
     endAt: z.iso.datetime({ offset: true }),
     capacity: z.number().int().min(1).max(500),
@@ -94,6 +100,7 @@ export const tourTemplateSchema = z.object({
   capacity: z.number().int().min(1).max(500),
   minParticipants: z.number().int().min(1).max(500).optional().nullable(),
   priceCrc: z.number().int().min(1000).max(10_000_000),
+  advisories: z.array(tripAdvisorySchema).max(18).optional(),
 }).refine((data) => data.minParticipants == null || data.minParticipants <= data.capacity, {
   error: 'Minimum participants cannot exceed capacity.',
   path: ['minParticipants'],

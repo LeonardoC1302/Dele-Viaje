@@ -59,6 +59,7 @@ export async function POST(
       waypoints: validated.data.waypoints ?? [],
       custom_fields: validated.data.customFields ?? [],
       links: validated.data.links ?? [],
+      advisories: validated.data.advisories ?? [],
       capacity: validated.data.capacity,
       min_participants: validated.data.minParticipants ?? null,
       price_crc: validated.data.priceCrc,

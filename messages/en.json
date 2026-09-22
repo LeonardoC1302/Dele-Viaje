@@ -161,7 +161,11 @@
     "filterClear": "Clear filters",
     "dateLabel": "Date",
     "locationLabel": "Location",
-    "resultsCount": "{count, plural, one {# trip} other {# trips}}"
+    "resultsCount": "{count, plural, one {# trip} other {# trips}}",
+    "searchPlaceholder": "Search by name or place",
+    "searchLabel": "Search trips",
+    "searchSubmit": "Search",
+    "searchClear": "Clear"
   },
   "trips": {
     "visibilityLabel": "Trip type",
@@ -270,7 +274,17 @@
     "tab_documents": "Documents",
     "tab_qa": "Q&A",
     "tab_reviews": "Reviews",
-    "tab_people": "People"
+    "tab_people": "People",
+    "cancelTrip": "Cancel trip",
+    "cancelTripTitle": "Cancel this trip?",
+    "cancelTripBody": "The trip stays visible with your reason, and everyone who signed up is notified. Their spots are kept, so nothing is deleted. Use Delete instead if you want it gone entirely.",
+    "cancelReasonLabel": "Why is it cancelled?",
+    "cancelReasonPlaceholder": "e.g. the trail is closed after the storm — we will reschedule",
+    "cancelTripConfirm": "Cancel trip",
+    "cancelError": "Could not cancel the trip. Try again.",
+    "cancelledTitle": "This trip was cancelled",
+    "stampCancelled": "Cancelled",
+    "rateLimited": "Too many attempts. Wait a moment and try again."
   },
   "chat": {
     "title": "Trip chat",
@@ -302,7 +316,8 @@
     "waitlistPromoted": "You're off the waitlist for \"{trip}\" — your spot is confirmed!",
     "newMessage": "{actor} sent a message in \"{trip}\"",
     "newFollower": "{actor} started following you",
-    "planDirectInvite": "{actor} invited you to join \"{trip}\""
+    "planDirectInvite": "{actor} invited you to join \"{trip}\"",
+    "tripCancelled": "{trip} was cancelled"
   },
   "profile": {
     "follow": "Follow",
@@ -664,5 +679,29 @@
     "status_pending_stamp": "Pending",
     "status_suspended_stamp": "Suspended",
     "status_rejected_stamp": "Rejected"
+  },
+  "advisories": {
+    "blockTitle": "Before you go",
+    "editorLabel": "Advisories",
+    "editorHelper": "Flag anything someone should know before they commit — risks, permits, what to bring. Danger tags also show on the trip card.",
+    "notesLabel": "Details (optional)",
+    "notePlaceholder": "Add the specific detail, e.g. where on the trail",
+    "severity_danger": "Risk to safety",
+    "severity_caution": "Plan for it",
+    "severity_info": "Good to know",
+    "cardLabel": "Safety advisories",
+    "ackTitle": "This trip has safety advisories",
+    "ackConfirm": "I have read the advisories above",
+    "addDetail": "Add detail",
+    "removeDetail": "Remove detail",
+    "selectedLabel": "{count, plural, one {# selected} other {# selected}}"
+  },
+  "tripActions": {
+    "addToCalendar": "Add to calendar",
+    "shareWhatsapp": "Share",
+    "copyLink": "Copy link",
+    "copied": "Copied",
+    "directions": "Directions",
+    "shareMessage": "{title} — {date}, {place}"
   }
 }

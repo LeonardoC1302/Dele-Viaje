@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { redirect } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { TourTemplateForm } from '@/components/agencies/tour-template-form';
+import { mapAdvisoryTypes } from '@/lib/constants/advisories';
 
 export default async function NewTourTemplatePage({
   params,
@@ -35,9 +36,16 @@ export default async function NewTourTemplatePage({
     redirect({ href: `/agencies/${id}`, locale });
   }
 
+  const { data: advisoryTypeRows } = await supabase
+    .from('trip_advisory_types')
+    .select('code, label_es, label_en, icon, severity');
+
   return (
     <main className="mx-auto w-full max-w-[760px] px-4 py-8 sm:px-7 sm:py-10">
-      <TourTemplateForm agencyId={id} />
+      <TourTemplateForm
+        agencyId={id}
+        advisoryTypes={mapAdvisoryTypes(advisoryTypeRows ?? [])}
+      />
     </main>
   );
 }

@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createTripSchema } from '@/lib/validators/trip';
 import { createTourSchema } from '@/lib/validators/agency';
-import { saveTripCustomFields, saveTripLinks, saveTourExclusiveContent } from '@/lib/trip-extras';
+import { saveTripCustomFields,
+  saveTripAdvisories, saveTripLinks, saveTourExclusiveContent } from '@/lib/trip-extras';
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
@@ -119,6 +120,8 @@ export async function PATCH(
     }
     await supabase.from('trip_custom_fields').delete().eq('trip_id', id);
     await saveTripCustomFields(supabase, id, validated.data.customFields);
+    await supabase.from('trip_advisories').delete().eq('trip_id', id);
+    await saveTripAdvisories(supabase, id, validated.data.advisories);
     await supabase.from('trip_links').delete().eq('trip_id', id);
     await saveTripLinks(supabase, id, user.id, validated.data.links);
     await saveTourExclusiveContent(supabase, id, validated.data.exclusiveContent);
@@ -189,6 +192,8 @@ export async function PATCH(
   // — acceptable at plan-editing frequency, revisit if that proves wasteful.
   await supabase.from('trip_custom_fields').delete().eq('trip_id', id);
   await saveTripCustomFields(supabase, id, validated.data.customFields);
+  await supabase.from('trip_advisories').delete().eq('trip_id', id);
+  await saveTripAdvisories(supabase, id, validated.data.advisories);
 
   await supabase.from('trip_links').delete().eq('trip_id', id);
   await saveTripLinks(supabase, id, user.id, validated.data.links);

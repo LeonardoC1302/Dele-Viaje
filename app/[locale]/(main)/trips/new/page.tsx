@@ -1,6 +1,7 @@
 import { redirect } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { TripForm } from '@/components/trips/trip-form';
+import { mapAdvisoryTypes } from '@/lib/constants/advisories';
 
 export default async function NewTripPage({
   params,
@@ -27,9 +28,13 @@ export default async function NewTripPage({
     redirect({ href: '/onboarding', locale });
   }
 
+  const { data: advisoryTypes } = await supabase
+    .from('trip_advisory_types')
+    .select('code, label_es, label_en, icon, severity');
+
   return (
     <main className="mx-auto w-full max-w-[760px] px-4 py-8 sm:px-7 sm:py-10">
-      <TripForm />
+      <TripForm advisoryTypes={mapAdvisoryTypes(advisoryTypes ?? [])} />
     </main>
   );
 }

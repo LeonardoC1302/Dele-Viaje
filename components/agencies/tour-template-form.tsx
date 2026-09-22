@@ -14,6 +14,8 @@ import {
   type TripWaypointInput,
 } from '@/components/trips/trip-map-editor';
 import { CustomFieldsEditor, type TripCustomFieldInput } from '@/components/trips/custom-fields-editor';
+import { AdvisoryEditor, type AdvisoryInput } from '@/components/trips/advisory-editor';
+import type { AdvisoryType } from '@/lib/constants/advisories';
 import { LinksEditor, type TripLinkInput } from '@/components/trips/links-editor';
 import { CATEGORY_KEYS } from '@/lib/constants/categories';
 import { extractErrorMessage } from '@/lib/format-validation-error';
@@ -31,6 +33,8 @@ interface TourTemplateFormProps {
   mode?: 'create' | 'edit';
   templateId?: string;
   initialValues?: TemplateFormValues;
+  /** Seeded taxonomy from trip_advisory_types, fetched server-side. */
+  advisoryTypes?: AdvisoryType[];
 }
 
 // Same fields as TourForm minus start/end date — a template is reused
@@ -39,7 +43,13 @@ interface TourTemplateFormProps {
 // own label in the agency's list, kept separate from `title` (the tour's
 // public title) since an agency might want to tell apart, say, two
 // templates that both produce tours titled "Chirripó Sunrise Hike".
-export function TourTemplateForm({ agencyId, mode = 'create', templateId, initialValues }: TourTemplateFormProps) {
+export function TourTemplateForm({
+  agencyId,
+  mode = 'create',
+  templateId,
+  initialValues,
+  advisoryTypes = [],
+}: TourTemplateFormProps) {
   const t = useTranslations('agencies');
   const tTrips = useTranslations('trips');
   const tCategories = useTranslations('categories');
@@ -55,6 +65,7 @@ export function TourTemplateForm({ agencyId, mode = 'create', templateId, initia
   const [waypoints, setWaypoints] = useState<TripWaypointInput[]>(
     initialValues?.waypoints.map((wp) => ({ id: crypto.randomUUID(), ...wp })) ?? []
   );
+  const [advisories, setAdvisories] = useState<AdvisoryInput[]>(initialValues?.advisories ?? []);
   const [customFields, setCustomFields] = useState<TripCustomFieldInput[]>(
     initialValues?.customFields.map((f) => ({ id: crypto.randomUUID(), ...f })) ?? []
   );
@@ -96,6 +107,7 @@ export function TourTemplateForm({ agencyId, mode = 'create', templateId, initia
           waypoints: waypoints
             .filter((wp) => wp.lat != null && wp.lng != null && wp.label.trim())
             .map((wp) => ({ label: wp.label.trim(), lat: wp.lat, lng: wp.lng, kind: wp.kind })),
+          advisories: advisories.map((a) => ({ code: a.code, note: a.note.trim() || undefined })),
           customFields: customFields
             .filter((f) => f.label.trim() && f.value.trim())
             .map((f) => ({ label: f.label.trim(), value: f.value.trim() })),
@@ -197,6 +209,10 @@ export function TourTemplateForm({ agencyId, mode = 'create', templateId, initia
 
         <FormSection icon={Sliders} title={tTrips('sectionExtras')}>
           <CustomFieldsEditor fields={customFields} onChange={setCustomFields} />
+
+          {advisoryTypes.length > 0 && (
+            <AdvisoryEditor types={advisoryTypes} value={advisories} onChange={setAdvisories} />
+          )}
           <LinksEditor links={links} onChange={setLinks} />
         </FormSection>
 

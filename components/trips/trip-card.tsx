@@ -7,6 +7,8 @@ import {
   DEFAULT_CATEGORY_TAB,
 } from '@/lib/constants/category-visuals';
 import type { CategoryKey } from '@/lib/constants/categories';
+import { AdvisoryIcons } from '@/components/trips/advisory-block';
+import type { TripAdvisory } from '@/lib/constants/advisories';
 import { cn } from '@/lib/utils';
 
 export interface TripCardData {
@@ -15,6 +17,7 @@ export interface TripCardData {
   category: string;
   locationName: string;
   startAt: string;
+  endAt?: string | null;
   capacity: number | null;
   confirmedCount: number;
   lat?: number | null;
@@ -22,6 +25,8 @@ export interface TripCardData {
   visibility?: 'public' | 'private';
   type?: 'social' | 'tour';
   priceCrc?: number | null;
+  /** Only danger-level entries are rendered here — see AdvisoryIcons. */
+  advisories?: Pick<TripAdvisory, 'code' | 'label' | 'icon' | 'severity'>[];
 }
 
 /**
@@ -39,19 +44,32 @@ export function TripCard({ trip }: { trip: TripCardData }) {
   const t = useTranslations('feed');
   const tCategories = useTranslations('categories');
   const tTrips = useTranslations('trips');
+  const tAdvisories = useTranslations('advisories');
   const locale = useLocale();
 
   const spotsLeft = trip.capacity != null ? trip.capacity - trip.confirmedCount : null;
   const isFull = spotsLeft != null && spotsLeft <= 0;
   const isPast = new Date(trip.startAt) <= new Date();
 
-  const formattedDate = new Intl.DateTimeFormat(locale, {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    hour: 'numeric',
-    minute: '2-digit',
-  }).format(new Date(trip.startAt));
+  const start = new Date(trip.startAt);
+  const end = trip.endAt ? new Date(trip.endAt) : null;
+
+  // A multi-day trip showed only its start date, so a three-day trek was
+  // indistinguishable from a morning hike. When the trip spans calendar
+  // days, show the span and drop the time — the range is the useful fact
+  // at card scale; the exact meeting time belongs on the detail page.
+  const spansDays =
+    end != null && new Date(start).toDateString() !== new Date(end).toDateString();
+
+  const formattedDate = spansDays
+    ? new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' }).formatRange(start, end!)
+    : new Intl.DateTimeFormat(locale, {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        hour: 'numeric',
+        minute: '2-digit',
+      }).format(start);
 
   const currency = new Intl.NumberFormat(locale, {
     style: 'currency',
@@ -133,11 +151,18 @@ export function TripCard({ trip }: { trip: TripCardData }) {
                   : t('spotsLeft', { count: spotsLeft })}
             </p>
 
-            {trip.type === 'tour' && trip.priceCrc != null && (
-              <p className="tnum font-display text-sm font-bold text-sand-900 dark:text-sand-50">
-                {currency.format(trip.priceCrc)}
-              </p>
-            )}
+            <span className="flex items-center gap-2.5">
+              {/* Safety advisories, before you click in. */}
+              {trip.advisories && trip.advisories.length > 0 && (
+                <AdvisoryIcons advisories={trip.advisories} label={tAdvisories('cardLabel')} />
+              )}
+
+              {trip.type === 'tour' && trip.priceCrc != null && (
+                <span className="tnum font-display text-sm font-bold text-sand-900 dark:text-sand-50">
+                  {currency.format(trip.priceCrc)}
+                </span>
+              )}
+            </span>
           </div>
         </div>
       </article>

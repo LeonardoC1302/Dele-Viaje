@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { redirect } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { TripForm, type TripFormInitialValues } from '@/components/trips/trip-form';
+import { mapAdvisoryTypes } from '@/lib/constants/advisories';
 
 export default async function EditTripPage({
   params,
@@ -34,7 +35,8 @@ export default async function EditTripPage({
     redirect({ href: `/trips/${id}`, locale });
   }
 
-  const [waypointsResult, customFieldsResult, linksResult] = await Promise.all([
+  const [waypointsResult, customFieldsResult, linksResult, advisoryResult, advisoryTypeResult] =
+    await Promise.all([
     supabase
       .from('trip_waypoints')
       .select('label, lat, lng, kind')
@@ -50,6 +52,8 @@ export default async function EditTripPage({
       .select('url, label')
       .eq('trip_id', id)
       .order('sort', { ascending: true }),
+    supabase.from('trip_advisories').select('code, note').eq('trip_id', id),
+    supabase.from('trip_advisory_types').select('code, label_es, label_en, icon, severity'),
   ]);
 
   const initialValues: TripFormInitialValues = {
@@ -62,6 +66,7 @@ export default async function EditTripPage({
     waypoints: (waypointsResult.data ?? []) as TripFormInitialValues['waypoints'],
     customFields: customFieldsResult.data ?? [],
     links: (linksResult.data ?? []).map((l) => ({ url: l.url, label: l.label ?? '' })),
+    advisories: (advisoryResult.data ?? []).map((a) => ({ code: a.code, note: a.note ?? '' })),
     startAt: trip.start_at,
     endAt: trip.end_at,
     capacity: trip.capacity,
@@ -69,7 +74,12 @@ export default async function EditTripPage({
 
   return (
     <main className="mx-auto w-full max-w-[760px] px-4 py-8 sm:px-7 sm:py-10">
-      <TripForm mode="edit" tripId={trip.id} initialValues={initialValues} />
+      <TripForm
+        mode="edit"
+        tripId={trip.id}
+        initialValues={initialValues}
+        advisoryTypes={mapAdvisoryTypes(advisoryTypeResult.data ?? [])}
+      />
     </main>
   );
 }

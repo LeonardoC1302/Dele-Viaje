@@ -14,14 +14,15 @@ export type NotificationType =
   | 'waitlist_promoted'
   | 'new_message'
   | 'new_follower'
-  | 'plan_direct_invite';
+  | 'plan_direct_invite'
+  | 'trip_cancelled';
 
 export interface NotificationData {
   id: string;
   type: NotificationType;
   tripId: string | null;
   actorId: string | null;
-  data: { preview?: string; token?: string; tripTitle?: string };
+  data: { preview?: string; token?: string; tripTitle?: string; reason?: string };
   readAt: string | null;
   createdAt: string;
 }
@@ -204,6 +205,8 @@ export function NotificationBell({
         return t('newMessage', { actor: actorName ?? t('someone'), trip: tripTitle ?? '' });
       case 'new_follower':
         return t('newFollower', { actor: actorName ?? t('someone') });
+      case 'trip_cancelled':
+        return t('tripCancelled', { trip: tripTitle ?? '' });
       case 'plan_direct_invite':
         return t('planDirectInvite', {
           actor: actorName ?? t('someone'),

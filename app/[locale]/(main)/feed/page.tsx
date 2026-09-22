@@ -1,4 +1,4 @@
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { SealCheck, Plus } from '@phosphor-icons/react/dist/ssr';
 import { Link } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/server';
@@ -11,6 +11,9 @@ import { FeedFilters } from '@/components/trips/feed-filters';
 import { CaseHeader, PageBody } from '@/components/cordillera/folder';
 import { chipClasses } from '@/components/ui/chip';
 import { buttonVariants } from '@/components/ui/button';
+import { resolveAdvisories, mapAdvisoryTypes } from '@/lib/constants/advisories';
+import { sanitizeSearchTerm } from '@/lib/search';
+import { FeedSearch } from '@/components/trips/feed-search';
 import { boundingBox, haversineKm } from '@/lib/geo';
 
 const NEAR_ME_RADIUS_KM = 100;
@@ -19,6 +22,7 @@ export default async function FeedPage({
   searchParams,
 }: {
   searchParams: Promise<{
+    q?: string;
     category?: string;
     verified?: string;
     lat?: string;
@@ -28,10 +32,11 @@ export default async function FeedPage({
     dateTo?: string;
   }>;
 }) {
-  const { category, verified, lat, lng, maxPrice, dateFrom, dateTo } = await searchParams;
+  const { q, category, verified, lat, lng, maxPrice, dateFrom, dateTo } = await searchParams;
   const t = await getTranslations('feed');
   const tCategories = await getTranslations('categories');
   const tNav = await getTranslations('mainNav');
+  const locale = await getLocale();
   const supabase = await createClient();
 
   const showVerifiedOnly = verified === '1';
@@ -63,7 +68,7 @@ export default async function FeedPage({
   let query = supabase
     .from('trips')
     .select(
-      'id, title, category, location_name, start_at, capacity, confirmed_count, lat, lng, type, price_crc'
+      'id, title, category, location_name, start_at, end_at, capacity, confirmed_count, lat, lng, type, price_crc'
     )
     .eq('status', 'published')
     .eq('visibility', 'public')
@@ -85,6 +90,14 @@ export default async function FeedPage({
 
   if (activeCategory) {
     query = query.eq('category', activeCategory);
+  }
+
+  // Title OR location, so "Chirripó" finds both a trip named after the
+  // peak and one meeting at its ranger station. The term is sanitized
+  // because it lands inside PostgREST filter syntax — see lib/search.ts.
+  const searchTerm = q ? sanitizeSearchTerm(q) : null;
+  if (searchTerm) {
+    query = query.or(`title.ilike.%${searchTerm}%,location_name.ilike.%${searchTerm}%`);
   }
 
   // No PostGIS in this project — a bounding box is a cheap SQL
@@ -140,6 +153,7 @@ export default async function FeedPage({
   }
 
   const hasActiveFilters = !!(
+    searchTerm ||
     activeCategory ||
     showVerifiedOnly ||
     nearMeActive ||
@@ -148,18 +162,43 @@ export default async function FeedPage({
     upperBound
   );
 
+  // Advisories for every trip on this page in two queries rather than one
+  // per card: the type table is tiny and public, so it's fetched once and
+  // joined in app code (see resolveAdvisories).
+  const visibleIds = tripRows.map((trip) => trip.id);
+  const [advisoryRowsResult, advisoryTypesResult] = await Promise.all([
+    visibleIds.length > 0
+      ? supabase.from('trip_advisories').select('trip_id, code, note').in('trip_id', visibleIds)
+      : Promise.resolve({ data: [] }),
+    supabase.from('trip_advisory_types').select('code, label_es, label_en, icon, severity'),
+  ]);
+
+  const advisoryTypes = mapAdvisoryTypes(advisoryTypesResult.data ?? []);
+  const advisoriesByTrip = new Map<string, { code: string; note: string | null }[]>();
+  for (const row of (advisoryRowsResult.data ?? []) as {
+    trip_id: string;
+    code: string;
+    note: string | null;
+  }[]) {
+    const list = advisoriesByTrip.get(row.trip_id) ?? [];
+    list.push({ code: row.code, note: row.note });
+    advisoriesByTrip.set(row.trip_id, list);
+  }
+
   const tripCards: TripCardData[] = tripRows.map((trip) => ({
     id: trip.id,
     title: trip.title,
     category: trip.category,
     locationName: trip.location_name,
     startAt: trip.start_at,
+    endAt: trip.end_at,
     capacity: trip.capacity,
     confirmedCount: trip.confirmed_count,
     lat: trip.lat,
     lng: trip.lng,
     type: trip.type,
     priceCrc: trip.price_crc,
+    advisories: resolveAdvisories(advisoriesByTrip.get(trip.id) ?? [], advisoryTypes, locale),
   }));
 
   return (
@@ -180,6 +219,17 @@ export default async function FeedPage({
             {tNav('createTrip')}
           </Link>
         }
+      />
+
+      <FeedSearch
+        q={q}
+        category={activeCategory}
+        verified={showVerifiedOnly}
+        lat={lat}
+        lng={lng}
+        maxPrice={maxPrice}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
       />
 
       <div className="flex flex-wrap gap-2">

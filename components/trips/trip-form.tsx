@@ -10,6 +10,8 @@ import { Select } from '@/components/ui/select';
 import { DateTimeField } from '@/components/ui/date-time-field';
 import { Button } from '@/components/ui/button';
 import { FormSection } from '@/components/ui/form-section';
+import { AdvisoryEditor, type AdvisoryInput } from '@/components/trips/advisory-editor';
+import type { AdvisoryType } from '@/lib/constants/advisories';
 import {
   TripMapEditor,
   type TripWaypointInput,
@@ -33,6 +35,7 @@ export interface TripFormInitialValues {
   waypoints: { label: string; lat: number; lng: number; kind: TripWaypointKind }[];
   customFields: { label: string; value: string }[];
   links: { url: string; label: string }[];
+  advisories: { code: string; note: string }[];
   startAt: string;
   endAt: string;
   capacity: number | null;
@@ -42,9 +45,16 @@ interface TripFormProps {
   mode?: 'create' | 'edit';
   tripId?: string;
   initialValues?: TripFormInitialValues;
+  /** Seeded taxonomy, fetched server-side so an admin can extend it without a deploy. */
+  advisoryTypes?: AdvisoryType[];
 }
 
-export function TripForm({ mode = 'create', tripId, initialValues }: TripFormProps) {
+export function TripForm({
+  mode = 'create',
+  tripId,
+  initialValues,
+  advisoryTypes = [],
+}: TripFormProps) {
   const t = useTranslations('trips');
   const tCategories = useTranslations('categories');
   const router = useRouter();
@@ -61,6 +71,9 @@ export function TripForm({ mode = 'create', tripId, initialValues }: TripFormPro
   );
   const [customFields, setCustomFields] = useState<TripCustomFieldInput[]>(
     initialValues?.customFields.map((f) => ({ id: crypto.randomUUID(), ...f })) ?? []
+  );
+  const [advisories, setAdvisories] = useState<AdvisoryInput[]>(
+    initialValues?.advisories ?? []
   );
   const [links, setLinks] = useState<TripLinkInput[]>(
     initialValues?.links.map((l) => ({ id: crypto.randomUUID(), ...l })) ?? []
@@ -117,6 +130,10 @@ export function TripForm({ mode = 'create', tripId, initialValues }: TripFormPro
         customFields: customFields
           .filter((f) => f.label.trim() && f.value.trim())
           .map((f) => ({ label: f.label.trim(), value: f.value.trim() })),
+        advisories: advisories.map((a) => ({
+          code: a.code,
+          note: a.note.trim() || undefined,
+        })),
         links: links
           .filter((l) => l.url.trim())
           .map((l) => ({ url: l.url.trim(), label: l.label.trim() || undefined })),
@@ -255,6 +272,14 @@ export function TripForm({ mode = 'create', tripId, initialValues }: TripFormPro
 
         <FormSection icon={Sliders} title={t('sectionExtras')}>
           <CustomFieldsEditor fields={customFields} onChange={setCustomFields} />
+
+          {advisoryTypes.length > 0 && (
+            <AdvisoryEditor
+              types={advisoryTypes}
+              value={advisories}
+              onChange={setAdvisories}
+            />
+          )}
           <LinksEditor links={links} onChange={setLinks} />
         </FormSection>
 

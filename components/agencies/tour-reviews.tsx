@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Star, Trash } from '@phosphor-icons/react';
 import { PanelHeading } from '@/components/ui/panel-heading';
 import { createClient } from '@/lib/supabase/client';
+import { isRateLimited } from '@/lib/rate-limit';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/field';
 import { cn } from '@/lib/utils';
@@ -46,6 +47,7 @@ export function Stars({ value, size = 14 }: { value: number; size?: number }) {
 
 export function TourReviews({ tripId, currentUserId, isHostTeam, canReview, initialReviews }: TourReviewsProps) {
   const t = useTranslations('agencies');
+  const tTrips = useTranslations('trips');
   const locale = useLocale();
   const [supabase] = useState(() => createClient());
   const [reviews, setReviews] = useState(initialReviews);
@@ -75,7 +77,7 @@ export function TourReviews({ tripId, currentUserId, isHostTeam, canReview, init
     setSubmitting(false);
 
     if (insertError || !data) {
-      setError(t('reviewSubmitError'));
+      setError(isRateLimited(insertError) ? tTrips('rateLimited') : t('reviewSubmitError'));
       return;
     }
 

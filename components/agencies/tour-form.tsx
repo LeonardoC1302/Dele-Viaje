@@ -15,6 +15,8 @@ import {
   type TripWaypointInput,
 } from '@/components/trips/trip-map-editor';
 import { CustomFieldsEditor, type TripCustomFieldInput } from '@/components/trips/custom-fields-editor';
+import { AdvisoryEditor, type AdvisoryInput } from '@/components/trips/advisory-editor';
+import type { AdvisoryType } from '@/lib/constants/advisories';
 import { LinksEditor, type TripLinkInput } from '@/components/trips/links-editor';
 import { CATEGORY_KEYS } from '@/lib/constants/categories';
 import { extractErrorMessage } from '@/lib/format-validation-error';
@@ -30,6 +32,7 @@ export interface TourFormInitialValues {
   lng: number | null;
   waypoints: { label: string; lat: number; lng: number; kind: TripWaypointInput['kind'] }[];
   customFields: { label: string; value: string }[];
+  advisories: { code: string; note: string }[];
   links: { url: string; label: string }[];
   startAt: string;
   endAt: string;
@@ -49,6 +52,8 @@ interface TourFormProps {
   tripId?: string;
   initialValues?: TourFormInitialValues;
   templateValues?: TourTemplateValues;
+  /** Seeded taxonomy from trip_advisory_types, fetched server-side. */
+  advisoryTypes?: AdvisoryType[];
 }
 
 // A dedicated form rather than TripForm + a "tour mode" — tours submit to
@@ -61,7 +66,14 @@ interface TourFormProps {
 // the generic PATCH /api/trips/[id] (which branches on trip.type) rather
 // than a second agency-scoped route — no agency-specific logic is needed
 // once you're already allowed to touch the row.
-export function TourForm({ agencyId, mode = 'create', tripId, initialValues, templateValues }: TourFormProps) {
+export function TourForm({
+  agencyId,
+  mode = 'create',
+  tripId,
+  initialValues,
+  templateValues,
+  advisoryTypes = [],
+}: TourFormProps) {
   const t = useTranslations('agencies');
   const tTrips = useTranslations('trips');
   const tCategories = useTranslations('categories');
@@ -84,6 +96,7 @@ export function TourForm({ agencyId, mode = 'create', tripId, initialValues, tem
   const [customFields, setCustomFields] = useState<TripCustomFieldInput[]>(
     prefill?.customFields.map((f) => ({ id: crypto.randomUUID(), ...f })) ?? []
   );
+  const [advisories, setAdvisories] = useState<AdvisoryInput[]>(prefill?.advisories ?? []);
   const [links, setLinks] = useState<TripLinkInput[]>(
     prefill?.links.map((l) => ({ id: crypto.randomUUID(), ...l })) ?? []
   );
@@ -136,6 +149,10 @@ export function TourForm({ agencyId, mode = 'create', tripId, initialValues, tem
         customFields: customFields
           .filter((f) => f.label.trim() && f.value.trim())
           .map((f) => ({ label: f.label.trim(), value: f.value.trim() })),
+        advisories: advisories.map((a) => ({
+          code: a.code,
+          note: a.note.trim() || undefined,
+        })),
         links: links
           .filter((l) => l.url.trim())
           .map((l) => ({ url: l.url.trim(), label: l.label.trim() || undefined })),
@@ -234,6 +251,10 @@ export function TourForm({ agencyId, mode = 'create', tripId, initialValues, tem
 
         <FormSection icon={Sliders} title={tTrips('sectionExtras')}>
           <CustomFieldsEditor fields={customFields} onChange={setCustomFields} />
+
+          {advisoryTypes.length > 0 && (
+            <AdvisoryEditor types={advisoryTypes} value={advisories} onChange={setAdvisories} />
+          )}
           <LinksEditor links={links} onChange={setLinks} />
         </FormSection>
 

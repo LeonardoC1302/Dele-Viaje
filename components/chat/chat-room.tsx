@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Trash, PencilSimple, Check, X } from '@phosphor-icons/react';
 import { Link } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { isRateLimited } from '@/lib/rate-limit';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ReportButton } from '@/components/reports/report-button';
@@ -46,6 +47,7 @@ export function ChatRoom({
   profiles,
 }: ChatRoomProps) {
   const t = useTranslations('chat');
+  const tTrips = useTranslations('trips');
   const locale = useLocale();
   // One client for the component's lifetime. A fresh client per call (as
   // this previously did) races the realtime websocket against the async
@@ -185,8 +187,14 @@ export function ChatRoom({
       .single();
 
     if (insertError) {
-      console.error('Failed to send message:', insertError);
-      setError(`${t('sendError')} (${insertError.message})`);
+      // The chat limiter is a database trigger (migration 0034), not a
+      // route handler, because this insert never passes through one.
+      if (isRateLimited(insertError)) {
+        setError(tTrips('rateLimited'));
+      } else {
+        console.error('Failed to send message:', insertError);
+        setError(`${t('sendError')} (${insertError.message})`);
+      }
     } else {
       // Optimistic append so the sender sees it immediately; the INSERT
       // realtime handler dedupes by id if the event also arrives.

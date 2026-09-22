@@ -23,6 +23,8 @@ interface JoinTripButtonProps {
   isFull: boolean;
   hasStarted: boolean;
   waitlistPosition?: number | null;
+  /** True when the trip carries at least one danger-level advisory. */
+  requiresAck?: boolean;
 }
 
 export function JoinTripButton({
@@ -33,13 +35,16 @@ export function JoinTripButton({
   isFull,
   hasStarted,
   waitlistPosition,
+  requiresAck = false,
 }: JoinTripButtonProps) {
   const t = useTranslations('trips');
+  const tAdvisories = useTranslations('advisories');
   const router = useRouter();
   const [status, setStatus] = useState<AttendeeStatus>(initialStatus);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [acknowledged, setAcknowledged] = useState(false);
 
   const handleJoin = async () => {
     setLoading(true);
@@ -56,6 +61,14 @@ export function JoinTripButton({
       return;
     }
     const body = await res.json();
+
+    if (requiresAck) {
+      // Fire-and-forget: the join succeeded and must not be rolled back
+      // if stamping the acknowledgement fails. ack_trip_advisories() is
+      // idempotent, so a retry on the next join attempt is harmless.
+      await fetch(`/api/trips/${tripId}/ack-advisories`, { method: 'POST' }).catch(() => {});
+    }
+
     setStatus(body.status);
     setLoading(false);
     router.refresh();
@@ -167,11 +180,36 @@ export function JoinTripButton({
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <Button size="md" isLoading={loading} onClick={handleJoin}>
+    <div className="flex flex-col items-start gap-2.5">
+      {/* When the host declared a danger-level advisory, joining asks for
+          an explicit confirmation first. The checkbox is a UX gate, not a
+          legal waiver — but the timestamp it records (attendees.
+          advisories_ack_at, via ack_trip_advisories()) is real evidence
+          the warning was shown and confirmed, which is what an agency
+          needs when a buyer says nobody told them. */}
+      {requiresAck && (
+        <label className="flex max-w-[44ch] cursor-pointer items-start gap-2.5 text-sm text-sand-700 dark:text-sand-300">
+          <input
+            type="checkbox"
+            checked={acknowledged}
+            onChange={(e) => setAcknowledged(e.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 rounded-sm border-sand-400 accent-forest-600 dark:border-sand-600"
+          />
+          <span className="leading-snug">{tAdvisories('ackConfirm')}</span>
+        </label>
+      )}
+
+      <Button
+        size="md"
+        variant="primary"
+        isLoading={loading}
+        disabled={requiresAck && !acknowledged}
+        onClick={handleJoin}
+      >
         {isFull ? t('joinWaitlist') : t('join')}
       </Button>
-      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+
+      {error && <p className="text-sm text-red-700 dark:text-red-400">{error}</p>}
     </div>
   );
 }

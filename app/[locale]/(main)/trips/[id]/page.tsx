@@ -41,6 +41,11 @@ import {
   PageBody,
   type FolderTab,
 } from '@/components/cordillera/folder';
+import { AdvisoryBlock } from '@/components/trips/advisory-block';
+import { TripActions } from '@/components/trips/trip-actions';
+import { CancelTripButton } from '@/components/trips/cancel-trip-button';
+import { CancelledNotice } from '@/components/trips/cancelled-notice';
+import { resolveAdvisories, mapAdvisoryTypes } from '@/lib/constants/advisories';
 
 export default async function TripDetailPage({
   params,
@@ -60,7 +65,7 @@ export default async function TripDetailPage({
   const { data: trip } = await supabase
     .from('trips')
     .select(
-      'id, title, description, category, location_name, lat, lng, start_at, end_at, capacity, confirmed_count, owner_id, visibility, type, agency_id, price_crc, min_participants, tour_group_id'
+      'id, title, description, category, location_name, lat, lng, start_at, end_at, capacity, confirmed_count, owner_id, visibility, type, agency_id, price_crc, min_participants, tour_group_id, status, cancellation_reason'
     )
     .eq('id', id)
     .single();
@@ -108,6 +113,13 @@ export default async function TripDetailPage({
     .select('id, day_index, start_time, label, description, photo_url, icon')
     .eq('trip_id', trip.id)
     .order('day_index', { ascending: true });
+  const advisoryQuery = supabase
+    .from('trip_advisories')
+    .select('code, note')
+    .eq('trip_id', trip.id);
+  const advisoryTypeQuery = supabase
+    .from('trip_advisory_types')
+    .select('code, label_es, label_en, icon, severity');
 
   const [
     ownerResult,
@@ -117,6 +129,8 @@ export default async function TripDetailPage({
     customFieldsResult,
     linksResult,
     itineraryResult,
+    advisoryResult,
+    advisoryTypeResult,
   ] = await Promise.all([
     ownerQuery,
     attendeeQuery,
@@ -125,7 +139,16 @@ export default async function TripDetailPage({
     customFieldsQuery,
     linksQuery,
     itineraryQuery,
+    advisoryQuery,
+    advisoryTypeQuery,
   ]);
+
+  const advisories = resolveAdvisories(
+    advisoryResult.data ?? [],
+    mapAdvisoryTypes(advisoryTypeResult.data ?? []),
+    locale
+  );
+  const hasDangerAdvisory = advisories.some((a) => a.severity === 'danger');
 
   const owner = ownerResult.data as { display_name: string | null } | null;
   const waypoints = waypointsResult.data ?? [];
@@ -245,6 +268,7 @@ export default async function TripDetailPage({
   const isOwner = user?.id === trip.owner_id;
   const canOpenChat = isOwner || attendeeStatus !== null;
   const isPrivate = trip.visibility === 'private';
+  const isCancelled = trip.status === 'cancelled';
   const isTour = trip.type === 'tour';
 
   let isHostTeam = isOwner;
@@ -496,7 +520,9 @@ export default async function TripDetailPage({
     ? `/agencies/${trip.agency_id}/tours/${trip.id}/edit`
     : `/trips/${trip.id}/edit`;
 
-  const stamp = isPrivate ? (
+  const stamp = isCancelled ? (
+    <StatusStamp tone="void">{t('stampCancelled')}</StatusStamp>
+  ) : isPrivate ? (
     <StatusStamp tone="inert">{t('privatePlanBadge')}</StatusStamp>
   ) : isFull ? (
     <StatusStamp tone="hold">{tFeed('full')}</StatusStamp>
@@ -538,13 +564,14 @@ export default async function TripDetailPage({
                   <PencilSimple size={15} />
                   {t('editTrip')}
                 </Link>
+                {!isCancelled && <CancelTripButton tripId={trip.id} />}
                 <DeleteTripButton
                   tripId={trip.id}
                   redirectTo={isTour ? `/agencies/${trip.agency_id}/panel` : '/my-trips'}
                 />
               </div>
             ) : (
-              !isPrivate && (
+              !isPrivate && !isCancelled && (
                 <JoinTripButton
                   tripId={trip.id}
                   initialStatus={attendeeStatus}
@@ -553,6 +580,7 @@ export default async function TripDetailPage({
                   isFull={isFull}
                   hasStarted={hasStarted}
                   waitlistPosition={myWaitlistPosition}
+                  requiresAck={hasDangerAdvisory}
                 />
               )
             )
@@ -634,6 +662,13 @@ export default async function TripDetailPage({
                   </section>
                 )}
 
+                {/* Above the description on purpose: a snake warning
+                    underneath 400 words of prose is a warning nobody
+                    read. */}
+                {isCancelled && <CancelledNotice reason={trip.cancellation_reason} />}
+
+                <AdvisoryBlock advisories={advisories} />
+
                 <MarkdownContent content={trip.description} />
 
                 <CustomFieldsDisplay fields={customFields} />
@@ -671,21 +706,35 @@ export default async function TripDetailPage({
                     the case header. Reporting sits here, next to the
                     content it would be reporting, rather than in the
                     header slot that belongs to the call to action. */}
-                <div className="flex flex-wrap items-center gap-3 border-t border-sand-200 pt-6 dark:border-sand-800">
-                  {(canOpenChat || isPrivate) && (
-                    <Link
-                      href={`/trips/${trip.id}/chat`}
-                      className={buttonVariants({ variant: 'outline' })}
-                    >
-                      <ChatCircleText size={17} />
-                      {t('openChat')}
-                    </Link>
-                  )}
-                  {user && !isHostTeam && (
-                    <div className="ml-auto">
-                      <ReportButton targetType="trip" targetId={trip.id} />
-                    </div>
-                  )}
+                <div className="flex flex-col gap-4 border-t border-sand-200 pt-6 dark:border-sand-800">
+                  <div className="flex flex-wrap items-center gap-3">
+                    {(canOpenChat || isPrivate) && (
+                      <Link
+                        href={`/trips/${trip.id}/chat`}
+                        className={buttonVariants({ variant: 'outline' })}
+                      >
+                        <ChatCircleText size={17} />
+                        {t('openChat')}
+                      </Link>
+                    )}
+                    {user && !isHostTeam && (
+                      <div className="ml-auto">
+                        <ReportButton targetType="trip" targetId={trip.id} />
+                      </div>
+                    )}
+                  </div>
+
+                  <TripActions
+                    tripId={trip.id}
+                    title={trip.title}
+                    description={trip.description}
+                    locationName={trip.location_name}
+                    startAt={trip.start_at}
+                    endAt={trip.end_at}
+                    lat={trip.lat}
+                    lng={trip.lng}
+                    isPrivate={isPrivate}
+                  />
                 </div>
               </div>
             )}

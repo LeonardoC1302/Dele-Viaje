@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { redirect } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { TourForm, type TourFormInitialValues } from '@/components/agencies/tour-form';
+import { mapAdvisoryTypes } from '@/lib/constants/advisories';
 
 export default async function EditTourPage({
   params,
@@ -43,7 +44,14 @@ export default async function EditTourPage({
     notFound();
   }
 
-  const [waypointsResult, customFieldsResult, linksResult, exclusiveContentResult] = await Promise.all([
+  const [
+    waypointsResult,
+    customFieldsResult,
+    linksResult,
+    exclusiveContentResult,
+    advisoryResult,
+    advisoryTypeResult,
+  ] = await Promise.all([
     supabase
       .from('trip_waypoints')
       .select('label, lat, lng, kind')
@@ -60,6 +68,8 @@ export default async function EditTourPage({
       .eq('trip_id', tripId)
       .order('sort', { ascending: true }),
     supabase.from('tour_exclusive_content').select('content').eq('trip_id', tripId).maybeSingle(),
+    supabase.from('trip_advisories').select('code, note').eq('trip_id', tripId),
+    supabase.from('trip_advisory_types').select('code, label_es, label_en, icon, severity'),
   ]);
 
   const initialValues: TourFormInitialValues = {
@@ -70,6 +80,7 @@ export default async function EditTourPage({
     lat: trip.lat,
     lng: trip.lng,
     waypoints: (waypointsResult.data ?? []) as TourFormInitialValues['waypoints'],
+          advisories: (advisoryResult.data ?? []).map((a) => ({ code: a.code, note: a.note ?? '' })),
     customFields: customFieldsResult.data ?? [],
     links: (linksResult.data ?? []).map((l) => ({ url: l.url, label: l.label ?? '' })),
     startAt: trip.start_at,

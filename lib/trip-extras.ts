@@ -27,6 +27,38 @@ export async function saveTripCustomFields(
   }
 }
 
+/**
+ * Saves the trip's advisory selections.
+ *
+ * De-duplicates by code before inserting: `trip_advisories` is keyed on
+ * (trip_id, code), so a client that somehow sent the same code twice
+ * would fail the whole insert rather than just ignoring the duplicate.
+ * An empty note is stored as NULL, not '', because the column's check
+ * constraint requires 1..200 characters when present.
+ */
+export async function saveTripAdvisories(
+  supabase: SupabaseServerClient,
+  tripId: string,
+  advisories: CreateTripInput['advisories']
+) {
+  if (!advisories || advisories.length === 0) return;
+
+  const byCode = new Map(advisories.map((a) => [a.code, a]));
+  const rows = [...byCode.values()].map((a) => ({
+    trip_id: tripId,
+    code: a.code,
+    note: a.note && a.note.trim() ? a.note.trim() : null,
+  }));
+
+  const { error } = await supabase.from('trip_advisories').insert(rows);
+  if (error) {
+    // Logged, not thrown, matching the other extras helpers: the trip
+    // itself already saved, and failing the whole request here would
+    // leave the caller thinking nothing was created.
+    console.error('Failed to save trip advisories:', error);
+  }
+}
+
 export async function saveTripLinks(
   supabase: SupabaseServerClient,
   tripId: string,
