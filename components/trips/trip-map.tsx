@@ -1,23 +1,13 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import * as maplibregl from 'maplibre-gl';
+// Re-exported from lib/maplibre-worker so the WORKER_URL fix is applied
+// before any map is constructed — see that module for why it's needed.
+import { maplibregl } from '@/lib/maplibre-worker';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { cordilleraMapStyle } from '@/lib/map-style';
 import { useColorScheme } from '@/lib/use-color-scheme';
 import { useRouter } from '@/i18n/navigation';
-
-// Turbopack (Next 16's dev bundler) doesn't yet resolve maplibre-gl's
-// `new Worker(new URL(...), import.meta.url)` tile-parsing worker — the
-// request falls through to Next's catch-all route and comes back as an
-// HTML 404 instead of the worker script ("Failed to load module script:
-// ... non-JavaScript MIME type of text/html"), so the map mounts (canvas +
-// controls render) but silently never paints any tiles. Pointing at the
-// matching version's worker bundle on a CDN sidesteps the bundler
-// entirely. Re-check whether this is still needed next time Turbopack or
-// maplibre-gl is upgraded.
-maplibregl.config.WORKER_URL =
-  'https://cdn.jsdelivr.net/npm/maplibre-gl@6.10.0/dist/maplibre-gl-worker.mjs';
 
 export interface TripMapPin {
   id: string;

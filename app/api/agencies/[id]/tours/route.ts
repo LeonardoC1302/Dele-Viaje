@@ -2,7 +2,12 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createTourSchema } from '@/lib/validators/agency';
 import { geocodeLocation } from '@/lib/geocode';
-import { saveTripCustomFields, saveTripLinks, saveTourExclusiveContent } from '@/lib/trip-extras';
+import {
+  saveTripCustomFields,
+  saveTripRoutes,
+  saveTripLinks,
+  saveTourExclusiveContent,
+} from '@/lib/trip-extras';
 
 // Tours are created as `status: 'draft'` — unlike a social trip (which
 // publishes immediately), an agency needs a separate "Publish" action
@@ -106,6 +111,7 @@ export async function POST(
   }
 
   await saveTripCustomFields(supabase, data.id, validated.data.customFields);
+  await saveTripRoutes(supabase, data.id, user.id, validated.data.routes);
   await saveTripLinks(supabase, data.id, user.id, validated.data.links);
   await saveTourExclusiveContent(supabase, data.id, validated.data.exclusiveContent);
 
@@ -151,6 +157,7 @@ export async function POST(
         );
       }
       await saveTripCustomFields(supabase, sibling.id, validated.data.customFields);
+      await saveTripRoutes(supabase, sibling.id, user.id, validated.data.routes);
       await saveTripLinks(supabase, sibling.id, user.id, validated.data.links);
       await saveTourExclusiveContent(supabase, sibling.id, validated.data.exclusiveContent);
     }

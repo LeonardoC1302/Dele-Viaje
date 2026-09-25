@@ -67,7 +67,11 @@ export function TourTemplateForm({
   );
   const [advisories, setAdvisories] = useState<AdvisoryInput[]>(initialValues?.advisories ?? []);
   const [customFields, setCustomFields] = useState<TripCustomFieldInput[]>(
-    initialValues?.customFields.map((f) => ({ id: crypto.randomUUID(), ...f })) ?? []
+    initialValues?.customFields.map((f) => ({
+      id: crypto.randomUUID(),
+      ...f,
+      icon: f.icon ?? null,
+    })) ?? []
   );
   const [links, setLinks] = useState<TripLinkInput[]>(
     initialValues?.links.map((l) => ({ id: crypto.randomUUID(), ...l })) ?? []
@@ -110,7 +114,7 @@ export function TourTemplateForm({
           advisories: advisories.map((a) => ({ code: a.code, note: a.note.trim() || undefined })),
           customFields: customFields
             .filter((f) => f.label.trim() && f.value.trim())
-            .map((f) => ({ label: f.label.trim(), value: f.value.trim() })),
+            .map((f) => ({ label: f.label.trim(), value: f.value.trim(), icon: f.icon })),
           links: links
             .filter((l) => l.url.trim())
             .map((l) => ({ url: l.url.trim(), label: l.label.trim() || undefined })),

@@ -2,7 +2,8 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import * as maplibregl from 'maplibre-gl';
+// See lib/maplibre-worker for why maplibre is imported through it.
+import { maplibregl } from '@/lib/maplibre-worker';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { cordilleraMapStyle } from '@/lib/map-style';
 import { useColorScheme } from '@/lib/use-color-scheme';

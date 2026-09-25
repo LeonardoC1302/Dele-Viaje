@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { redirect } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { BackLink } from '@/components/ui/back-link';
 import { TourTemplateForm } from '@/components/agencies/tour-template-form';
 import { mapAdvisoryTypes } from '@/lib/constants/advisories';
 
@@ -40,8 +42,11 @@ export default async function NewTourTemplatePage({
     .from('trip_advisory_types')
     .select('code, label_es, label_en, icon, severity');
 
+  const t = await getTranslations('agencies');
+
   return (
     <main className="mx-auto w-full max-w-[760px] px-4 py-8 sm:px-7 sm:py-10">
+      <BackLink href={`/agencies/${id}/panel`}>{t('backToPanel')}</BackLink>
       <TourTemplateForm
         agencyId={id}
         advisoryTypes={mapAdvisoryTypes(advisoryTypeRows ?? [])}

@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createTripSchema } from '@/lib/validators/trip';
 import { geocodeLocation } from '@/lib/geocode';
 import { saveTripCustomFields,
-  saveTripAdvisories, saveTripLinks } from '@/lib/trip-extras';
+  saveTripAdvisories, saveTripRoutes, saveTripLinks } from '@/lib/trip-extras';
 
 // See docs/api.md §3. Only `type: social` trips are supported until
 // agencies (tours) land — both `visibility: public` (open social trips)
@@ -102,6 +102,7 @@ export async function POST(request: Request) {
 
   await saveTripCustomFields(supabase, data.id, validated.data.customFields);
   await saveTripAdvisories(supabase, data.id, validated.data.advisories);
+  await saveTripRoutes(supabase, data.id, user.id, validated.data.routes);
   await saveTripLinks(supabase, data.id, user.id, validated.data.links);
 
   return NextResponse.json({ id: data.id }, { status: 201 });

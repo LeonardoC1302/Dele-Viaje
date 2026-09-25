@@ -10,7 +10,10 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "sync:maplibre-worker": "node scripts/sync-maplibre-worker.mjs",
+    "predev": "node scripts/sync-maplibre-worker.mjs",
+    "prebuild": "node scripts/sync-maplibre-worker.mjs"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",

@@ -5,6 +5,7 @@ import {
   tripCustomFieldSchema,
   tripLinkSchema,
   tripAdvisorySchema,
+  tripRouteSchema,
 } from '@/lib/validators/trip';
 
 export const agencyApplySchema = z.object({
@@ -49,6 +50,7 @@ export const createTourSchema = z
     customFields: z.array(tripCustomFieldSchema).max(20).optional(),
     links: z.array(tripLinkSchema).max(10).optional(),
     advisories: z.array(tripAdvisorySchema).max(18).optional(),
+    routes: z.array(tripRouteSchema).max(5).optional(),
     startAt: z.iso.datetime({ offset: true }),
     endAt: z.iso.datetime({ offset: true }),
     capacity: z.number().int().min(1).max(500),

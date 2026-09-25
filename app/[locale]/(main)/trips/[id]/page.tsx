@@ -6,10 +6,10 @@ import {
   UsersThree,
   ChatCircleText,
   PencilSimple,
-  ArrowLeft,
 } from '@phosphor-icons/react/dist/ssr';
 import { Link } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { BackLink } from '@/components/ui/back-link';
 import { MarkdownContent } from '@/components/ui/markdown-content';
 import { buttonVariants } from '@/components/ui/button';
 import { JoinTripButton, type AttendeeStatus } from '@/components/trips/join-trip-button';
@@ -17,6 +17,7 @@ import { AttendeeList, type AttendeeData } from '@/components/trips/attendee-lis
 import { ReportButton } from '@/components/reports/report-button';
 import { DeleteTripButton } from '@/components/trips/delete-trip-button';
 import { TripRouteMap } from '@/components/trips/trip-route-map';
+import { TripRoutes, type TripRouteData } from '@/components/trips/trip-routes';
 import { InviteManager, type PlanInvite } from '@/components/plans/invite-manager';
 import { PackingList, type PackingItemData } from '@/components/plans/packing-list';
 import { ExpensesList, type ExpenseData } from '@/components/plans/expenses-list';
@@ -81,7 +82,10 @@ export default async function TripDetailPage({
   const ownerQuery = supabase.rpc('profiles_public').eq('id', trip.owner_id).single();
   const waypointsQuery = supabase
     .from('trip_waypoints')
-    .select('label, lat, lng, kind')
+    // `sort` is selected, not inferred from position: routes link to a
+    // stop by its sort value (migration 0037), so the mapping has to be
+    // exact rather than assume the rows are gapless.
+    .select('label, lat, lng, kind, sort')
     .eq('trip_id', trip.id)
     .order('sort', { ascending: true });
   const attendeeQuery = user
@@ -100,7 +104,7 @@ export default async function TripDetailPage({
     .order('joined_at', { ascending: true });
   const customFieldsQuery = supabase
     .from('trip_custom_fields')
-    .select('label, value')
+    .select('label, value, icon')
     .eq('trip_id', trip.id)
     .order('sort', { ascending: true });
   const linksQuery = supabase
@@ -120,6 +124,13 @@ export default async function TripDetailPage({
   const advisoryTypeQuery = supabase
     .from('trip_advisory_types')
     .select('code, label_es, label_en, icon, severity');
+  const routesQuery = supabase
+    .from('trip_routes')
+    .select(
+      'id, name, stop_sort, geometry, profile, distance_m, ascent_m, descent_m, min_ele_m, max_ele_m'
+    )
+    .eq('trip_id', trip.id)
+    .order('sort', { ascending: true });
 
   const [
     ownerResult,
@@ -131,6 +142,7 @@ export default async function TripDetailPage({
     itineraryResult,
     advisoryResult,
     advisoryTypeResult,
+    routesResult,
   ] = await Promise.all([
     ownerQuery,
     attendeeQuery,
@@ -141,7 +153,41 @@ export default async function TripDetailPage({
     itineraryQuery,
     advisoryQuery,
     advisoryTypeQuery,
+    routesQuery,
   ]);
+
+  // `?? []` throughout, as with advisories: the page still renders in
+  // full if migration 0037 hasn't been applied yet.
+  const routeRows = (routesResult.data ?? []) as {
+    id: string;
+    name: string;
+    stop_sort: number | null;
+    geometry: [number, number][];
+    profile: [number, number][] | null;
+    distance_m: number;
+    ascent_m: number | null;
+    descent_m: number | null;
+    min_ele_m: number | null;
+    max_ele_m: number | null;
+  }[];
+
+  const routeLines = routeRows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    coordinates: row.geometry,
+  }));
+
+  const routeCards: TripRouteData[] = routeRows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    stopSort: row.stop_sort,
+    profile: row.profile,
+    distanceM: row.distance_m,
+    ascentM: row.ascent_m,
+    descentM: row.descent_m,
+    minEleM: row.min_ele_m,
+    maxEleM: row.max_ele_m,
+  }));
 
   const advisories = resolveAdvisories(
     advisoryResult.data ?? [],
@@ -152,6 +198,9 @@ export default async function TripDetailPage({
 
   const owner = ownerResult.data as { display_name: string | null } | null;
   const waypoints = waypointsResult.data ?? [];
+  const stopLabels = new Map<number, string>(
+    waypoints.map((wp) => [wp.sort as number, wp.label as string])
+  );
   const customFields = customFieldsResult.data ?? [];
   const links: TripLinkData[] = (linksResult.data ?? []).map((l) => ({
     id: l.id,
@@ -534,13 +583,7 @@ export default async function TripDetailPage({
 
   return (
     <PageBody className="max-w-[1000px]">
-      <Link
-        href={isPrivate ? '/my-trips' : '/feed'}
-        className="micro-label mb-6 inline-flex items-center gap-1.5 transition-colors hover:text-sand-800 dark:hover:text-sand-200"
-      >
-        <ArrowLeft size={13} weight="bold" />
-        {t('detailBack')}
-      </Link>
+      <BackLink href={isPrivate ? '/my-trips' : '/feed'}>{t('detailBack')}</BackLink>
 
       <Dossier>
         <CaseHeader
@@ -681,8 +724,11 @@ export default async function TripDetailPage({
                       lng: trip.lng,
                     }}
                     waypoints={waypoints}
+                    routes={routeLines}
                   />
                 )}
+
+                <TripRoutes tripId={trip.id} routes={routeCards} stopLabels={stopLabels} />
 
                 {links.length > 0 && (
                   <div className="flex flex-col gap-2">

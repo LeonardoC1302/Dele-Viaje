@@ -230,6 +230,17 @@
     "customFieldLabelPlaceholder": "Ej. Distancia",
     "customFieldValuePlaceholder": "Ej. 12 km",
     "customFieldRemove": "Eliminar detalle",
+    "customFieldIconLabel": "Ícono",
+    "customFieldIconAdd": "Agregar ícono al detalle",
+    "customFieldIconChange": "Cambiar el ícono del detalle",
+    "customFieldIconClear": "Quitar",
+    "customFieldIconGroups": {
+      "route": "Ruta",
+      "conditions": "Condiciones",
+      "nature": "Naturaleza",
+      "gear": "Equipo",
+      "logistics": "Logística"
+    },
     "linksLabel": "Lugares enlazados (opcional)",
     "linksAdd": "Añadir enlace",
     "linksHelper": "Enlaza un hotel, Airbnb o restaurante — intentaremos obtener una vista previa automáticamente.",
@@ -284,7 +295,8 @@
     "cancelError": "No se pudo cancelar el viaje. Intentá de nuevo.",
     "cancelledTitle": "Este viaje fue cancelado",
     "stampCancelled": "Cancelado",
-    "rateLimited": "Demasiados intentos. Esperá un momento y volvé a intentar."
+    "rateLimited": "Demasiados intentos. Esperá un momento y volvé a intentar.",
+    "backToTrip": "Volver al viaje"
   },
   "chat": {
     "title": "Chat del viaje",
@@ -678,7 +690,9 @@
     "status_approved_stamp": "Verificada",
     "status_pending_stamp": "Pendiente",
     "status_suspended_stamp": "Suspendida",
-    "status_rejected_stamp": "Rechazada"
+    "status_rejected_stamp": "Rechazada",
+    "backToPanel": "Volver al panel",
+    "backToTour": "Volver al tour"
   },
   "advisories": {
     "blockTitle": "Antes de ir",
@@ -703,5 +717,27 @@
     "copied": "Copiado",
     "directions": "Cómo llegar",
     "shareMessage": "{title} — {date}, {place}"
+  },
+  "routes": {
+    "title": "Rutas",
+    "download": "Descargar GPX",
+    "atStop": "En {stop}",
+    "distance": "Distancia",
+    "ascent": "Ascenso",
+    "descent": "Descenso",
+    "profile": "Perfil de elevación",
+    "untitled": "Ruta sin nombre",
+    "editorLabel": "Rutas de senderismo (opcional)",
+    "editorAdd": "Importar GPX",
+    "editorHelper": "Subí el archivo GPX de tu reloj, Wikiloc o AllTrails. Calculamos la distancia y el desnivel, y la ruta se dibuja en el mapa del viaje.",
+    "editorName": "Nombre de la ruta",
+    "editorRemove": "Eliminar ruta",
+    "editorStop": "Parada asociada",
+    "editorNoStop": "Sin parada asociada",
+    "pointCount": "{count, plural, one {# punto} other {# puntos}}",
+    "errorInvalid": "No pudimos leer ese archivo. Revisá que sea un GPX válido.",
+    "errorEmpty": "Ese GPX no tiene una ruta con suficientes puntos.",
+    "errorTooLarge": "Ese archivo es muy grande. El máximo es 12 MB.",
+    "errorRateLimited": "Demasiadas importaciones seguidas. Probá de nuevo en un rato."
   }
 }

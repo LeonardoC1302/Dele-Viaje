@@ -18,6 +18,7 @@ import { CustomFieldsEditor, type TripCustomFieldInput } from '@/components/trip
 import { AdvisoryEditor, type AdvisoryInput } from '@/components/trips/advisory-editor';
 import type { AdvisoryType } from '@/lib/constants/advisories';
 import { LinksEditor, type TripLinkInput } from '@/components/trips/links-editor';
+import { RoutesEditor, type TripRouteInput } from '@/components/trips/routes-editor';
 import { CATEGORY_KEYS } from '@/lib/constants/categories';
 import { extractErrorMessage } from '@/lib/format-validation-error';
 
@@ -31,8 +32,11 @@ export interface TourFormInitialValues {
   lat: number | null;
   lng: number | null;
   waypoints: { label: string; lat: number; lng: number; kind: TripWaypointInput['kind'] }[];
-  customFields: { label: string; value: string }[];
+  customFields: { label: string; value: string; icon?: string | null }[];
   advisories: { code: string; note: string }[];
+  // Optional: a tour prefilled from a template has no routes, since
+  // templates don't carry them (see migration 0037).
+  routes?: Omit<TripRouteInput, 'id'>[];
   links: { url: string; label: string }[];
   startAt: string;
   endAt: string;
@@ -77,6 +81,7 @@ export function TourForm({
   const t = useTranslations('agencies');
   const tTrips = useTranslations('trips');
   const tCategories = useTranslations('categories');
+  const tRoutes = useTranslations('routes');
   const router = useRouter();
 
   // A template only prefills in create mode — startAt/endAt are never part
@@ -94,9 +99,16 @@ export function TourForm({
     prefill?.waypoints.map((wp) => ({ id: crypto.randomUUID(), ...wp })) ?? []
   );
   const [customFields, setCustomFields] = useState<TripCustomFieldInput[]>(
-    prefill?.customFields.map((f) => ({ id: crypto.randomUUID(), ...f })) ?? []
+    prefill?.customFields.map((f) => ({
+      id: crypto.randomUUID(),
+      ...f,
+      icon: f.icon ?? null,
+    })) ?? []
   );
   const [advisories, setAdvisories] = useState<AdvisoryInput[]>(prefill?.advisories ?? []);
+  const [routes, setRoutes] = useState<TripRouteInput[]>(
+    prefill?.routes?.map((route) => ({ id: crypto.randomUUID(), ...route })) ?? []
+  );
   const [links, setLinks] = useState<TripLinkInput[]>(
     prefill?.links.map((l) => ({ id: crypto.randomUUID(), ...l })) ?? []
   );
@@ -148,10 +160,14 @@ export function TourForm({
           .map((wp) => ({ label: wp.label.trim(), lat: wp.lat, lng: wp.lng, kind: wp.kind })),
         customFields: customFields
           .filter((f) => f.label.trim() && f.value.trim())
-          .map((f) => ({ label: f.label.trim(), value: f.value.trim() })),
+          .map((f) => ({ label: f.label.trim(), value: f.value.trim(), icon: f.icon })),
         advisories: advisories.map((a) => ({
           code: a.code,
           note: a.note.trim() || undefined,
+        })),
+        routes: routes.map(({ id: _id, ...route }) => ({
+          ...route,
+          name: route.name.trim() || tRoutes('untitled'),
         })),
         links: links
           .filter((l) => l.url.trim())
@@ -247,6 +263,8 @@ export function TourForm({
             waypoints={waypoints}
             onWaypointsChange={setWaypoints}
           />
+
+          <RoutesEditor routes={routes} onChange={setRoutes} stops={waypoints} />
         </FormSection>
 
         <FormSection icon={Sliders} title={tTrips('sectionExtras')}>

@@ -147,19 +147,30 @@
 
   /**
    * MapLibre's own chrome ships hard-coded white. The tiles are themed
-   * in lib/map-style.ts, but the zoom buttons and the attribution bar
-   * are DOM, not canvas, so they stay bright on a dark page unless they
-   * are overridden here. Scoped to the vendor classes so nothing else
-   * picks these up.
+   * in lib/map-style.ts, but the zoom buttons, the attribution bar and
+   * the marker popups are DOM, not canvas, so they stay bright on a
+   * dark page unless they are overridden here. Scoped to the vendor
+   * classes so nothing else picks these up.
+   *
+   * WHY EVERY OVERRIDE IS !important
+   * maplibre-gl.css is imported from a component as a plain stylesheet,
+   * so it lands UNLAYERED, while this file is inside `@layer
+   * components`. Unlayered normal declarations beat layered ones no
+   * matter their specificity or source order, so without `!important`
+   * none of this applies — which is exactly what went wrong with the
+   * popup below: it kept the vendor's white background while the label
+   * text inherited the page's near-white ink. `!important` is the one
+   * thing that crosses a layer boundary, since an important
+   * declaration outranks any normal one.
    */
   .maplibregl-ctrl-group {
-    background: var(--raised);
-    border: 1px solid var(--hairline);
-    box-shadow: none;
+    background: var(--raised) !important;
+    border: 1px solid var(--hairline) !important;
+    box-shadow: none !important;
   }
 
   .maplibregl-ctrl-group button + button {
-    border-top-color: var(--hairline);
+    border-top-color: var(--hairline) !important;
   }
 
   .maplibregl-ctrl-group button .maplibregl-ctrl-icon {
@@ -168,11 +179,56 @@
 
   .maplibregl-ctrl-attrib {
     background: color-mix(in srgb, var(--raised) 88%, transparent) !important;
-    color: var(--ink-muted);
+    color: var(--ink-muted) !important;
   }
 
   .maplibregl-ctrl-attrib a {
-    color: var(--ink-muted);
+    color: var(--ink-muted) !important;
+  }
+
+  /**
+   * Marker popups (the stop labels). The vendor rule hard-codes
+   * `background: #fff` and sets no `color` at all, so the label text
+   * inherits whatever the page ink is — legible on a light page, and
+   * white-on-white in dark mode. Both halves are set here.
+   */
+  .maplibregl-popup-content {
+    background: var(--raised) !important;
+    color: var(--ink) !important;
+    border: 1px solid var(--hairline) !important;
+    border-radius: 6px !important;
+    box-shadow: none !important;
+    padding: 6px 10px !important;
+    font: inherit !important;
+    font-size: 0.8125rem !important;
+    line-height: 1.3 !important;
+  }
+
+  .maplibregl-popup-close-button {
+    color: var(--ink-muted) !important;
+    padding: 0 4px !important;
+  }
+
+  /* The tip is a CSS triangle, so its fill is a border colour — one
+     per anchor position, all of them #fff by default. */
+  .maplibregl-popup-anchor-top .maplibregl-popup-tip,
+  .maplibregl-popup-anchor-top-left .maplibregl-popup-tip,
+  .maplibregl-popup-anchor-top-right .maplibregl-popup-tip {
+    border-bottom-color: var(--raised) !important;
+  }
+
+  .maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
+  .maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip,
+  .maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip {
+    border-top-color: var(--raised) !important;
+  }
+
+  .maplibregl-popup-anchor-left .maplibregl-popup-tip {
+    border-right-color: var(--raised) !important;
+  }
+
+  .maplibregl-popup-anchor-right .maplibregl-popup-tip {
+    border-left-color: var(--raised) !important;
   }
 }
 

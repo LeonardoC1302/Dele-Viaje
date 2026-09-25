@@ -1,5 +1,7 @@
+import { getTranslations } from 'next-intl/server';
 import { redirect } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { BackLink } from '@/components/ui/back-link';
 import { TripForm } from '@/components/trips/trip-form';
 import { mapAdvisoryTypes } from '@/lib/constants/advisories';
 
@@ -32,8 +34,11 @@ export default async function NewTripPage({
     .from('trip_advisory_types')
     .select('code, label_es, label_en, icon, severity');
 
+  const t = await getTranslations('trips');
+
   return (
     <main className="mx-auto w-full max-w-[760px] px-4 py-8 sm:px-7 sm:py-10">
+      <BackLink href="/feed">{t('detailBack')}</BackLink>
       <TripForm advisoryTypes={mapAdvisoryTypes(advisoryTypes ?? [])} />
     </main>
   );

@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import { useTranslations } from 'next-intl';
 import { NotePencil, MapPin, Sliders, CalendarBlank } from '@phosphor-icons/react';
-import { useRouter } from '@/i18n/navigation';
+import { Link, useRouter } from '@/i18n/navigation';
 import { Input } from '@/components/ui/field';
 import { MarkdownEditor } from '@/components/ui/markdown-editor';
 import { Select } from '@/components/ui/select';
@@ -18,6 +18,7 @@ import {
   type TripWaypointKind,
 } from '@/components/trips/trip-map-editor';
 import { CustomFieldsEditor, type TripCustomFieldInput } from '@/components/trips/custom-fields-editor';
+import { RoutesEditor, type TripRouteInput } from '@/components/trips/routes-editor';
 import { LinksEditor, type TripLinkInput } from '@/components/trips/links-editor';
 import { CATEGORY_KEYS } from '@/lib/constants/categories';
 import { extractErrorMessage } from '@/lib/format-validation-error';
@@ -33,9 +34,10 @@ export interface TripFormInitialValues {
   lat: number | null;
   lng: number | null;
   waypoints: { label: string; lat: number; lng: number; kind: TripWaypointKind }[];
-  customFields: { label: string; value: string }[];
+  customFields: { label: string; value: string; icon?: string | null }[];
   links: { url: string; label: string }[];
   advisories: { code: string; note: string }[];
+  routes: Omit<TripRouteInput, 'id'>[];
   startAt: string;
   endAt: string;
   capacity: number | null;
@@ -57,6 +59,11 @@ export function TripForm({
 }: TripFormProps) {
   const t = useTranslations('trips');
   const tCategories = useTranslations('categories');
+  const tRoutes = useTranslations('routes');
+  // `cancel` already exists under `agencies` and is used verbatim by the
+  // three other forms; a duplicate key under `trips` would be one more
+  // string for translators to keep in sync for no gain.
+  const tAgencies = useTranslations('agencies');
   const router = useRouter();
 
   const [visibility, setVisibility] = useState<'public' | 'private'>('public');
@@ -70,10 +77,17 @@ export function TripForm({
     initialValues?.waypoints.map((wp) => ({ id: crypto.randomUUID(), ...wp })) ?? []
   );
   const [customFields, setCustomFields] = useState<TripCustomFieldInput[]>(
-    initialValues?.customFields.map((f) => ({ id: crypto.randomUUID(), ...f })) ?? []
+    initialValues?.customFields.map((f) => ({
+      id: crypto.randomUUID(),
+      ...f,
+      icon: f.icon ?? null,
+    })) ?? []
   );
   const [advisories, setAdvisories] = useState<AdvisoryInput[]>(
     initialValues?.advisories ?? []
+  );
+  const [routes, setRoutes] = useState<TripRouteInput[]>(
+    initialValues?.routes.map((route) => ({ id: crypto.randomUUID(), ...route })) ?? []
   );
   const [links, setLinks] = useState<TripLinkInput[]>(
     initialValues?.links.map((l) => ({ id: crypto.randomUUID(), ...l })) ?? []
@@ -129,10 +143,16 @@ export function TripForm({
           .map((wp) => ({ label: wp.label.trim(), lat: wp.lat, lng: wp.lng, kind: wp.kind })),
         customFields: customFields
           .filter((f) => f.label.trim() && f.value.trim())
-          .map((f) => ({ label: f.label.trim(), value: f.value.trim() })),
+          .map((f) => ({ label: f.label.trim(), value: f.value.trim(), icon: f.icon })),
         advisories: advisories.map((a) => ({
           code: a.code,
           note: a.note.trim() || undefined,
+        })),
+        // `id` is a client-side key only; the rest is what the server
+        // measured and is sent back unchanged apart from the name.
+        routes: routes.map(({ id: _id, ...route }) => ({
+          ...route,
+          name: route.name.trim() || tRoutes('untitled'),
         })),
         links: links
           .filter((l) => l.url.trim())
@@ -268,6 +288,11 @@ export function TripForm({
             waypoints={waypoints}
             onWaypointsChange={setWaypoints}
           />
+
+          {/* Beside the map rather than down in Extras: a hiking track is
+              the route, and linking one to a stop only makes sense next
+              to where the stops are set. */}
+          <RoutesEditor routes={routes} onChange={setRoutes} stops={waypoints} />
         </FormSection>
 
         <FormSection icon={Sliders} title={t('sectionExtras')}>
@@ -316,9 +341,21 @@ export function TripForm({
           <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
         )}
 
-        <Button type="submit" size="lg" isLoading={status === 'loading'}>
-          {mode === 'edit' ? t('saveChanges') : t('submit')}
-        </Button>
+        {/* Cancel beside the submit, matching the tour, template and
+            agency forms — this was the only one of the four without
+            one, on the longest form in the product. It goes where the
+            page's back link goes, so both exits land in the same place. */}
+        <div className="flex items-center gap-3">
+          <Button type="submit" size="lg" isLoading={status === 'loading'}>
+            {mode === 'edit' ? t('saveChanges') : t('submit')}
+          </Button>
+          <Link
+            href={mode === 'edit' && tripId ? `/trips/${tripId}` : '/feed'}
+            className="text-sm font-medium text-sand-600 hover:text-sand-900 dark:text-sand-400 dark:hover:text-sand-100"
+          >
+            {tAgencies('cancel')}
+          </Link>
+        </div>
       </div>
     </form>
   );

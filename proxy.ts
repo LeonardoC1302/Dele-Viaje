@@ -10,8 +10,13 @@ export async function proxy(request: NextRequest) {
   return attachSupabaseSession(request, response);
 }
 
+// Everything not excluded here gets a locale prefix. Static files served
+// straight out of public/ must be excluded by name, exactly like sw.js:
+// maplibre-gl-worker.mjs has to stay at the root because a Worker can
+// only be constructed from a same-origin URL, and a 307 to /es/... is
+// not that URL (see lib/maplibre-worker.ts).
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|sw.js|icon$|icon\\..*|apple-icon$|apple-icon\\..*|manifest\\.webmanifest|icons/.*|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|sw.js|maplibre-gl-[a-z]+\\.mjs|icon$|icon\\..*|apple-icon$|apple-icon\\..*|manifest\\.webmanifest|icons/.*|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
   ],
 };

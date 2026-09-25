@@ -26,12 +26,19 @@ function Calendar({ className, classNames, ...props }: CalendarProps) {
       showOutsideDays
       className={cn('p-1', className)}
       classNames={{
-        months: 'flex flex-col gap-4',
+        // `nav` is the first child of `months` (before the caption) and is
+        // absolutely positioned so the arrows sit on the caption row. That
+        // needs two things the library's own stylesheet would have given us,
+        // but we never import it: a positioned containing block here, and a
+        // z-index — otherwise the full-width `month_caption` below, which is
+        // `relative` and later in the DOM, paints over the arrows and eats
+        // every click.
+        months: 'relative flex flex-col gap-4',
         month: 'flex flex-col gap-3',
         month_caption: 'relative flex items-center justify-center pt-1',
         caption_label:
           'text-sm font-semibold text-sand-900 dark:text-sand-100',
-        nav: 'absolute inset-x-0 top-0 flex items-center justify-between',
+        nav: 'absolute inset-x-0 top-0 z-10 flex items-center justify-between',
         button_previous:
           'flex h-7 w-7 items-center justify-center rounded-full text-sand-500 hover:bg-sand-100 disabled:opacity-30 dark:text-sand-400 dark:hover:bg-sand-800',
         button_next:

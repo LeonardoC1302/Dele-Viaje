@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { redirect, Link } from '@/i18n/navigation';
+import { redirect } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { BackLink } from '@/components/ui/back-link';
 import { ChatRoom, type ChatMessage, type ChatProfile } from '@/components/chat/chat-room';
 
 export default async function TripChatPage({
@@ -101,12 +102,11 @@ export default async function TripChatPage({
   return (
     <main>
       <div className="mx-auto w-full max-w-[720px] px-4 py-8 sm:px-7 sm:py-10">
-        <Link
-          href={`/trips/${trip.id}`}
-          className="text-sm font-medium text-forest-600 hover:underline dark:text-forest-400"
-        >
-          &larr; {t('backToTrip')}
-        </Link>
+        {/* Was an ad-hoc forest link with a literal arrow entity — the
+            same affordance, drawn differently from every other page. */}
+        <BackLink href={`/trips/${trip.id}`} className="mb-0">
+          {t('backToTrip')}
+        </BackLink>
 
         <h1 className="mt-4 text-xl font-extrabold text-sand-900 dark:text-sand-50">
           {trip.title}

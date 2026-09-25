@@ -230,6 +230,17 @@
     "customFieldLabelPlaceholder": "E.g. Distance",
     "customFieldValuePlaceholder": "E.g. 12 km",
     "customFieldRemove": "Remove detail",
+    "customFieldIconLabel": "Icon",
+    "customFieldIconAdd": "Add an icon to this detail",
+    "customFieldIconChange": "Change this detail's icon",
+    "customFieldIconClear": "Clear",
+    "customFieldIconGroups": {
+      "route": "Route",
+      "conditions": "Conditions",
+      "nature": "Nature",
+      "gear": "Gear",
+      "logistics": "Logistics"
+    },
     "linksLabel": "Linked places (optional)",
     "linksAdd": "Add link",
     "linksHelper": "Link a hotel, Airbnb, or restaurant — we'll try to fetch a preview automatically.",
@@ -284,7 +295,8 @@
     "cancelError": "Could not cancel the trip. Try again.",
     "cancelledTitle": "This trip was cancelled",
     "stampCancelled": "Cancelled",
-    "rateLimited": "Too many attempts. Wait a moment and try again."
+    "rateLimited": "Too many attempts. Wait a moment and try again.",
+    "backToTrip": "Back to trip"
   },
   "chat": {
     "title": "Trip chat",
@@ -678,7 +690,9 @@
     "status_approved_stamp": "Verified",
     "status_pending_stamp": "Pending",
     "status_suspended_stamp": "Suspended",
-    "status_rejected_stamp": "Rejected"
+    "status_rejected_stamp": "Rejected",
+    "backToPanel": "Back to panel",
+    "backToTour": "Back to tour"
   },
   "advisories": {
     "blockTitle": "Before you go",
@@ -703,5 +717,27 @@
     "copied": "Copied",
     "directions": "Directions",
     "shareMessage": "{title} — {date}, {place}"
+  },
+  "routes": {
+    "title": "Routes",
+    "download": "Download GPX",
+    "atStop": "At {stop}",
+    "distance": "Distance",
+    "ascent": "Ascent",
+    "descent": "Descent",
+    "profile": "Elevation profile",
+    "untitled": "Unnamed route",
+    "editorLabel": "Hiking routes (optional)",
+    "editorAdd": "Import GPX",
+    "editorHelper": "Upload the GPX from your watch, Wikiloc or AllTrails. We measure the distance and elevation gain, and draw the route on the trip map.",
+    "editorName": "Route name",
+    "editorRemove": "Remove route",
+    "editorStop": "Linked stop",
+    "editorNoStop": "Not linked to a stop",
+    "pointCount": "{count, plural, one {# point} other {# points}}",
+    "errorInvalid": "We could not read that file. Check that it is a valid GPX.",
+    "errorEmpty": "That GPX has no route with enough points.",
+    "errorTooLarge": "That file is too large. The maximum is 12 MB.",
+    "errorRateLimited": "Too many imports in a row. Try again shortly."
   }
 }

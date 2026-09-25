@@ -53,3 +53,8 @@ next-env.d.ts
 /.impeccable/questions/
 /.impeccable/hook.cache.json
 /.impeccable/config.local.json
+
+# Copied out of node_modules by scripts/sync-maplibre-worker.mjs
+# on predev/prebuild — see lib/maplibre-worker.ts.
+/public/maplibre-gl-worker.mjs
+/public/maplibre-gl-shared.mjs

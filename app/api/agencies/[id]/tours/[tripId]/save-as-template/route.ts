@@ -53,7 +53,11 @@ export async function POST(
 
   const [waypointsResult, customFieldsResult, linksResult] = await Promise.all([
     supabase.from('trip_waypoints').select('label, lat, lng, kind').eq('trip_id', tripId).order('sort'),
-    supabase.from('trip_custom_fields').select('label, value').eq('trip_id', tripId).order('sort'),
+    supabase
+      .from('trip_custom_fields')
+      .select('label, value, icon')
+      .eq('trip_id', tripId)
+      .order('sort'),
     supabase.from('trip_links').select('url, label').eq('trip_id', tripId).order('sort'),
   ]);
 

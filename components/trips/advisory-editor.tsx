@@ -139,7 +139,14 @@ export function AdvisoryEditor({
               const type = byCode.get(entry.code);
               if (!type) return null;
 
-              const isOpen = opened.has(entry.code) || entry.note.length > 0;
+              // `note` is typed as a string, but this editor is also fed
+              // from jsonb (tour templates), where a blank note is a
+              // missing key rather than an empty string. Callers
+              // normalise it now — see lib/template-values — and this
+              // stays defensive because the crash it caused took out the
+              // whole form, and the input below must stay controlled.
+              const note = entry.note ?? '';
+              const isOpen = opened.has(entry.code) || note.length > 0;
               const TypeIcon = advisoryIcon(type.icon);
 
               return (
@@ -178,10 +185,10 @@ export function AdvisoryEditor({
                   {isOpen && (
                     <input
                       type="text"
-                      value={entry.note}
+                      value={note}
                       onChange={(e) => setNote(entry.code, e.target.value)}
                       maxLength={200}
-                      autoFocus={opened.has(entry.code) && entry.note.length === 0}
+                      autoFocus={opened.has(entry.code) && note.length === 0}
                       placeholder={t('notePlaceholder')}
                       className={cn(controlClasses, 'mt-2 h-9')}
                     />

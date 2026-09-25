@@ -1,6 +1,9 @@
 import { notFound } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { redirect } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { normalizeAdvisories, normalizeLinks } from '@/lib/template-values';
+import { BackLink } from '@/components/ui/back-link';
 import { TourForm, type TourTemplateValues } from '@/components/agencies/tour-form';
 import { mapAdvisoryTypes } from '@/lib/constants/advisories';
 
@@ -59,9 +62,11 @@ export default async function NewTourPage({
         lat: template.lat,
         lng: template.lng,
         waypoints: template.waypoints ?? [],
-        advisories: template.advisories ?? [],
+        // See lib/template-values: blank optional text is absent from
+        // the stored jsonb, not empty, and the editors take strings.
+        advisories: normalizeAdvisories(template.advisories),
         customFields: template.custom_fields ?? [],
-        links: template.links ?? [],
+        links: normalizeLinks(template.links),
         capacity: template.capacity ?? 1,
         minParticipants: template.min_participants,
         priceCrc: template.price_crc ?? 1000,
@@ -74,8 +79,11 @@ export default async function NewTourPage({
     .from('trip_advisory_types')
     .select('code, label_es, label_en, icon, severity');
 
+  const t = await getTranslations('agencies');
+
   return (
     <main className="mx-auto w-full max-w-[760px] px-4 py-8 sm:px-7 sm:py-10">
+      <BackLink href={`/agencies/${id}/panel`}>{t('backToPanel')}</BackLink>
       <TourForm agencyId={id} advisoryTypes={mapAdvisoryTypes(advisoryTypeRows ?? [])} templateValues={templateValues} />
     </main>
   );
